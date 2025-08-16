@@ -1,0 +1,102 @@
+[project]
+name = "fraiseql-doctor"
+version = "0.1.0"
+description = "Health monitoring and query execution tool for FraiseQL/GraphQL endpoints"
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "typer>=0.9.0",
+    "sqlalchemy>=2.0.0",
+    "psycopg[binary]>=3.1.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "requests>=2.31.0",
+    "rich>=13.0.0",
+    "click>=8.0.0",
+    "python-dotenv>=1.0.0",
+    "alembic>=1.12.0",
+    "aiohttp>=3.9.0",
+    "pyyaml>=6.0.0",
+    "croniter>=2.0.0",
+    "asyncpg>=0.30.0",
+    "pytest-asyncio>=1.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.1.0",
+    "mypy>=1.5.0",
+    "pre-commit>=3.4.0",
+    "aioresponses>=0.7.0",
+    "hypothesis>=6.82.0",
+]
+
+[project.scripts]
+fraiseql-doctor = "fraiseql_doctor.cli.main:app"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "D203", "D213",  # Docstring formatting
+    "COM812", "ISC001",  # Conflicts with formatter
+    "ANN101", "ANN102", "ANN204",  # Missing type annotations for self, cls, __init__
+    "FBT001", "FBT002",  # Boolean positional args
+    "ARG001", "ARG002",  # Unused function arguments (common in CLI callbacks)
+    "B008",  # Function calls in argument defaults (typer pattern)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "PLR2004", "SLF001", "ANN201"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--cov=src --cov-report=html --cov-report=term-missing --asyncio-mode=auto"
+asyncio_mode = "auto"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "aioresponses>=0.7.8",
+    "hypothesis>=6.138.2",
+    "mypy>=1.17.1",
+    "pre-commit>=4.3.0",
+    "psycopg2-binary>=2.9.10",
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.1.0",
+    "pytest-cov>=6.2.1",
+    "ruff>=0.12.9",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fraiseql_doctor"]
