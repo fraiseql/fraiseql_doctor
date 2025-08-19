@@ -109,7 +109,7 @@ async def result_storage_manager(mock_db_session, tmp_path):
 def sample_endpoint():
     """Create sample endpoint for testing."""
     return Endpoint(
-        id=uuid4(),
+        pk_endpoint=uuid4(),
         name="Test GraphQL Endpoint",
         url="https://api.example.com/graphql",
         auth_type="bearer",
@@ -291,7 +291,7 @@ class TestExecutionManagerIntegration:
         
         result = await execution_manager.execute_query(
             query_id,
-            sample_endpoint.id
+            sample_endpoint.pk_endpoint
         )
         
         assert result.success is True
@@ -326,7 +326,7 @@ class TestExecutionManagerIntegration:
         
         batch_result = await execution_manager.execute_batch(
             query_ids,
-            sample_endpoint.id,
+            sample_endpoint.pk_endpoint,
             mode=BatchMode.PARALLEL
         )
         
@@ -370,7 +370,7 @@ class TestExecutionManagerIntegration:
         
         batch_result = await execution_manager.execute_batch(
             query_ids,
-            sample_endpoint.id,
+            sample_endpoint.pk_endpoint,
             mode=BatchMode.PRIORITY
         )
         
@@ -392,13 +392,13 @@ class TestExecutionManagerIntegration:
         
         scheduled = await execution_manager.schedule_query(
             query_id,
-            sample_endpoint.id,
+            sample_endpoint.pk_endpoint,
             cron_expression
         )
         
         assert scheduled.query_id == query_id
         assert scheduled.cron_expression == cron_expression
-        assert scheduled.endpoint_id == sample_endpoint.id
+        assert scheduled.endpoint_id == sample_endpoint.pk_endpoint
         assert scheduled.enabled is True
         assert scheduled.next_execution is not None
         
@@ -567,7 +567,7 @@ class TestEndToEndIntegration:
         
         execution_result = await execution_manager.execute_query(
             query.id,
-            sample_endpoint.id
+            sample_endpoint.pk_endpoint
         )
         
         assert execution_result.success is True
@@ -643,7 +643,7 @@ class TestEndToEndIntegration:
         # Execute batch
         batch_result = await execution_manager.execute_batch(
             query_ids,
-            sample_endpoint.id,
+            sample_endpoint.pk_endpoint,
             mode=BatchMode.PARALLEL
         )
         
@@ -734,7 +734,7 @@ class TestErrorHandlingIntegration:
         
         result = await execution_manager.execute_query(
             query_id,
-            sample_endpoint.id
+            sample_endpoint.pk_endpoint
         )
         
         assert result.success is False
