@@ -1,14 +1,9 @@
-"""Alembic environment configuration."""
-
-import asyncio
 from logging.config import fileConfig
 
-from alembic import context
-from sqlalchemy import engine_from_config, pool
-from sqlalchemy.engine import Connection
+from sqlalchemy import engine_from_config
+from sqlalchemy import pool
 
-from fraiseql_doctor.core.config import get_settings
-from fraiseql_doctor.models import Base
+from alembic import context
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -21,6 +16,20 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
+import sys
+from pathlib import Path
+
+# Add src directory to path
+src_path = Path(__file__).parent.parent / "src"
+sys.path.insert(0, str(src_path))
+
+from fraiseql_doctor.models.base import Base
+from fraiseql_doctor.models.query import Query
+from fraiseql_doctor.models.endpoint import Endpoint
+from fraiseql_doctor.models.execution import Execution
+from fraiseql_doctor.models.health_check import HealthCheck
+from fraiseql_doctor.models.schedule import Schedule
+
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
@@ -28,10 +37,6 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
-def get_url():
-    """Get database URL from settings."""
-    settings = get_settings()
-    return settings.database.url
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -45,14 +50,12 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = get_url()
+    url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        compare_type=True,
-        compare_server_default=True,
     )
 
     with context.begin_transaction():
@@ -66,21 +69,15 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    # Override the sqlalchemy.url in the alembic config
-    config.set_main_option("sqlalchemy.url", get_url())
-    
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
+        config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection,
-            target_metadata=target_metadata,
-            compare_type=True,
-            compare_server_default=True,
+            connection=connection, target_metadata=target_metadata
         )
 
         with context.begin_transaction():

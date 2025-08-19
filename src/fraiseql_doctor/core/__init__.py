@@ -1,1 +1,1 @@
-"""Core functionality for FraiseQL Doctor."""
+"""Core module for FraiseQL Doctor."""

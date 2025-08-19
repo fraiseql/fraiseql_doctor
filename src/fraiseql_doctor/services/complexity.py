@@ -1,54 +1,123 @@
-"""FraiseQL query complexity analysis."""
+"""
+GraphQL Query Complexity Analyzer.
+
+Analyzes GraphQL queries to compute complexity scores and provide
+optimization recommendations.
+"""
 import re
-from typing import Dict, Any, List
+from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
+from enum import Enum
+
+
+class ComplexityLevel(Enum):
+    """Query complexity levels."""
+    LOW = "low"
+    MEDIUM = "medium" 
+    HIGH = "high"
+    VERY_HIGH = "very_high"
 
 
 @dataclass
 class ComplexityMetrics:
-    """Query complexity analysis results."""
-    total_score: int
+    """Query complexity analysis metrics."""
     depth: int
     field_count: int
-    nested_queries: int
-    estimated_cost: float
+    complexity_score: int
+    complexity_level: ComplexityLevel
     recommendations: List[str]
+    
+    def to_dict(self) -> Dict:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "depth": self.depth,
+            "field_count": self.field_count,
+            "complexity_score": self.complexity_score,
+            "complexity_level": self.complexity_level.value,
+            "recommendations": self.recommendations
+        }
 
 
 class QueryComplexityAnalyzer:
-    """Analyze GraphQL query complexity for FraiseQL optimization."""
+    """
+    Analyzes GraphQL query complexity for optimization.
     
-    def __init__(self, max_depth: int = 10, max_complexity: int = 1000):
-        self.max_depth = max_depth
-        self.max_complexity = max_complexity
+    Provides depth analysis, field counting, and optimization
+    recommendations to help optimize query performance.
+    """
+    
+    # Complexity scoring weights
+    DEPTH_WEIGHT = 5
+    FIELD_WEIGHT = 1
+    NESTED_FIELD_WEIGHT = 3
+    LIST_FIELD_WEIGHT = 5
+    
+    # Complexity thresholds
+    LOW_THRESHOLD = 20
+    MEDIUM_THRESHOLD = 50
+    HIGH_THRESHOLD = 100
+    
+    def __init__(self):
+        """Initialize the complexity analyzer."""
+        self.field_patterns = {
+            'list_fields': re.compile(r'\w+\s*\([^)]*(?:limit|first|last):', re.IGNORECASE),
+            'nested_fields': re.compile(r'{\s*\w+\s*{'),
+            'fragments': re.compile(r'fragment\s+\w+\s+on\s+\w+', re.IGNORECASE),
+            'directives': re.compile(r'@\w+'),
+            'arguments': re.compile(r'\w+\s*\([^)]+\)'),
+        }
     
     def analyze_query(self, query: str) -> ComplexityMetrics:
-        """Analyze query complexity and provide recommendations."""
-        # Parse query structure
-        depth = self._calculate_depth(query)
-        field_count = self._count_fields(query)
-        nested_queries = self._count_nested_queries(query)
+        """
+        Analyze GraphQL query complexity.
         
-        # Calculate complexity score
-        total_score = self._calculate_complexity_score(depth, field_count, nested_queries)
-        estimated_cost = self._estimate_cost(total_score, depth)
+        Args:
+            query: GraphQL query string
+            
+        Returns:
+            ComplexityMetrics with analysis results
+        """
+        # Clean and normalize query
+        normalized_query = self._normalize_query(query)
+        
+        # Calculate metrics
+        depth = self._calculate_depth(normalized_query)
+        field_count = self._count_fields(normalized_query)
+        complexity_score = self._calculate_complexity_score(
+            normalized_query, depth, field_count
+        )
+        
+        # Determine complexity level
+        complexity_level = self._determine_complexity_level(complexity_score)
         
         # Generate recommendations
         recommendations = self._generate_recommendations(
-            depth, field_count, nested_queries, total_score
+            normalized_query, depth, field_count, complexity_score
         )
         
         return ComplexityMetrics(
-            total_score=total_score,
             depth=depth,
             field_count=field_count,
-            nested_queries=nested_queries,
-            estimated_cost=estimated_cost,
+            complexity_score=complexity_score,
+            complexity_level=complexity_level,
             recommendations=recommendations
         )
     
+    def _normalize_query(self, query: str) -> str:
+        """Normalize query string for analysis."""
+        # Remove comments
+        query = re.sub(r'#.*$', '', query, flags=re.MULTILINE)
+        
+        # Remove extra whitespace
+        query = re.sub(r'\s+', ' ', query)
+        
+        # Remove leading/trailing whitespace
+        query = query.strip()
+        
+        return query
+    
     def _calculate_depth(self, query: str) -> int:
-        """Calculate maximum nesting depth."""
+        """Calculate the maximum nesting depth of the query."""
         max_depth = 0
         current_depth = 0
         
@@ -62,128 +131,162 @@ class QueryComplexityAnalyzer:
         return max_depth
     
     def _count_fields(self, query: str) -> int:
-        """Count total number of fields requested."""
-        # Remove comments and strings
-        cleaned_query = re.sub(r'#.*$', '', query, flags=re.MULTILINE)
-        cleaned_query = re.sub(r'"[^"]*"', '""', cleaned_query)
+        """Count the total number of fields in the query."""
+        # Remove operation keywords
+        query_body = re.sub(r'^(query|mutation|subscription)\s*[^{]*', '', query, flags=re.IGNORECASE)
         
-        # Find field selections (word followed by optional arguments and either { or end)
-        field_pattern = r'\b([a-zA-Z_][a-zA-Z0-9_]*)\s*(?:\([^)]*\))?\s*(?:\{|$|,|\s)'
-        matches = re.findall(field_pattern, cleaned_query)
+        # Remove arguments from fields
+        query_body = re.sub(r'\([^)]*\)', '', query_body)
         
-        # Filter out GraphQL keywords and fragments
-        keywords = {
-            'query', 'mutation', 'subscription', 'fragment', 'on', 'true', 'false', 
-            'null', 'if', 'skip', 'include', '__typename', '__schema', '__type'
-        }
+        # Remove braces and extract field names
+        fields = re.findall(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b', query_body)
         
-        fields = [match for match in matches if match.lower() not in keywords]
+        # Filter out keywords and directives
+        keywords = {'query', 'mutation', 'subscription', 'fragment', 'on', 'true', 'false', 'null'}
+        fields = [f for f in fields if f.lower() not in keywords and not f.startswith('__')]
+        
         return len(fields)
     
-    def _count_nested_queries(self, query: str) -> int:
-        """Count nested object selections."""
-        return query.count('{') - 1  # Subtract the root query
-    
-    def _calculate_complexity_score(self, depth: int, fields: int, nested: int) -> int:
+    def _calculate_complexity_score(self, query: str, depth: int, field_count: int) -> int:
         """Calculate overall complexity score."""
-        # Weight factors for different aspects
-        depth_weight = 10
-        field_weight = 2
-        nested_weight = 5
+        base_score = (depth * self.DEPTH_WEIGHT) + (field_count * self.FIELD_WEIGHT)
         
-        # FraiseQL specific considerations
-        # Deeper queries are more expensive in PostgreSQL
-        depth_penalty = depth ** 2 if depth > 5 else depth * depth_weight
+        # Add penalties for complex patterns
+        nested_fields = len(self.field_patterns['nested_fields'].findall(query))
+        list_fields = len(self.field_patterns['list_fields'].findall(query))
         
-        return int(depth_penalty + (fields * field_weight) + (nested * nested_weight))
+        complexity_score = (
+            base_score +
+            (nested_fields * self.NESTED_FIELD_WEIGHT) +
+            (list_fields * self.LIST_FIELD_WEIGHT)
+        )
+        
+        return max(1, complexity_score)  # Minimum score of 1
     
-    def _estimate_cost(self, complexity: int, depth: int) -> float:
-        """Estimate query execution cost in relative units."""
-        base_cost = complexity * 0.1
-        
-        # FraiseQL specific cost factors
-        # Deep queries require more JOIN operations
-        depth_penalty = (depth * 0.05) if depth > 3 else 0
-        
-        # PostgreSQL connection overhead
-        connection_overhead = 0.1
-        
-        return base_cost + depth_penalty + connection_overhead
+    def _determine_complexity_level(self, score: int) -> ComplexityLevel:
+        """Determine complexity level based on score."""
+        if score <= self.LOW_THRESHOLD:
+            return ComplexityLevel.LOW
+        elif score <= self.MEDIUM_THRESHOLD:
+            return ComplexityLevel.MEDIUM
+        elif score <= self.HIGH_THRESHOLD:
+            return ComplexityLevel.HIGH
+        else:
+            return ComplexityLevel.VERY_HIGH
     
     def _generate_recommendations(
-        self, depth: int, fields: int, nested: int, score: int
+        self, 
+        query: str, 
+        depth: int, 
+        field_count: int, 
+        score: int
     ) -> List[str]:
         """Generate optimization recommendations."""
         recommendations = []
         
-        if depth >= self.max_depth:
+        # Depth recommendations
+        if depth > 5:
             recommendations.append(
-                f"Query depth ({depth}) exceeds recommended maximum ({self.max_depth}). "
-                "Consider breaking into multiple queries or using fragments."
+                f"Query depth ({depth}) is high. Consider breaking into multiple queries."
             )
         
-        if score >= self.max_complexity:
+        # Field count recommendations
+        if field_count > 20:
             recommendations.append(
-                f"Query complexity ({score}) exceeds limit ({self.max_complexity}). "
-                "Reduce field selections or query depth."
+                f"High field count ({field_count}). Consider using fragments or selecting fewer fields."
             )
         
-        if fields > 50:
+        # List field recommendations
+        list_fields = self.field_patterns['list_fields'].findall(query)
+        if len(list_fields) > 3:
             recommendations.append(
-                "High field count detected. Consider using GraphQL fragments "
-                "or selecting only required fields."
+                "Multiple list fields detected. Consider pagination and limiting results."
             )
         
-        if nested > 8:
+        # Nested field recommendations
+        nested_fields = self.field_patterns['nested_fields'].findall(query)
+        if len(nested_fields) > 3:
             recommendations.append(
-                "Deep nesting detected. Consider flattening the query structure "
-                "or using separate queries with data stitching."
+                "Deep nesting detected. Consider flattening the query structure."
             )
         
-        # FraiseQL specific recommendations
-        if depth > 6:
+        # Argument recommendations
+        arguments = self.field_patterns['arguments'].findall(query)
+        if len(arguments) > 5:
             recommendations.append(
-                "Deep queries may cause performance issues in PostgreSQL. "
-                "Consider using FraiseQL's pagination or cursor-based loading."
+                "Many field arguments detected. Ensure proper indexing on filtered fields."
             )
         
-        if self._has_potential_n_plus_1(nested, fields):
+        # Overall score recommendations
+        if score > self.HIGH_THRESHOLD:
             recommendations.append(
-                "Potential N+1 query pattern detected. Ensure your FraiseQL "
-                "resolvers use efficient batch loading."
+                "Very high complexity score. Consider caching or breaking into smaller queries."
             )
+        elif score > self.MEDIUM_THRESHOLD:
+            recommendations.append(
+                "Medium-high complexity. Monitor performance and consider optimization."
+            )
+        
+        # No recommendations for simple queries
+        if not recommendations and score <= self.LOW_THRESHOLD:
+            recommendations.append("Query complexity is optimal.")
         
         return recommendations
     
-    def _has_potential_n_plus_1(self, nested: int, fields: int) -> bool:
-        """Detect potential N+1 query patterns."""
-        # Heuristic: high field count with moderate nesting
-        # suggests potential N+1 issues
-        return nested > 3 and fields > 20 and (fields / nested) > 5
+    def estimate_execution_time(self, complexity_score: int) -> Tuple[float, float]:
+        """
+        Estimate query execution time range based on complexity.
+        
+        Args:
+            complexity_score: Calculated complexity score
+            
+        Returns:
+            Tuple of (min_time_ms, max_time_ms)
+        """
+        # Base execution time estimates (in milliseconds)
+        base_time = 10  # Base 10ms
+        
+        if complexity_score <= self.LOW_THRESHOLD:
+            return (base_time, base_time * 3)
+        elif complexity_score <= self.MEDIUM_THRESHOLD:
+            return (base_time * 2, base_time * 8)
+        elif complexity_score <= self.HIGH_THRESHOLD:
+            return (base_time * 5, base_time * 20)
+        else:
+            return (base_time * 10, base_time * 50)
     
-    def validate_query_limits(self, query: str) -> Dict[str, Any]:
-        """Validate query against complexity limits."""
-        metrics = self.analyze_query(query)
+    def suggest_optimizations(self, metrics: ComplexityMetrics) -> List[str]:
+        """
+        Suggest specific optimizations based on complexity metrics.
         
-        violations = []
+        Args:
+            metrics: ComplexityMetrics from analysis
+            
+        Returns:
+            List of specific optimization suggestions
+        """
+        optimizations = []
         
-        if metrics.depth > self.max_depth:
-            violations.append({
-                "type": "max_depth_exceeded",
-                "current": metrics.depth,
-                "limit": self.max_depth
-            })
+        if metrics.complexity_level in [ComplexityLevel.HIGH, ComplexityLevel.VERY_HIGH]:
+            optimizations.extend([
+                "Use query result caching with appropriate TTL",
+                "Implement DataLoader pattern for N+1 prevention",
+                "Consider query whitelisting for production",
+                "Add query complexity limits at the server level"
+            ])
         
-        if metrics.total_score > self.max_complexity:
-            violations.append({
-                "type": "max_complexity_exceeded", 
-                "current": metrics.total_score,
-                "limit": self.max_complexity
-            })
+        if metrics.depth > 4:
+            optimizations.extend([
+                "Break deep queries into multiple shallow queries",
+                "Use GraphQL fragments to reuse common field selections",
+                "Implement query depth limiting middleware"
+            ])
         
-        return {
-            "valid": len(violations) == 0,
-            "violations": violations,
-            "metrics": metrics,
-            "estimated_execution_time_ms": metrics.estimated_cost * 100  # Rough estimate
-        }
+        if metrics.field_count > 15:
+            optimizations.extend([
+                "Select only necessary fields for the use case",
+                "Use field-level caching for expensive computations",
+                "Consider creating specialized query endpoints"
+            ])
+        
+        return optimizations

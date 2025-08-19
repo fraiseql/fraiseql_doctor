@@ -1,19 +1,30 @@
 """Test configuration and shared fixtures."""
 
+import asyncio
 import pytest
 
 # Import all database fixtures
-from .fixtures.database import (
-    test_database_url,
-    test_settings,
-    test_database_manager,
-    test_database,
-    db_session,
-    sync_db_session,
-    clean_database,
-    db_connection_pool,
-    multiple_db_sessions,
-    sample_endpoint_data,
-    sample_query_data,
-    migration_tester,
+from tests.fixtures.database import (
+    test_engine,
+    db_session, 
+    fresh_db_session,
+    empty_db_session,
+    seeded_db_session,
+    performance_db_session,
+    setup_test_database
 )
+
+
+@pytest.fixture(scope="session")
+def event_loop():
+    """Create event loop for async tests."""
+    loop = asyncio.new_event_loop()
+    yield loop
+    loop.close()
+
+
+# Ensure template database is set up before any tests
+@pytest.fixture(scope="session", autouse=True)
+def ensure_test_database(setup_test_database):
+    """Automatically ensure test database is ready before running tests."""
+    return setup_test_database

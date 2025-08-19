@@ -1,1 +1,1 @@
-"""Utility functions for FraiseQL Doctor."""
+"""Utils module for FraiseQL Doctor."""

@@ -1,180 +1,55 @@
-"""Execution and health check models for tracking query results."""
-
-import enum
-import uuid
-from datetime import datetime
+"""Query execution tracking model."""
 from typing import Any
+from uuid import UUID, uuid4
+from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, Float, ForeignKey, Integer, String, Text, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import BaseModel
+from .base import Base
 
 
-class ExecutionStatus(enum.Enum):
-    """Status of query execution."""
+class Execution(Base):
+    """Query execution history model."""
+    __tablename__ = "tb_execution"
 
-    PENDING = "pending"
-    RUNNING = "running"
-    SUCCESS = "success"
-    FAILED = "failed"
-    TIMEOUT = "timeout"
-    CANCELLED = "cancelled"
+    pk_execution: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    fk_query: Mapped[UUID] = mapped_column(ForeignKey("tb_query.pk_query", ondelete="CASCADE"))
+    fk_endpoint: Mapped[UUID] = mapped_column(ForeignKey("tb_endpoint.pk_endpoint", ondelete="CASCADE"))
+    execution_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    execution_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    status: Mapped[str] = mapped_column(String(20), nullable=False)  # pending, success, error, timeout
+    response_time_ms: Mapped[int | None] = mapped_column(Integer)
+    response_size_bytes: Mapped[int | None] = mapped_column(Integer)
+    actual_complexity_score: Mapped[int | None] = mapped_column(Integer)
+    error_message: Mapped[str | None] = mapped_column(Text)
+    error_code: Mapped[str | None] = mapped_column(String(50))
+    response_data: Mapped[dict[str, Any] | None] = mapped_column()
+    variables_used: Mapped[dict[str, Any]] = mapped_column(default=dict)
+    execution_context: Mapped[dict[str, Any]] = mapped_column(default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
-
-class HealthStatus(enum.Enum):
-    """Health check status."""
-
-    HEALTHY = "healthy"
-    DEGRADED = "degraded"
-    UNHEALTHY = "unhealthy"
-    UNKNOWN = "unknown"
-
-
-class QueryExecution(BaseModel):
-    """Record of a query execution."""
-
-    __tablename__ = "query_executions"
-
-    # Foreign keys
-    query_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("queries.id"), nullable=False
-    )
-    endpoint_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("endpoints.id"), nullable=False
-    )
-
-    # Execution details
-    status: Mapped[ExecutionStatus] = mapped_column(
-        Enum(ExecutionStatus), default=ExecutionStatus.PENDING, nullable=False
-    )
-    variables: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    
-    # Timing
-    started_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    completed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    response_time_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
-    
-    # Results
-    response_data: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
-    error_details: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    
-    # Metadata
-    complexity_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    operation_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    
-    # Trace information for debugging
-    trace_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    span_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    
-    # Context
-    execution_context: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    
-    # Execution source
-    triggered_by: Mapped[str | None] = mapped_column(String(100), nullable=True)  # 'manual', 'scheduled', 'health_check'
-
-    # Relationships
+    # Relationships (using string references to avoid circular imports)
     query = relationship("Query", back_populates="executions")
-    endpoint = relationship("Endpoint", back_populates="query_executions")
+    endpoint = relationship("Endpoint", back_populates="executions")
 
-    def __repr__(self) -> str:
-        """String representation of the execution."""
-        return f"<QueryExecution(id={self.id}, status='{self.status.value}')>"
-
-    @property
-    def duration_ms(self) -> float | None:
-        """Calculate execution duration in milliseconds."""
-        if self.completed_at and self.started_at:
-            return (self.completed_at - self.started_at).total_seconds() * 1000
-        return None
-
-    @property
-    def is_successful(self) -> bool:
-        """Check if execution was successful."""
-        return self.status == ExecutionStatus.SUCCESS
-
-    def mark_completed(self, status: ExecutionStatus, response_time_ms: float | None = None) -> None:
-        """Mark execution as completed with given status."""
-        self.status = status
-        self.completed_at = func.now()
-        if response_time_ms is not None:
-            self.response_time_ms = response_time_ms
-
-    def add_error(self, message: str, details: dict[str, Any] | None = None) -> None:
-        """Add error information to the execution."""
-        self.error_message = message
-        self.error_details = details or {}
-        if self.status == ExecutionStatus.PENDING or self.status == ExecutionStatus.RUNNING:
-            self.status = ExecutionStatus.FAILED
-
-
-class HealthCheck(BaseModel):
-    """Health check record for endpoints."""
-
-    __tablename__ = "health_checks"
-
-    # Foreign key
-    endpoint_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("endpoints.id"), nullable=False
-    )
-
-    # Health status
-    status: Mapped[HealthStatus] = mapped_column(
-        Enum(HealthStatus), default=HealthStatus.UNKNOWN, nullable=False
-    )
-    
-    # Timing
-    checked_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    response_time_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
-    
-    # Health details
-    details: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
-    
-    # Metrics
-    http_status_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    
-    # Additional context
-    check_type: Mapped[str] = mapped_column(String(50), default="basic", nullable=False)  # 'basic', 'introspection', 'custom'
-    check_metadata: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-
-    # Relationships
-    endpoint = relationship("Endpoint", back_populates="health_checks")
-
-    def __repr__(self) -> str:
-        """String representation of the health check."""
-        return f"<HealthCheck(endpoint_id={self.endpoint_id}, status='{self.status.value}')>"
-
-    @property
-    def is_healthy(self) -> bool:
-        """Check if this health check indicates healthy status."""
-        return self.status == HealthStatus.HEALTHY
-
-    def set_healthy(self, response_time_ms: float, details: dict[str, Any] | None = None) -> None:
-        """Mark health check as healthy."""
-        self.status = HealthStatus.HEALTHY
-        self.response_time_ms = response_time_ms
-        self.details = details or {}
-        self.error_message = None
-
-    def set_unhealthy(self, error_message: str, details: dict[str, Any] | None = None) -> None:
-        """Mark health check as unhealthy."""
-        self.status = HealthStatus.UNHEALTHY
-        self.error_message = error_message
-        self.details = details or {}
-
-    def set_degraded(self, reason: str, response_time_ms: float, details: dict[str, Any] | None = None) -> None:
-        """Mark health check as degraded."""
-        self.status = HealthStatus.DEGRADED
-        self.response_time_ms = response_time_ms
-        self.error_message = reason
-        self.details = details or {}
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "Execution":
+        """Create Execution instance from dictionary."""
+        return cls(
+            pk_execution=data.get("pk_execution"),
+            fk_query=data["fk_query"],
+            fk_endpoint=data["fk_endpoint"],
+            execution_start=data["execution_start"],
+            execution_end=data.get("execution_end"),
+            status=data["status"],
+            response_time_ms=data.get("response_time_ms"),
+            response_size_bytes=data.get("response_size_bytes"),
+            actual_complexity_score=data.get("actual_complexity_score"),
+            error_message=data.get("error_message"),
+            error_code=data.get("error_code"),
+            response_data=data.get("response_data"),
+            variables_used=data.get("variables_used", {}),
+            execution_context=data.get("execution_context", {}),
+            created_at=data.get("created_at")
+        )

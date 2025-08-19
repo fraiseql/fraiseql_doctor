@@ -1,1 +1,1 @@
-"""Tests for FraiseQL Doctor."""
+"""Tests package for FraiseQL Doctor."""

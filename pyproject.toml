@@ -1,7 +1,7 @@
 [project]
 name = "fraiseql-doctor"
 version = "0.1.0"
-description = "Health monitoring and query execution tool for FraiseQL/GraphQL endpoints"
+description = "Test-driven health monitoring and query execution tool for FraiseQL/GraphQL endpoints"
 authors = [
     {name = "Your Name", email = "your.email@example.com"}
 ]
@@ -32,6 +32,8 @@ dependencies = [
     "croniter>=2.0.0",
     "asyncpg>=0.30.0",
     "pytest-asyncio>=1.1.0",
+    "aiofiles>=24.1.0",
+    "psutil>=7.0.0",
 ]
 
 [project.optional-dependencies]
@@ -78,8 +80,32 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "--cov=src --cov-report=html --cov-report=term-missing --asyncio-mode=auto"
+addopts = [
+    "--cov=src",
+    "--cov-report=html",
+    "--cov-report=term-missing",
+    "--cov-fail-under=10",
+    "--strict-markers",
+    "-v"
+]
+markers = [
+    "integration: Integration tests",
+    "performance: Performance tests", 
+    "slow: Slow running tests"
+]
 asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/conftest.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError"
+]
 
 [build-system]
 requires = ["hatchling"]

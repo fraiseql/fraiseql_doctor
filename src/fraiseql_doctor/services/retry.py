@@ -1,202 +1,319 @@
-"""Advanced retry logic with circuit breaker pattern."""
-import asyncio
-import time
-from enum import Enum
-from typing import Callable, Any, Dict
-from dataclasses import dataclass
+"""
+Retry Logic with Exponential Backoff.
 
-from fraiseql_doctor.core.exceptions import CircuitBreakerOpenError
+Provides sophisticated retry mechanisms for GraphQL client operations
+with exponential backoff, jitter, and circuit breaker patterns.
+"""
+import asyncio
+import random
+import time
+from typing import Optional, Callable, Any, Union, Type
+from dataclasses import dataclass
+from enum import Enum
+import logging
+
 from fraiseql_doctor.models.endpoint import Endpoint
-from fraiseql_doctor.services.client import FraiseQLClient, GraphQLResponse
+from fraiseql_doctor.services.fraiseql_client import (
+    FraiseQLClient,
+    GraphQLResponse,
+    GraphQLClientError,
+    NetworkError,
+    AuthenticationError,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class CircuitState(Enum):
-    CLOSED = "closed"
-    OPEN = "open"
-    HALF_OPEN = "half_open"
+    """Circuit breaker states."""
+    CLOSED = "closed"      # Normal operation
+    OPEN = "open"          # Blocking requests
+    HALF_OPEN = "half_open"  # Testing if service recovered
+
+
+@dataclass
+class RetryConfig:
+    """Configuration for retry behavior."""
+    max_retries: int = 3
+    base_delay: float = 1.0
+    max_delay: float = 60.0
+    exponential_base: float = 2.0
+    jitter: bool = True
+    retry_on_timeout: bool = True
+    retry_on_network_error: bool = True
+    retry_on_server_error: bool = True
+    retry_on_auth_error: bool = False
 
 
 @dataclass
 class CircuitBreakerConfig:
-    """Circuit breaker configuration."""
+    """Configuration for circuit breaker."""
     failure_threshold: int = 5
-    recovery_timeout: int = 60
-    expected_exception: type = Exception
-    
-
-@dataclass
-class CircuitBreakerStats:
-    """Circuit breaker statistics."""
-    state: CircuitState = CircuitState.CLOSED
-    failure_count: int = 0
-    last_failure_time: float = 0
-    success_count: int = 0
-    total_requests: int = 0
+    recovery_timeout: float = 30.0
+    success_threshold: int = 3
 
 
 class CircuitBreaker:
-    """Circuit breaker for GraphQL client."""
+    """
+    Circuit breaker implementation to prevent cascade failures.
+    
+    Tracks failures and opens the circuit when failure threshold is reached,
+    preventing further requests until recovery timeout expires.
+    """
     
     def __init__(self, config: CircuitBreakerConfig):
+        """Initialize circuit breaker."""
         self.config = config
-        self.stats = CircuitBreakerStats()
+        self.state = CircuitState.CLOSED
+        self.failure_count = 0
+        self.success_count = 0
+        self.last_failure_time = 0.0
     
-    async def call(self, func: Callable, *args, **kwargs) -> Any:
-        """Execute function with circuit breaker protection."""
-        self.stats.total_requests += 1
-        
-        if self.stats.state == CircuitState.OPEN:
-            if time.time() - self.stats.last_failure_time > self.config.recovery_timeout:
-                self.stats.state = CircuitState.HALF_OPEN
-            else:
-                raise CircuitBreakerOpenError("Circuit breaker is open")
-        
-        try:
-            result = await func(*args, **kwargs)
-            await self._on_success()
-            return result
-        except self.config.expected_exception as e:
-            await self._on_failure()
-            raise e
-    
-    async def _on_success(self) -> None:
-        """Handle successful request."""
-        self.stats.success_count += 1
-        self.stats.failure_count = 0
-        if self.stats.state == CircuitState.HALF_OPEN:
-            self.stats.state = CircuitState.CLOSED
-    
-    async def _on_failure(self) -> None:
-        """Handle failed request."""
-        self.stats.failure_count += 1
-        self.stats.last_failure_time = time.time()
-        
-        if self.stats.failure_count >= self.config.failure_threshold:
-            self.stats.state = CircuitState.OPEN
-    
-    def get_stats(self) -> Dict[str, Any]:
-        """Get circuit breaker statistics."""
-        return {
-            "state": self.stats.state.value,
-            "failure_count": self.stats.failure_count,
-            "success_count": self.stats.success_count,
-            "total_requests": self.stats.total_requests,
-            "last_failure_time": self.stats.last_failure_time,
-            "success_rate": (
-                self.stats.success_count / self.stats.total_requests * 100
-                if self.stats.total_requests > 0 else 0
-            )
-        }
-    
-    def reset(self) -> None:
-        """Reset circuit breaker to closed state."""
-        self.stats = CircuitBreakerStats()
-
-
-class RetryableClient:
-    """GraphQL client with retry logic and circuit breaker."""
-    
-    def __init__(self, client: FraiseQLClient, endpoint: Endpoint):
-        self.client = client
-        self.endpoint = endpoint
-        self.circuit_breaker = CircuitBreaker(CircuitBreakerConfig(
-            failure_threshold=(endpoint.max_retries or 3) + 2,  # Allow retries before opening
-            recovery_timeout=60
-        ))
-    
-    async def execute_with_retry(
-        self,
-        query: str,
-        variables: Dict[str, Any] | None = None,
-        **kwargs
-    ) -> GraphQLResponse:
-        """Execute query with retry logic and circuit breaker."""
-        max_retries = self.endpoint.max_retries or 3
-        base_delay = 1  # Default retry delay in seconds
-        
-        last_exception = None
-        
-        for attempt in range(max_retries + 1):
-            try:
-                return await self.circuit_breaker.call(
-                    self.client.execute_query,
-                    query,
-                    variables,
-                    **kwargs
-                )
-            except Exception as e:
-                last_exception = e
-                
-                if attempt == max_retries:
-                    # All retries exhausted
-                    break
-                
-                # Calculate delay with exponential backoff and jitter
-                delay = self._calculate_delay(base_delay, attempt)
-                await asyncio.sleep(delay)
-        
-        # Re-raise the last exception if all retries failed
-        if last_exception:
-            raise last_exception
-        
-        # This should never be reached
-        raise Exception("Unexpected retry logic error")
-    
-    def _calculate_delay(self, base_delay: float, attempt: int) -> float:
-        """Calculate retry delay with exponential backoff and jitter."""
-        # Exponential backoff
-        delay = base_delay * (2 ** attempt)
-        
-        # Add jitter to prevent thundering herd
-        import random
-        jitter = random.uniform(0.1, 0.3) * delay
-        
-        # Cap maximum delay
-        max_delay = 60.0
-        return min(delay + jitter, max_delay)
-    
-    def _should_retry(self, exception: Exception) -> bool:
-        """Determine if an exception should trigger a retry."""
-        from fraiseql_doctor.core.exceptions import (
-            GraphQLTimeoutError,
-            GraphQLClientError,
-            GraphQLAuthError
-        )
-        
-        # Don't retry authentication errors
-        if isinstance(exception, GraphQLAuthError):
-            return False
-        
-        # Retry timeout and general client errors
-        if isinstance(exception, (GraphQLTimeoutError, GraphQLClientError)):
+    def is_request_allowed(self) -> bool:
+        """Check if request is allowed through the circuit."""
+        if self.state == CircuitState.CLOSED:
             return True
         
-        # Retry on network-related errors
-        if isinstance(exception, (asyncio.TimeoutError, ConnectionError)):
+        if self.state == CircuitState.OPEN:
+            # Check if recovery timeout has passed
+            if time.time() - self.last_failure_time >= self.config.recovery_timeout:
+                self.state = CircuitState.HALF_OPEN
+                self.success_count = 0
+                logger.info("Circuit breaker transitioning to HALF_OPEN")
+                return True
+            return False
+        
+        if self.state == CircuitState.HALF_OPEN:
             return True
         
         return False
     
-    async def health_check_with_retry(self) -> Dict[str, Any]:
-        """Perform health check with retry logic."""
-        try:
-            result = await self.execute_with_retry("query { __typename }")
-            return {
-                "healthy": True,
-                "response_time_ms": result.response_time_ms,
-                "circuit_breaker": self.circuit_breaker.get_stats()
-            }
-        except Exception as e:
-            return {
-                "healthy": False,
-                "error": str(e),
-                "circuit_breaker": self.circuit_breaker.get_stats()
-            }
+    def record_success(self):
+        """Record a successful operation."""
+        if self.state == CircuitState.HALF_OPEN:
+            self.success_count += 1
+            if self.success_count >= self.config.success_threshold:
+                self.state = CircuitState.CLOSED
+                self.failure_count = 0
+                logger.info("Circuit breaker transitioning to CLOSED")
+        elif self.state == CircuitState.CLOSED:
+            self.failure_count = 0
     
-    def get_circuit_breaker_stats(self) -> Dict[str, Any]:
-        """Get circuit breaker statistics."""
-        return self.circuit_breaker.get_stats()
+    def record_failure(self):
+        """Record a failed operation."""
+        self.failure_count += 1
+        self.last_failure_time = time.time()
+        
+        if self.state == CircuitState.CLOSED:
+            if self.failure_count >= self.config.failure_threshold:
+                self.state = CircuitState.OPEN
+                logger.warning(f"Circuit breaker OPEN after {self.failure_count} failures")
+        elif self.state == CircuitState.HALF_OPEN:
+            self.state = CircuitState.OPEN
+            self.success_count = 0
+            logger.warning("Circuit breaker returned to OPEN state")
+
+
+class RetryableClient:
+    """
+    GraphQL client with retry logic and circuit breaker.
     
-    def reset_circuit_breaker(self) -> None:
+    Wraps the base FraiseQLClient to provide resilient operations
+    with exponential backoff, jitter, and circuit breaker protection.
+    """
+    
+    def __init__(
+        self,
+        client: FraiseQLClient,
+        retry_config: Optional[RetryConfig] = None,
+        circuit_breaker_config: Optional[CircuitBreakerConfig] = None
+    ):
+        """
+        Initialize retryable client.
+        
+        Args:
+            client: Base FraiseQL client
+            retry_config: Retry behavior configuration
+            circuit_breaker_config: Circuit breaker configuration
+        """
+        self.client = client
+        self.retry_config = retry_config or RetryConfig()
+        self.circuit_breaker = CircuitBreaker(
+            circuit_breaker_config or CircuitBreakerConfig()
+        )
+    
+    async def execute_query(
+        self,
+        query: str,
+        variables: Optional[dict] = None,
+        operation_name: Optional[str] = None,
+        timeout: Optional[int] = None,
+        retry_config: Optional[RetryConfig] = None
+    ) -> GraphQLResponse:
+        """
+        Execute GraphQL query with retry logic.
+        
+        Args:
+            query: GraphQL query string
+            variables: Optional query variables
+            operation_name: Optional operation name
+            timeout: Optional timeout override
+            retry_config: Optional retry config override
+            
+        Returns:
+            GraphQLResponse from successful execution
+            
+        Raises:
+            GraphQLClientError: After all retries exhausted
+        """
+        config = retry_config or self.retry_config
+        attempt = 0
+        last_exception = None
+        
+        while attempt <= config.max_retries:
+            # Check circuit breaker
+            if not self.circuit_breaker.is_request_allowed():
+                raise GraphQLClientError(
+                    "Circuit breaker is OPEN - service unavailable",
+                    status_code=503
+                )
+            
+            try:
+                # Execute the query
+                response = await self.client.execute_query(
+                    query=query,
+                    variables=variables,
+                    operation_name=operation_name,
+                    timeout=timeout
+                )
+                
+                # Success - record with circuit breaker
+                self.circuit_breaker.record_success()
+                logger.debug(f"Query succeeded on attempt {attempt + 1}")
+                return response
+                
+            except Exception as e:
+                last_exception = e
+                attempt += 1
+                
+                # Check if we should retry this error
+                if not self._should_retry(e, config):
+                    logger.debug(f"Not retrying error: {type(e).__name__}: {e}")
+                    self.circuit_breaker.record_failure()
+                    raise e
+                
+                # Check if we have retries left
+                if attempt > config.max_retries:
+                    logger.warning(f"Max retries ({config.max_retries}) exceeded")
+                    self.circuit_breaker.record_failure()
+                    break
+                
+                # Calculate delay and wait
+                delay = self._calculate_delay(attempt - 1, config)
+                logger.info(
+                    f"Attempt {attempt} failed: {type(e).__name__}: {e}. "
+                    f"Retrying in {delay:.2f}s..."
+                )
+                
+                await asyncio.sleep(delay)
+        
+        # All retries exhausted
+        self.circuit_breaker.record_failure()
+        raise last_exception or GraphQLClientError("All retries exhausted")
+    
+    def _should_retry(self, exception: Exception, config: RetryConfig) -> bool:
+        """Determine if an exception should trigger a retry."""
+        if isinstance(exception, NetworkError):
+            # Check if it's a timeout error
+            if "timeout" in str(exception).lower():
+                return config.retry_on_timeout
+            return config.retry_on_network_error
+        
+        if isinstance(exception, AuthenticationError):
+            return config.retry_on_auth_error
+        
+        if isinstance(exception, GraphQLClientError):
+            # Retry on server errors (5xx)
+            if hasattr(exception, 'status_code') and exception.status_code:
+                if 500 <= exception.status_code < 600:
+                    return config.retry_on_server_error
+                # Don't retry client errors (4xx)
+                if 400 <= exception.status_code < 500:
+                    return False
+            return True
+        
+        # For other exceptions, don't retry by default
+        return False
+    
+    def _calculate_delay(self, attempt: int, config: RetryConfig) -> float:
+        """Calculate delay for exponential backoff with jitter."""
+        # Exponential backoff: base_delay * (exponential_base ^ attempt)
+        delay = config.base_delay * (config.exponential_base ** attempt)
+        
+        # Cap at max_delay
+        delay = min(delay, config.max_delay)
+        
+        # Add jitter to prevent thundering herd
+        if config.jitter:
+            delay = delay * (0.5 + random.random() * 0.5)
+        
+        return delay
+    
+    def get_circuit_breaker_status(self) -> dict:
+        """Get current circuit breaker status."""
+        return {
+            "state": self.circuit_breaker.state.value,
+            "failure_count": self.circuit_breaker.failure_count,
+            "success_count": self.circuit_breaker.success_count,
+            "last_failure_time": self.circuit_breaker.last_failure_time,
+        }
+    
+    def reset_circuit_breaker(self):
         """Reset circuit breaker to closed state."""
-        self.circuit_breaker.reset()
+        self.circuit_breaker.state = CircuitState.CLOSED
+        self.circuit_breaker.failure_count = 0
+        self.circuit_breaker.success_count = 0
+        self.circuit_breaker.last_failure_time = 0.0
+        logger.info("Circuit breaker manually reset to CLOSED")
+    
+    async def __aenter__(self):
+        """Async context manager entry."""
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit."""
+        if hasattr(self.client, '__aexit__'):
+            await self.client.__aexit__(exc_type, exc_val, exc_tb)
+
+
+def create_retryable_client(
+    endpoint: Endpoint,
+    retry_config: Optional[RetryConfig] = None,
+    circuit_breaker_config: Optional[CircuitBreakerConfig] = None
+) -> RetryableClient:
+    """
+    Create a retryable client from endpoint configuration.
+    
+    Args:
+        endpoint: Endpoint configuration
+        retry_config: Optional retry configuration
+        circuit_breaker_config: Optional circuit breaker configuration
+        
+    Returns:
+        Configured RetryableClient instance
+    """
+    # Create base client
+    base_client = FraiseQLClient(endpoint)
+    
+    # Use endpoint configuration for retry settings if not provided
+    if retry_config is None:
+        retry_config = RetryConfig(
+            max_retries=endpoint.max_retries,
+            base_delay=endpoint.retry_delay_seconds,
+        )
+    
+    return RetryableClient(
+        client=base_client,
+        retry_config=retry_config,
+        circuit_breaker_config=circuit_breaker_config
+    )

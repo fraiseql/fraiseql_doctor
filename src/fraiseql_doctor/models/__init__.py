@@ -1,29 +1,18 @@
-"""Database models for FraiseQL Doctor."""
+"""Database models package."""
 
-from .base import Base, BaseModel, TimestampMixin, UUIDMixin
-from .endpoint import AuthType, Endpoint
-from .execution import ExecutionStatus, HealthCheck, HealthStatus, QueryExecution
-from .query import Query, QueryType
-from .schedule import ScheduledQuery, ScheduleStatus
+# Import all models to ensure they're registered with SQLAlchemy
+from .base import Base
+from .query import Query  
+from .endpoint import Endpoint
+from .execution import Execution
+from .health_check import HealthCheck
+from .schedule import Schedule
 
 __all__ = [
-    # Base classes
     "Base",
-    "BaseModel",
-    "TimestampMixin",
-    "UUIDMixin",
-    # Endpoint models
+    "Query", 
     "Endpoint",
-    "AuthType",
-    # Query models
-    "Query",
-    "QueryType",
-    # Execution models
-    "QueryExecution",
-    "ExecutionStatus",
+    "Execution", 
     "HealthCheck",
-    "HealthStatus",
-    # Schedule models
-    "ScheduledQuery",
-    "ScheduleStatus",
+    "Schedule"
 ]
