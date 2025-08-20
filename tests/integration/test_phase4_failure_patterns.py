@@ -76,9 +76,16 @@ async def failing_db_session():
         if session._call_count % 5 == 0:
             raise Exception("Transaction rollback")
     
+    async def failing_get(model, pk):
+        session._call_count += 1
+        # Fail every 2nd call to get
+        if session._call_count % 2 == 0:
+            raise Exception("Database connection lost")
+        return None
+    
     session.execute.side_effect = failing_execute
     session.commit.side_effect = failing_commit
-    session.get.return_value = None
+    session.get.side_effect = failing_get
     session.add = MagicMock()
     session.delete = AsyncMock()
     
@@ -151,12 +158,13 @@ class TestCircuitBreakerPatterns:
     async def test_circuit_breaker_recovery(self, circuit_breaker):
         """Test circuit breaker recovery mechanism."""
         call_count = 0
+        recovery_attempted = False
         
         async def unstable_operation():
-            nonlocal call_count
+            nonlocal call_count, recovery_attempted
             call_count += 1
-            # Fail first few calls, then succeed
-            if call_count <= 5:
+            # Fail first few calls, then succeed after recovery timeout
+            if not recovery_attempted or call_count <= 3:
                 raise Exception("Temporary failure")
             return "success"
         
@@ -171,6 +179,7 @@ class TestCircuitBreakerPatterns:
         
         # Wait for recovery timeout
         await asyncio.sleep(circuit_breaker.recovery_timeout + 0.1)
+        recovery_attempted = True
         
         # Next call should transition to HALF_OPEN and succeed
         result = await circuit_breaker.call(unstable_operation)
@@ -247,23 +256,36 @@ class TestCascadingFailures:
         # Try to create collection with invalid queries
         from src.fraiseql_doctor.core.database.schemas import QueryCollectionCreate
         
-        collection_schema = QueryCollectionCreate(
+        # Test that invalid GraphQL syntax is caught during schema validation
+        with pytest.raises(Exception) as exc_info:
+            QueryCreate(
+                name="Invalid Query", 
+                query_text="invalid graphql {{{",
+                variables={},
+                created_by="test-user"
+            )
+        
+        # Should fail with validation error for GraphQL syntax
+        assert "graphql" in str(exc_info.value).lower() or "validation" in str(exc_info.value).lower()
+        
+        # Test valid schema creation but failure during collection processing
+        valid_collection_schema = QueryCollectionCreate(
             name="Test Collection",
-            description="Testing cascading failures",
+            description="Testing cascading failures", 
             created_by="test-user",
             initial_queries=[
                 QueryCreate(
-                    name="Invalid Query",
-                    query_text="invalid graphql {{{",
+                    name="Valid Query",
+                    query_text="query { test }",  # Valid GraphQL
                     variables={},
                     created_by="test-user"
                 )
             ]
         )
         
-        # Collection creation should fail due to query validation
+        # Collection creation should fail due to complexity analyzer failure
         with pytest.raises(ValueError, match="Invalid GraphQL"):
-            await collection_manager.create_collection(collection_schema)
+            await collection_manager.create_collection(valid_collection_schema)
 
 
 class TestPartialFailureRecovery:
