@@ -528,27 +528,31 @@ class QueryCollectionManager:
         ]
         avg_complexity = sum(complexity_scores) / len(complexity_scores) if complexity_scores else 0.0
         
-        # Get execution stats from database
-        exec_stats = await self.db_session.execute("""
-            SELECT 
-                COUNT(*) as total_executions,
-                AVG(CASE WHEN success THEN 1.0 ELSE 0.0 END) as success_rate,
-                AVG(execution_time) as avg_execution_time,
-                MAX(executed_at) as last_executed
-            FROM query_executions 
-            WHERE query_id = ANY($1)
-        """, [[q.id for q in collection.queries]])
+        # Get execution stats from database using the query IDs from our results
+        query_ids = [q.get('id') for q in queries if q.get('id')]
+        if query_ids:
+            exec_stats = await self.db_session.execute("""
+                SELECT 
+                    COUNT(*) as total_executions,
+                    AVG(CASE WHEN success THEN 1.0 ELSE 0.0 END) as success_rate,
+                    AVG(execution_time) as avg_execution_time,
+                    MAX(executed_at) as last_executed
+                FROM query_executions 
+                WHERE query_id = ANY($1)
+            """, [query_ids])
+        else:
+            exec_stats = []
         
-        if exec_stats:
+        if exec_stats and len(exec_stats) > 0:
             stats = exec_stats[0]
             return QueryCollectionMetrics(
                 total_queries=total_queries,
                 active_queries=active_queries,
                 avg_complexity_score=avg_complexity,
-                total_executions=stats['total_executions'] or 0,
-                success_rate=float(stats['success_rate'] or 0.0),
-                avg_execution_time=float(stats['avg_execution_time'] or 0.0),
-                last_executed=stats['last_executed']
+                total_executions=stats.get('total_executions', 0) or 0,
+                success_rate=float(stats.get('success_rate', 0.0) or 0.0),
+                avg_execution_time=float(stats.get('avg_execution_time', 0.0) or 0.0),
+                last_executed=stats.get('last_executed')
             )
         
         return QueryCollectionMetrics(

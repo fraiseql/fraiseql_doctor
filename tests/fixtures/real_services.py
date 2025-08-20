@@ -163,14 +163,37 @@ class TestDatabaseSession:
         """Get object by primary key."""
         # Return test object if requested
         if hasattr(model_class, 'from_dict'):
-            return model_class.from_dict({
+            # Provide appropriate test data based on model type
+            base_data = {
                 "id": primary_key,
                 "name": f"Test {model_class.__name__}",
-                "pk_endpoint": primary_key,
-                "url": "https://api.test.com/graphql",
-                "auth_type": "bearer",
-                "auth_config": {"token": "test-token"}
-            })
+                "created_by": "test-user"
+            }
+            
+            # Add model-specific fields
+            if "Endpoint" in model_class.__name__:
+                base_data.update({
+                    "pk_endpoint": primary_key,
+                    "url": "https://api.test.com/graphql",
+                    "auth_type": "bearer",
+                    "auth_config": {"token": "test-token"}
+                })
+            elif "QueryCollection" in model_class.__name__:
+                base_data.update({
+                    "pk_query_collection": primary_key,
+                    "description": f"Test collection description",
+                    "tags": {},
+                    "collection_metadata": {}
+                })
+            elif "Query" in model_class.__name__:
+                base_data.update({
+                    "pk_query": primary_key,
+                    "query_text": "query { test }",
+                    "variables": {},
+                    "query_metadata": {}
+                })
+            
+            return model_class.from_dict(base_data)
         return None
     
     async def delete(self, obj):
