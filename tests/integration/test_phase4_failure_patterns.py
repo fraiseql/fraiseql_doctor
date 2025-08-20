@@ -184,6 +184,8 @@ class TestCascadingFailures:
     async def test_storage_failure_cascades_to_execution(self):
         """Test how storage failures affect execution manager."""
         mock_db = AsyncMock()
+        # Fix async mock warning - add() should not be async
+        mock_db.add = MagicMock()  # Override with sync mock
         
         # Create storage manager that always fails
         storage_config = StorageConfig(backend=StorageBackend.DATABASE)
@@ -270,6 +272,7 @@ class TestPartialFailureRecovery:
     async def test_batch_execution_partial_failures(self):
         """Test batch execution with some queries failing."""
         mock_db = AsyncMock()
+        mock_db.add = MagicMock()  # Fix async mock warning
         complexity_analyzer = QueryComplexityAnalyzer()
         collection_manager = QueryCollectionManager(mock_db, complexity_analyzer)
         
@@ -406,6 +409,7 @@ class TestResourceLeakDetection:
     async def test_task_cleanup_on_shutdown(self):
         """Test proper cleanup of async tasks on shutdown."""
         mock_db = AsyncMock()
+        mock_db.add = MagicMock()  # Fix async mock warning
         complexity_analyzer = QueryComplexityAnalyzer()
         collection_manager = QueryCollectionManager(mock_db, complexity_analyzer)
         
@@ -461,6 +465,7 @@ class TestDeadlockPrevention:
     async def test_concurrent_collection_access(self):
         """Test prevention of deadlocks in concurrent collection access."""
         mock_db = AsyncMock()
+        mock_db.add = MagicMock()  # Fix async mock warning
         complexity_analyzer = QueryComplexityAnalyzer()
         collection_manager = QueryCollectionManager(mock_db, complexity_analyzer)
         
@@ -546,6 +551,7 @@ class TestErrorPropagation:
     async def test_error_context_preservation(self):
         """Test that error context is preserved through the call stack."""
         mock_db = AsyncMock()
+        mock_db.add = MagicMock()  # Fix async mock warning
         complexity_analyzer = QueryComplexityAnalyzer()
         collection_manager = QueryCollectionManager(mock_db, complexity_analyzer)
         
@@ -565,6 +571,7 @@ class TestErrorPropagation:
     async def test_error_aggregation_in_batch(self):
         """Test proper error aggregation in batch operations."""
         mock_db = AsyncMock()
+        mock_db.add = MagicMock()  # Fix async mock warning
         complexity_analyzer = QueryComplexityAnalyzer()
         collection_manager = QueryCollectionManager(mock_db, complexity_analyzer)
         
@@ -601,6 +608,7 @@ class TestFailureIsolation:
     async def test_query_failure_isolation(self):
         """Test that query failure doesn't affect other queries."""
         mock_db = AsyncMock()
+        mock_db.add = MagicMock()  # Fix async mock warning
         complexity_analyzer = QueryComplexityAnalyzer()
         collection_manager = QueryCollectionManager(mock_db, complexity_analyzer)
         

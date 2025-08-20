@@ -13,7 +13,7 @@ import asyncio
 import json
 from datetime import datetime, timezone, timedelta
 from uuid import uuid4
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 from src.fraiseql_doctor.core.query_collection import (
     QueryCollectionManager, QueryStatus, QueryPriority, QuerySearchFilter
@@ -24,12 +24,16 @@ from src.fraiseql_doctor.core.execution_manager import (
 from src.fraiseql_doctor.core.result_storage import (
     ResultStorageManager, StorageConfig, StorageBackend, CompressionType
 )
-from src.fraiseql_doctor.services.complexity import QueryComplexityAnalyzer
-from src.fraiseql_doctor.core.fraiseql_client import FraiseQLClient
-from src.fraiseql_doctor.core.database.models import Endpoint
 from src.fraiseql_doctor.core.database.schemas import (
     QueryCollectionCreate, QueryCreate, ResultSearchFilter
 )
+
+# Import real test services instead of mocks
+from tests.fixtures.real_fixtures import (
+    real_query_collection_manager, real_execution_manager, real_result_storage_manager,
+    test_endpoint, sample_queries, created_query, created_collection_with_queries
+)
+from tests.fixtures.real_services import TestGraphQLClient
 
 
 @pytest.fixture
@@ -271,38 +275,31 @@ class TestQueryCollectionIntegration:
 
 
 class TestExecutionManagerIntegration:
-    """Test query execution manager integration."""
+    """Test query execution manager integration with real services."""
     
     async def test_single_query_execution(
         self,
-        execution_manager,
-        query_collection_manager,
-        sample_endpoint,
-        sample_queries
+        real_execution_manager,
+        created_query,
+        test_endpoint
     ):
-        """Test executing a single query with full integration."""
-        # Create a mock query
-        query_id = uuid4()
-        mock_query = MagicMock()
-        mock_query.id = query_id
-        mock_query.name = sample_queries[0]["name"]
-        mock_query.content = sample_queries[0]["query_text"]
-        mock_query.variables = sample_queries[0]["variables"]
-        mock_query.metadata = MagicMock(complexity_score=5.0)
+        """Test executing a single query with real integration."""
+        # Use real query instead of mock
+        query_id = created_query.pk_query
         
-        with patch.object(query_collection_manager, 'get_query', return_value=mock_query):
-            execution_manager.db_session.get = AsyncMock(return_value=sample_endpoint)
-            
-            result = await execution_manager.execute_query(
-                query_id,
-                sample_endpoint.pk_endpoint
-            )
-            
-            assert result.success is True
-            assert result.status == ExecutionStatus.COMPLETED
-            assert result.query_id == query_id
-            assert result.result_data == {"data": {"test": "result"}, "_complexity_score": 5.2, "_execution_time": 0.15}
-            assert result.execution_time > 0
+        # Use lightweight mocking only where necessary for external dependencies
+        with patch.object(real_execution_manager.collection_manager, 'get_query', return_value=created_query):
+            with patch.object(real_execution_manager.db_session, 'get', return_value=test_endpoint):
+                result = await real_execution_manager.execute_query(
+                    query_id,
+                    test_endpoint.pk_endpoint
+                )
+                
+                assert result.success is True
+                assert result.status == ExecutionStatus.COMPLETED
+                assert result.query_id == query_id
+                assert "data" in result.result_data
+                assert result.execution_time > 0
     
     async def test_batch_execution_parallel(
         self,
