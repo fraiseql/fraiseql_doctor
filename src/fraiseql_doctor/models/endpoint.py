@@ -1,5 +1,5 @@
 """Endpoint configuration model."""
-from typing import Any
+from typing import Any, Dict
 from uuid import UUID, uuid4
 from datetime import datetime
 
@@ -29,3 +29,40 @@ class Endpoint(Base, TimestampMixin):
     executions = relationship("Execution", back_populates="endpoint", cascade="all, delete-orphan")
     health_checks = relationship("HealthCheck", back_populates="endpoint", cascade="all, delete-orphan")
     schedules = relationship("Schedule", back_populates="endpoint", cascade="all, delete-orphan")
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "Endpoint":
+        """Create Endpoint instance from dictionary."""
+        return cls(
+            pk_endpoint=data.get("pk_endpoint"),
+            name=data["name"],
+            url=data["url"],
+            auth_type=data.get("auth_type", "none"),
+            auth_config=data.get("auth_config", {}),
+            headers=data.get("headers", {}),
+            timeout_seconds=data.get("timeout_seconds", 30),
+            max_retries=data.get("max_retries", 3),
+            retry_delay_seconds=data.get("retry_delay_seconds", 1),
+            is_active=data.get("is_active", True),
+            last_health_check=data.get("last_health_check"),
+            created_at=data.get("created_at"),
+            updated_at=data.get("updated_at")
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert Endpoint to dictionary."""
+        return {
+            "pk_endpoint": self.pk_endpoint,
+            "name": self.name,
+            "url": self.url,
+            "auth_type": self.auth_type,
+            "auth_config": self.auth_config,
+            "headers": self.headers,
+            "timeout_seconds": self.timeout_seconds,
+            "max_retries": self.max_retries,
+            "retry_delay_seconds": self.retry_delay_seconds,
+            "is_active": self.is_active,
+            "last_health_check": self.last_health_check,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at
+        }

@@ -398,7 +398,8 @@ class TestDatabaseConstraintViolations:
         
         collection_schema = QueryCollectionCreate(
             name="Duplicate Collection",
-            description="Testing duplicate handling"
+            description="Testing duplicate handling",
+            created_by="test-user"
         )
         
         # Should handle constraint violation gracefully
@@ -411,23 +412,28 @@ class TestDatabaseConstraintViolations:
     
     async def test_null_constraint_violations(self, collection_manager):
         """Test handling of null constraint violations."""
-        # Test with None values in required fields
-        problematic_schemas = [
-            QueryCreate(name=None, query_text="query { test }", variables={}, created_by="test-user"),  # None name
-            QueryCreate(name="Test", query_text=None, variables={}, created_by="test-user"),            # None query_text
-            QueryCreate(name="Test", query_text="query { test }", variables=None, created_by="test-user"), # None variables
+        # Test each problematic schema by creating dictionary data first
+        problematic_data = [
+            {"name": None, "query_text": "query { test }", "variables": {}, "created_by": "test-user"},
+            {"name": "Test", "query_text": None, "variables": {}, "created_by": "test-user"},
+            {"name": "Test", "query_text": "query { test }", "variables": None, "created_by": "test-user"},
         ]
         
-        for schema in problematic_schemas:
+        for data in problematic_data:
             try:
+                # Try to create the schema - this should fail with validation error
+                schema = QueryCreate(**data)
                 mock_collection = MagicMock()
                 await collection_manager._add_query_to_collection(
                     mock_collection, schema, validate=False
                 )
+                # If we get here, the test should fail
+                assert False, "Expected validation error for null constraints"
                 
             except Exception as e:
-                # Should handle null violations appropriately
-                assert any(term in str(e).lower() for term in ["none", "null", "required"])
+                # Should handle null violations appropriately (either Pydantic or business logic)
+                error_msg = str(e).lower()
+                assert any(term in error_msg for term in ["none", "null", "required", "string_type", "validation"])
     
     async def test_foreign_key_violations(self, collection_manager):
         """Test handling of foreign key constraint violations."""

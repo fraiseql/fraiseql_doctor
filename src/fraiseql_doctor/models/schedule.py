@@ -1,5 +1,5 @@
 """Query scheduling model."""
-from typing import Any
+from typing import Any, Dict
 from uuid import UUID, uuid4
 from datetime import datetime
 
@@ -26,3 +26,36 @@ class Schedule(Base, TimestampMixin):
     # Relationships (using string references to avoid circular imports)
     query = relationship("Query", back_populates="schedules")
     endpoint = relationship("Endpoint", back_populates="schedules")
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "Schedule":
+        """Create Schedule instance from dictionary."""
+        return cls(
+            pk_schedule=data.get("pk_schedule"),
+            fk_query=data["fk_query"],
+            fk_endpoint=data["fk_endpoint"],
+            name=data["name"],
+            cron_expression=data["cron_expression"],
+            is_active=data.get("is_active", True),
+            next_run=data.get("next_run"),
+            last_run=data.get("last_run"),
+            variables_override=data.get("variables_override", {}),
+            created_at=data.get("created_at"),
+            updated_at=data.get("updated_at")
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert Schedule to dictionary."""
+        return {
+            "pk_schedule": self.pk_schedule,
+            "fk_query": self.fk_query,
+            "fk_endpoint": self.fk_endpoint,
+            "name": self.name,
+            "cron_expression": self.cron_expression,
+            "is_active": self.is_active,
+            "next_run": self.next_run,
+            "last_run": self.last_run,
+            "variables_override": self.variables_override,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at
+        }

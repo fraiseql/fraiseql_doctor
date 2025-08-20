@@ -1,5 +1,5 @@
 """Health check tracking model."""
-from typing import Any
+from typing import Any, Dict
 from uuid import UUID, uuid4
 from datetime import datetime
 
@@ -25,3 +25,32 @@ class HealthCheck(Base):
 
     # Relationships (using string references to avoid circular imports)
     endpoint = relationship("Endpoint", back_populates="health_checks")
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "HealthCheck":
+        """Create HealthCheck instance from dictionary."""
+        return cls(
+            pk_health_check=data.get("pk_health_check"),
+            fk_endpoint=data["fk_endpoint"],
+            check_time=data.get("check_time", datetime.utcnow()),
+            is_healthy=data["is_healthy"],
+            response_time_ms=data.get("response_time_ms"),
+            error_message=data.get("error_message"),
+            available_operations=data.get("available_operations", []),
+            schema_hash=data.get("schema_hash"),
+            check_metadata=data.get("check_metadata", {})
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert HealthCheck to dictionary."""
+        return {
+            "pk_health_check": self.pk_health_check,
+            "fk_endpoint": self.fk_endpoint,
+            "check_time": self.check_time,
+            "is_healthy": self.is_healthy,
+            "response_time_ms": self.response_time_ms,
+            "error_message": self.error_message,
+            "available_operations": self.available_operations,
+            "schema_hash": self.schema_hash,
+            "check_metadata": self.check_metadata
+        }
