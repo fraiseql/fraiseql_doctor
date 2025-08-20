@@ -6,9 +6,9 @@ from uuid import UUID, uuid4
 from datetime import datetime, timezone
 from dataclasses import dataclass
 
-from src.fraiseql_doctor.core.fraiseql_client import GraphQLExecutionError, NetworkError
-from src.fraiseql_doctor.services.complexity import QueryComplexityAnalyzer
-from src.fraiseql_doctor.models.endpoint import Endpoint
+from fraiseql_doctor.core.fraiseql_client import GraphQLExecutionError, NetworkError
+from fraiseql_doctor.services.complexity import QueryComplexityAnalyzer
+from fraiseql_doctor.models.endpoint import Endpoint
 
 
 class TestGraphQLClient:
@@ -19,6 +19,11 @@ class TestGraphQLClient:
         self.call_count = 0
         self.should_fail = False
         self.custom_response = None
+        self.failure_pattern = None
+        self.random_failures = False
+        self.failure_rate = 0.1
+        self.realistic_timing = False
+        self.default_response = None
         
     async def execute_query(self, query: str, variables: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Execute GraphQL query with predictable test responses."""
@@ -33,6 +38,29 @@ class TestGraphQLClient:
                 raise GraphQLExecutionError("Test GraphQL error")
             elif "poison" in query.lower():
                 raise Exception("Poison query executed")
+        
+        # Handle pattern-based failures
+        if self.failure_pattern and self.failure_pattern in query.lower():
+            raise GraphQLExecutionError(f"Test failure for pattern: {self.failure_pattern}")
+        
+        # Handle random failures
+        if self.random_failures:
+            import random
+            if random.random() < self.failure_rate:
+                raise Exception("Random execution failure")
+        
+        # Realistic timing simulation
+        if self.realistic_timing:
+            import asyncio
+            query_length = len(query)
+            base_time = 0.1
+            complexity_multiplier = query_length / 1000
+            execution_time = base_time + complexity_multiplier
+            await asyncio.sleep(min(execution_time, 2.0))
+        
+        # Return default response if set
+        if self.default_response:
+            return self.default_response.copy()
         
         # Return custom response if set
         if self.custom_response:
@@ -77,6 +105,26 @@ class TestGraphQLClient:
     def set_custom_response(self, response: Dict[str, Any]):
         """Set a custom response for specific test scenarios."""
         self.custom_response = response
+        
+    def set_default_response(self, response: Dict[str, Any]):
+        """Set a default response for all queries."""
+        self.default_response = response
+        
+    def set_failure_pattern(self, pattern: str):
+        """Set a pattern that triggers failures when found in queries."""
+        self.failure_pattern = pattern
+        
+    def set_random_failures(self, enable: bool = True):
+        """Enable random failures for stress testing."""
+        self.random_failures = enable
+        
+    def set_failure_rate(self, rate: float):
+        """Set the rate of random failures (0.0 to 1.0)."""
+        self.failure_rate = max(0.0, min(1.0, rate))
+        
+    def set_realistic_timing(self, enable: bool = True):
+        """Enable realistic timing simulation based on query complexity."""
+        self.realistic_timing = enable
 
 
 class TestComplexityAnalyzer(QueryComplexityAnalyzer):
@@ -140,6 +188,7 @@ class TestDatabaseSession:
         self.should_fail = False
         self.call_count = 0
         self.results = []
+        self.custom_error = None
         
     def add(self, obj):
         """Add object to session."""
@@ -148,19 +197,32 @@ class TestDatabaseSession:
     async def commit(self):
         """Commit transaction."""
         self.call_count += 1
-        if self.should_fail and self.call_count % 3 == 0:
-            raise Exception("Database connection lost")
+        if self.should_fail:
+            if self.custom_error:
+                raise self.custom_error
+            else:
+                raise Exception("Database connection lost")
         self.committed = True
         
     async def execute(self, query: str, params: Optional[list] = None):
         """Execute query and return test results."""
         self.call_count += 1
-        if self.should_fail and self.call_count % 3 == 0:
-            raise Exception("Database connection lost")
+        if self.should_fail:
+            if self.custom_error:
+                raise self.custom_error
+            else:
+                raise Exception("Database connection lost")
         return self.results
     
     async def get(self, model_class, primary_key):
         """Get object by primary key."""
+        self.call_count += 1
+        if self.should_fail:
+            if self.custom_error:
+                raise self.custom_error
+            else:
+                raise Exception("Database connection lost")
+        
         # Return test object if requested
         if hasattr(model_class, 'from_dict'):
             # Provide appropriate test data based on model type
@@ -208,6 +270,11 @@ class TestDatabaseSession:
     def set_results(self, results: list):
         """Set results to return from execute()."""
         self.results = results
+        
+    def set_custom_error(self, error: Exception):
+        """Set a custom error to raise during database operations."""
+        self.custom_error = error
+        self.should_fail = True
 
 
 def create_test_client_factory():

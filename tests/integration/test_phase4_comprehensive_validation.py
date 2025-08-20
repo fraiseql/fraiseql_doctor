@@ -20,17 +20,17 @@ from unittest.mock import AsyncMock, MagicMock
 from concurrent.futures import ThreadPoolExecutor
 import json
 
-from src.fraiseql_doctor.core.query_collection import (
+from fraiseql_doctor.core.query_collection import (
     QueryCollectionManager, QueryStatus, QueryPriority, QuerySearchFilter
 )
-from src.fraiseql_doctor.core.execution_manager import (
+from fraiseql_doctor.core.execution_manager import (
     QueryExecutionManager, ExecutionStatus, BatchMode, ExecutionConfig
 )
-from src.fraiseql_doctor.core.result_storage import (
+from fraiseql_doctor.core.result_storage import (
     ResultStorageManager, StorageConfig, StorageBackend, CompressionType
 )
-from src.fraiseql_doctor.services.complexity import QueryComplexityAnalyzer
-from src.fraiseql_doctor.core.database.schemas import (
+from fraiseql_doctor.services.complexity import QueryComplexityAnalyzer
+from fraiseql_doctor.core.database.schemas import (
     QueryCollectionCreate, QueryCreate
 )
 
@@ -75,18 +75,15 @@ def performance_monitor():
 
 @pytest.fixture
 async def realistic_test_environment(tmp_path):
-    """Create realistic test environment with all components."""
-    # Database session
-    mock_db = AsyncMock()
-    mock_db.execute.return_value = []
-    mock_db.get.return_value = None
-    mock_db.add = MagicMock()
-    mock_db.commit = AsyncMock()
-    mock_db.delete = AsyncMock()
+    """Create realistic test environment with all components using real implementations."""
+    from tests.fixtures.real_services import TestDatabaseSession, TestComplexityAnalyzer, TestGraphQLClient
     
-    # Components
-    complexity_analyzer = QueryComplexityAnalyzer()
-    collection_manager = QueryCollectionManager(mock_db, complexity_analyzer)
+    # Real test database session
+    test_db = TestDatabaseSession()
+    
+    # Components with real implementations
+    complexity_analyzer = TestComplexityAnalyzer()
+    collection_manager = QueryCollectionManager(test_db, complexity_analyzer)
     
     # Realistic execution config
     exec_config = ExecutionConfig(
@@ -96,36 +93,17 @@ async def realistic_test_environment(tmp_path):
         batch_size=25
     )
     
-    # Mock client with realistic behavior
-    mock_client = AsyncMock()
-    
-    async def realistic_execute(query, variables):
-        # Simulate realistic execution times based on complexity
-        query_length = len(query)
-        base_time = 0.1
-        complexity_multiplier = query_length / 1000  # Longer queries take more time
-        
-        execution_time = base_time + complexity_multiplier
-        await asyncio.sleep(min(execution_time, 2.0))  # Cap at 2 seconds
-        
-        # Simulate occasional failures (5% failure rate)
-        import random
-        if random.random() < 0.05:
-            raise Exception("Random execution failure")
-        
-        return {
-            "data": {"result": f"data for query length {query_length}"},
-            "_execution_time": execution_time,
-            "_complexity_score": complexity_multiplier * 10
-        }
-    
-    mock_client.execute_query.side_effect = realistic_execute
+    # Real test client with realistic behavior
+    test_client = TestGraphQLClient()
+    test_client.set_random_failures(True)
+    test_client.set_failure_rate(0.05)  # 5% failure rate
+    test_client.set_realistic_timing(True)  # Enable timing simulation
     
     def client_factory(endpoint):
-        return mock_client
+        return test_client
     
     execution_manager = QueryExecutionManager(
-        mock_db, client_factory, collection_manager, exec_config
+        test_db, client_factory, collection_manager, exec_config
     )
     
     # Storage manager
@@ -137,10 +115,10 @@ async def realistic_test_environment(tmp_path):
         cache_threshold_kb=5,
         ttl_hours=24
     )
-    storage_manager = ResultStorageManager(mock_db, storage_config)
+    storage_manager = ResultStorageManager(test_db, storage_config)
     
     return {
-        "db": mock_db,
+        "db": test_db,
         "collection_manager": collection_manager,
         "execution_manager": execution_manager,
         "storage_manager": storage_manager,

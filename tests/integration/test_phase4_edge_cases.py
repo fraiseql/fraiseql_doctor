@@ -23,44 +23,40 @@ import tempfile
 import os
 from pathlib import Path
 
-from src.fraiseql_doctor.core.query_collection import (
+from fraiseql_doctor.core.query_collection import (
     QueryCollectionManager, QueryStatus, QueryPriority, QuerySearchFilter
 )
-from src.fraiseql_doctor.core.execution_manager import (
+from fraiseql_doctor.core.execution_manager import (
     QueryExecutionManager, ExecutionStatus, BatchMode, ExecutionConfig
 )
-from src.fraiseql_doctor.core.result_storage import (
+from fraiseql_doctor.core.result_storage import (
     ResultStorageManager, StorageConfig, StorageBackend, CompressionType,
     FileSystemStorageBackend
 )
-from src.fraiseql_doctor.services.complexity import QueryComplexityAnalyzer
-from src.fraiseql_doctor.core.database.schemas import (
+from fraiseql_doctor.services.complexity import QueryComplexityAnalyzer
+from fraiseql_doctor.core.database.schemas import (
     QueryCollectionCreate, QueryCreate, QueryUpdate
 )
 
 
 @pytest.fixture
-async def mock_db_session():
-    """Mock database session for edge case testing."""
-    session = AsyncMock()
-    session.execute.return_value = []
-    session.get.return_value = None
-    session.add = MagicMock()
-    session.commit = AsyncMock()
-    session.delete = AsyncMock()
-    return session
+async def test_db_session():
+    """Real test database session for edge case testing - more reliable than mocks."""
+    from tests.fixtures.real_services import TestDatabaseSession
+    return TestDatabaseSession()
 
 
 @pytest.fixture
 def complexity_analyzer():
-    """Create complexity analyzer instance."""
-    return QueryComplexityAnalyzer()
+    """Create real test complexity analyzer instance."""
+    from tests.fixtures.real_services import TestComplexityAnalyzer
+    return TestComplexityAnalyzer()
 
 
 @pytest.fixture
-async def collection_manager(mock_db_session, complexity_analyzer):
-    """Create query collection manager instance."""
-    return QueryCollectionManager(mock_db_session, complexity_analyzer)
+async def collection_manager(test_db_session, complexity_analyzer):
+    """Create query collection manager instance with real implementations."""
+    return QueryCollectionManager(test_db_session, complexity_analyzer)
 
 
 class TestUnicodeAndSpecialCharacters:
@@ -169,7 +165,7 @@ class TestTimezoneEdgeCases:
                 limit=10
             )
             
-            collection_manager.db_session.execute.return_value = []
+            collection_manager.db_session.set_results([])
             
             # Should handle all timezone scenarios
             results = await collection_manager.search_queries(search_filter)
@@ -190,7 +186,7 @@ class TestTimezoneEdgeCases:
                 limit=1
             )
             
-            collection_manager.db_session.execute.return_value = []
+            collection_manager.db_session.set_results([])
             
             # Should handle gracefully (may convert or reject)
             try:
@@ -609,8 +605,8 @@ class TestNetworkProtocolEdgeCases:
 
 
 @pytest.fixture
-async def limited_storage_manager(mock_db_session, tmp_path):
-    """Create storage manager with strict limits for testing."""
+async def limited_storage_manager(test_db_session, tmp_path):
+    """Create storage manager with strict limits for testing using real implementations."""
     storage_path = tmp_path / "edge_case_storage"
     config = StorageConfig(
         backend=StorageBackend.FILE_SYSTEM,
@@ -619,7 +615,7 @@ async def limited_storage_manager(mock_db_session, tmp_path):
         cache_threshold_kb=1,
         ttl_hours=1,
     )
-    return ResultStorageManager(mock_db_session, config)
+    return ResultStorageManager(test_db_session, config)
 
 
 class TestMemoryAndResourceLimits:
