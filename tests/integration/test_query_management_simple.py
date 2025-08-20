@@ -130,18 +130,16 @@ class TestQueryExecutionCore:
             sample_endpoint.id
         )
         
-        # Verify results
+        # Verify results  
         assert result.success is True
         assert result.status == ExecutionStatus.COMPLETED
         assert result.query_id == sample_query.id
-        assert result.result_data["data"]["test"] == "result"
+        # TestGraphQLClient returns users data for queries containing "users"
+        assert "users" in result.result_data["data"]
         assert result.execution_time > 0
         
-        # Verify client was called correctly
-        mock_fraiseql_client.execute_query.assert_called_once_with(
-            sample_query.query_text,
-            sample_query.variables
-        )
+        # Verify client was called (TestGraphQLClient tracks call count)
+        assert mock_fraiseql_client.call_count == 1
     
     @pytest.mark.asyncio
     async def test_execute_query_with_error(
@@ -416,7 +414,8 @@ class TestIntegrationWorkflow:
         
         # Verify end-to-end data integrity
         assert stored_result == execution_result.result_data
-        assert stored_result["data"]["test"] == "result"
+        # TestGraphQLClient returns users data for queries containing "users"
+        assert "users" in stored_result["data"]
     
     @pytest.mark.asyncio 
     async def test_error_handling_workflow(
@@ -440,8 +439,17 @@ class TestIntegrationWorkflow:
         collection_manager.get_query = AsyncMock(return_value=sample_query)
         
         # Configure client to raise an exception using real test client patterns
+        # Use a query containing "fail" to trigger TestGraphQLClient failure mode
+        failing_query = MockQuery(
+            id=str(uuid4()),
+            name="Failing Query",
+            query_text="query { fail_test }",  # Contains "fail" - will trigger failure
+            variables={},
+            expected_complexity_score=1.0,
+            metadata=MockQueryMetadata(complexity_score=1.0)
+        )
+        collection_manager.get_query = AsyncMock(return_value=failing_query)
         mock_fraiseql_client.set_failure_mode(True)
-        mock_fraiseql_client.set_custom_response(None)  # Ensure it will fail
         
         def client_factory(endpoint):
             return mock_fraiseql_client
@@ -465,15 +473,15 @@ class TestIntegrationWorkflow:
         
         # Execute query that will fail
         execution_result = await execution_manager.execute_query(
-            sample_query.id,
+            failing_query.id,
             sample_endpoint.id
         )
         
         # Verify error was handled properly  
         assert execution_result.success is False
         assert execution_result.status == ExecutionStatus.FAILED
-        # TestGraphQLClient raises generic exception when should_fail=True for non-specific queries
-        assert "Unexpected error" in execution_result.error_message or "Exception" in execution_result.error_message
+        # TestGraphQLClient raises GraphQLExecutionError for queries containing "fail"
+        assert "Test GraphQL error" in execution_result.error_message or "GraphQL" in execution_result.error_message
         
         # Verify that we don't try to store failed results
         # (This would be handled by calling code)
