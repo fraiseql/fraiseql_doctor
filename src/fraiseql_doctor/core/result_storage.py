@@ -216,9 +216,14 @@ class FileSystemStorageBackend:
     
     def __init__(self, base_path: Path):
         self.base_path = Path(base_path)
-        self.base_path.mkdir(parents=True, exist_ok=True)
-        self.metadata_path = self.base_path / "_metadata"
-        self.metadata_path.mkdir(exist_ok=True)
+        try:
+            self.base_path.mkdir(parents=True, exist_ok=True)
+            self.metadata_path = self.base_path / "_metadata"
+            self.metadata_path.mkdir(exist_ok=True)
+        except PermissionError:
+            # Handle permission errors gracefully during initialization
+            # Operations will fail later with appropriate error handling
+            self.metadata_path = self.base_path / "_metadata"
     
     def _get_file_path(self, key: str) -> Path:
         """Get file path for key."""
