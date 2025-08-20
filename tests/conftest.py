@@ -1,6 +1,5 @@
 """Test configuration and shared fixtures."""
 
-import asyncio
 import pytest
 
 # Import all database fixtures
@@ -15,12 +14,8 @@ from tests.fixtures.database import (
 )
 
 
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create event loop for async tests."""
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
+# Configure pytest-asyncio to use function scope for event loops
+pytestmark = pytest.mark.asyncio
 
 
 # Ensure template database is set up before any tests

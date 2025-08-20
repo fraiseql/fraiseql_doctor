@@ -14,10 +14,12 @@ from fraiseql_doctor.models.base import Base
 # Test database configuration
 TEMPLATE_DB_NAME = "fraiseql_doctor_db_test_template"
 TEST_DB_NAME = "fraiseql_doctor_db_test"
-TEST_DATABASE_URL = f"postgresql+asyncpg://localhost/{TEST_DB_NAME}"
+# Use current user for database connection
+current_user = os.getenv("USER", "postgres")
+TEST_DATABASE_URL = f"postgresql+asyncpg://{current_user}@localhost/{TEST_DB_NAME}"
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(scope="function")
 async def test_engine():
     """Create test database engine with proper setup/teardown."""
     # Create test database from template (very fast)
@@ -28,8 +30,9 @@ async def test_engine():
         TEST_DATABASE_URL,
         echo=False,
         pool_pre_ping=True,
-        pool_size=5,
-        max_overflow=10
+        pool_size=2,
+        max_overflow=0,
+        pool_recycle=300
     )
     
     yield engine
@@ -48,19 +51,7 @@ async def db_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
     )
     
     async with async_session() as session:
-        # Start a transaction
-        transaction = await session.begin()
-        
-        try:
-            yield session
-        finally:
-            # Always rollback to keep tests isolated
-            try:
-                if transaction.is_active:
-                    await transaction.rollback()
-            except (Exception, RuntimeError) as e:
-                # Handle cases where transaction is already closed or event loop is closing
-                pass
+        yield session
 
 
 @pytest_asyncio.fixture
