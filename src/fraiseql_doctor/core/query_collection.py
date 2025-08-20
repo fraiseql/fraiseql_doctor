@@ -504,19 +504,27 @@ class QueryCollectionManager:
         if not collection:
             return QueryCollectionMetrics()
         
-        total_queries = len(collection.queries)
-        active_queries = len([q for q in collection.queries if q.status == QueryStatus.ACTIVE])
+        # Query database for queries in this collection
+        query_results = await self.db_session.execute(
+            """SELECT * FROM queries WHERE collection_id = $1""",
+            [collection_id]
+        )
+        queries = query_results if query_results else []
+        
+        total_queries = len(queries)
+        active_queries = len([q for q in queries if q.get('is_active', True)])
         
         if total_queries == 0:
             return QueryCollectionMetrics(
                 total_queries=0,
-                active_queries=0
+                active_queries=0,
+                avg_complexity_score=0.0
             )
         
         # Calculate average complexity
         complexity_scores = [
-            q.metadata.complexity_score for q in collection.queries 
-            if q.metadata.complexity_score > 0
+            q.get('complexity_score', 0.0) for q in queries 
+            if q.get('complexity_score', 0.0) > 0
         ]
         avg_complexity = sum(complexity_scores) / len(complexity_scores) if complexity_scores else 0.0
         

@@ -570,7 +570,7 @@ class TestEndToEndIntegration:
         query = MagicMock()
         query.id = uuid4()
         query.name = sample_queries[0]["name"]
-        query.content = sample_queries[0]["query_text"]
+        query.query_text = sample_queries[0]["query_text"]
         query.variables = sample_queries[0]["variables"]
         
         # Step 2: Execute query
@@ -603,20 +603,19 @@ class TestEndToEndIntegration:
         
         # Mock the search results
         result_storage_manager.db_session.execute.return_value = [{
-            "id": str(uuid4()),
-            "execution_id": str(execution_result.execution_id),
-            "query_id": str(query.id),
-            "storage_key": storage_key,
-            "size_bytes": 1024,
+            "pk_query_result": str(uuid4()),
+            "fk_execution": str(execution_result.execution_id),
+            "fk_query": str(query.id),
+            "result_hash": storage_key,
+            "original_size_bytes": 1024,
             "compressed_size_bytes": 512,
-            "compression_ratio": 0.5,
             "created_at": datetime.now(timezone.utc),
-            "metadata": {}
+            "search_metadata": {}
         }]
         
         search_results = await result_storage_manager.search_results(filter_params)
         assert len(search_results) == 1
-        assert search_results[0].query_id == query.id
+        assert str(search_results[0].fk_query) == str(query.id)
     
     async def test_batch_execution_with_result_storage(
         self,

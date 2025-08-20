@@ -314,17 +314,26 @@ class TestPartialFailureRecovery:
         
         # Create mix of successful and failing queries
         query_ids = []
+        mock_queries = []
+        
         for i in range(10):
             query_id = uuid4()
             query_ids.append(query_id)
             
             mock_query = MagicMock()
             mock_query.id = query_id
-            mock_query.content = f"query {{ test{i} {'fail' if i % 3 == 0 else ''} }}"
+            mock_query.query_text = f"query {{ test{i} {'fail' if i % 3 == 0 else ''} }}"
             mock_query.variables = {}
             mock_query.metadata = MagicMock(complexity_score=1.0)
+            mock_queries.append(mock_query)
+        
+        async def get_query_side_effect(query_id):
+            for query in mock_queries:
+                if query.id == query_id:
+                    return query
+            return None
             
-            collection_manager.get_query = AsyncMock(return_value=mock_query)
+        collection_manager.get_query = AsyncMock(side_effect=get_query_side_effect)
         
         execution_manager.db_session.get = AsyncMock(return_value=MagicMock())
         

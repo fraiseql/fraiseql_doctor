@@ -150,7 +150,7 @@ class TestBoundaryConditions:
         collection = await collection_manager.create_collection(collection_schema)
         
         # Test metrics on empty collection
-        metrics = await collection_manager._calculate_collection_metrics(collection.id)
+        metrics = await collection_manager._calculate_collection_metrics(collection.pk_query_collection)
         assert metrics.total_queries == 0
         assert metrics.active_queries == 0
         assert metrics.avg_complexity_score == 0.0
