@@ -248,11 +248,13 @@ class TestCascadingFailures:
         collection_schema = QueryCollectionCreate(
             name="Test Collection",
             description="Testing cascading failures",
+            created_by="test-user",
             initial_queries=[
                 QueryCreate(
                     name="Invalid Query",
-                    content="invalid graphql {{{",
-                    variables={}
+                    query_text="invalid graphql {{{",
+                    variables={},
+                    created_by="test-user"
                 )
             ]
         )

@@ -13,7 +13,7 @@ import asyncio
 import json
 from datetime import datetime, timezone, timedelta
 from uuid import uuid4
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from src.fraiseql_doctor.core.query_collection import (
     QueryCollectionManager, QueryStatus, QueryPriority, QuerySearchFilter
@@ -290,19 +290,19 @@ class TestExecutionManagerIntegration:
         mock_query.variables = sample_queries[0]["variables"]
         mock_query.metadata = MagicMock(complexity_score=5.0)
         
-        query_collection_manager.get_query = AsyncMock(return_value=mock_query)
-        execution_manager.db_session.get = AsyncMock(return_value=sample_endpoint)
-        
-        result = await execution_manager.execute_query(
-            query_id,
-            sample_endpoint.pk_endpoint
-        )
-        
-        assert result.success is True
-        assert result.status == ExecutionStatus.COMPLETED
-        assert result.query_id == query_id
-        assert result.result_data == {"data": {"test": "result"}, "_complexity_score": 5.2, "_execution_time": 0.15}
-        assert result.execution_time > 0
+        with patch.object(query_collection_manager, 'get_query', return_value=mock_query):
+            execution_manager.db_session.get = AsyncMock(return_value=sample_endpoint)
+            
+            result = await execution_manager.execute_query(
+                query_id,
+                sample_endpoint.pk_endpoint
+            )
+            
+            assert result.success is True
+            assert result.status == ExecutionStatus.COMPLETED
+            assert result.query_id == query_id
+            assert result.result_data == {"data": {"test": "result"}, "_complexity_score": 5.2, "_execution_time": 0.15}
+            assert result.execution_time > 0
     
     async def test_batch_execution_parallel(
         self,
@@ -324,21 +324,21 @@ class TestExecutionManagerIntegration:
             mock_query.metadata = MagicMock(complexity_score=float(i + 1))
             
             # Mock different queries return different results
-            query_collection_manager.get_query = AsyncMock(return_value=mock_query)
-        
-        execution_manager.db_session.get = AsyncMock(return_value=sample_endpoint)
-        
-        batch_result = await execution_manager.execute_batch(
-            query_ids,
-            sample_endpoint.pk_endpoint,
-            mode=BatchMode.PARALLEL
-        )
-        
-        assert batch_result.total_queries == 3
-        assert batch_result.successful == 3
-        assert batch_result.failed == 0
-        assert len(batch_result.results) == 3
-        assert all(r.success for r in batch_result.results)
+            with patch.object(query_collection_manager, 'get_query', return_value=mock_query):
+                
+                execution_manager.db_session.get = AsyncMock(return_value=sample_endpoint)
+                
+                batch_result = await execution_manager.execute_batch(
+                    query_ids,
+                    sample_endpoint.pk_endpoint,
+                    mode=BatchMode.PARALLEL
+                )
+                
+                assert batch_result.total_queries == 3
+                assert batch_result.successful == 3
+                assert batch_result.failed == 0
+                assert len(batch_result.results) == 3
+                assert all(r.success for r in batch_result.results)
     
     async def test_batch_execution_priority_mode(
         self,
@@ -369,20 +369,21 @@ class TestExecutionManagerIntegration:
                     return query
             return None
         
-        query_collection_manager.get_query.side_effect = get_query_side_effect
-        execution_manager.db_session.get = AsyncMock(return_value=sample_endpoint)
-        
-        batch_result = await execution_manager.execute_batch(
-            query_ids,
-            sample_endpoint.pk_endpoint,
-            mode=BatchMode.PRIORITY
-        )
-        
-        assert batch_result.successful == 3
-        
-        # Check that high priority queries were executed first
-        # (This would require more detailed mocking to verify execution order)
-        assert len(batch_result.results) == 3
+        # Use patch to mock the method properly
+        with patch.object(query_collection_manager, 'get_query', side_effect=get_query_side_effect):
+            execution_manager.db_session.get = AsyncMock(return_value=sample_endpoint)
+            
+            batch_result = await execution_manager.execute_batch(
+                query_ids,
+                sample_endpoint.pk_endpoint,
+                mode=BatchMode.PRIORITY
+            )
+            
+            assert batch_result.successful == 3
+            
+            # Check that high priority queries were executed first
+            # (This would require more detailed mocking to verify execution order)
+            assert len(batch_result.results) == 3
     
     async def test_scheduled_execution(
         self,
@@ -573,26 +574,26 @@ class TestEndToEndIntegration:
         query.variables = sample_queries[0]["variables"]
         
         # Step 2: Execute query
-        query_collection_manager.get_query = AsyncMock(return_value=query)
-        execution_manager.db_session.get = AsyncMock(return_value=sample_endpoint)
-        
-        execution_result = await execution_manager.execute_query(
-            query.id,
-            sample_endpoint.pk_endpoint
-        )
-        
-        assert execution_result.success is True
-        
-        # Step 3: Store result
-        storage_key = await result_storage_manager.store_result(
-            execution_result.execution_id,
-            query.id,
-            execution_result.result_data
-        )
-        
-        # Step 4: Retrieve and verify result
-        stored_result = await result_storage_manager.retrieve_result(storage_key)
-        assert stored_result == execution_result.result_data
+        with patch.object(query_collection_manager, 'get_query', return_value=query):
+            execution_manager.db_session.get = AsyncMock(return_value=sample_endpoint)
+            
+            execution_result = await execution_manager.execute_query(
+                query.id,
+                sample_endpoint.pk_endpoint
+            )
+            
+            assert execution_result.success is True
+            
+            # Step 3: Store result
+            storage_key = await result_storage_manager.store_result(
+                execution_result.execution_id,
+                query.id,
+                execution_result.result_data
+            )
+            
+            # Step 4: Retrieve and verify result
+            stored_result = await result_storage_manager.retrieve_result(storage_key)
+            assert stored_result == execution_result.result_data
         
         # Step 5: Search for results
         filter_params = ResultSearchFilter(
@@ -648,35 +649,36 @@ class TestEndToEndIntegration:
                     return query
             return None
         
-        query_collection_manager.get_query.side_effect = get_query_side_effect
-        execution_manager.db_session.get = AsyncMock(return_value=sample_endpoint)
-        
-        # Execute batch
-        batch_result = await execution_manager.execute_batch(
-            query_ids,
-            sample_endpoint.pk_endpoint,
-            mode=BatchMode.PARALLEL
-        )
-        
-        assert batch_result.successful == 3
-        
-        # Store all results
-        storage_keys = []
-        for execution_result in batch_result.results:
-            if execution_result.success:
-                storage_key = await result_storage_manager.store_result(
-                    execution_result.execution_id,
-                    execution_result.query_id,
-                    execution_result.result_data
-                )
-                storage_keys.append(storage_key)
-        
-        assert len(storage_keys) == 3
-        
-        # Verify all results can be retrieved
-        for storage_key in storage_keys:
-            result = await result_storage_manager.retrieve_result(storage_key)
-            assert result is not None
+        # Use patch to mock the method properly
+        with patch.object(query_collection_manager, 'get_query', side_effect=get_query_side_effect):
+            execution_manager.db_session.get = AsyncMock(return_value=sample_endpoint)
+            
+            # Execute batch
+            batch_result = await execution_manager.execute_batch(
+                query_ids,
+                sample_endpoint.pk_endpoint,
+                mode=BatchMode.PARALLEL
+            )
+            
+            assert batch_result.successful == 3
+            
+            # Store all results
+            storage_keys = []
+            for execution_result in batch_result.results:
+                if execution_result.success:
+                    storage_key = await result_storage_manager.store_result(
+                        execution_result.execution_id,
+                        execution_result.query_id,
+                        execution_result.result_data
+                    )
+                    storage_keys.append(storage_key)
+            
+            assert len(storage_keys) == 3
+            
+            # Verify all results can be retrieved
+            for storage_key in storage_keys:
+                result = await result_storage_manager.retrieve_result(storage_key)
+                assert result is not None
     
     async def test_performance_monitoring_integration(
         self,
@@ -735,22 +737,22 @@ class TestErrorHandlingIntegration:
         mock_query.variables = {}
         mock_query.metadata = MagicMock(complexity_score=1.0)
         
-        query_collection_manager.get_query = AsyncMock(return_value=mock_query)
-        execution_manager.db_session.get = AsyncMock(return_value=sample_endpoint)
-        
-        # Mock client to raise exception
-        execution_manager.client_factory = lambda endpoint: AsyncMock(
-            execute_query=AsyncMock(side_effect=Exception("GraphQL syntax error"))
-        )
-        
-        result = await execution_manager.execute_query(
-            query_id,
-            sample_endpoint.pk_endpoint
-        )
-        
-        assert result.success is False
-        assert result.status == ExecutionStatus.FAILED
-        assert "GraphQL syntax error" in result.error_message
+        with patch.object(query_collection_manager, 'get_query', return_value=mock_query):
+            execution_manager.db_session.get = AsyncMock(return_value=sample_endpoint)
+            
+            # Mock client to raise exception
+            execution_manager.client_factory = lambda endpoint: AsyncMock(
+                execute_query=AsyncMock(side_effect=Exception("GraphQL syntax error"))
+            )
+            
+            result = await execution_manager.execute_query(
+                query_id,
+                sample_endpoint.pk_endpoint
+            )
+            
+            assert result.success is False
+            assert result.status == ExecutionStatus.FAILED
+            assert "GraphQL syntax error" in result.error_message
     
     async def test_storage_failure_recovery(
         self,
