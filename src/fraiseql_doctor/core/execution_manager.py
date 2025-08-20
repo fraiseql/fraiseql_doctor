@@ -541,8 +541,11 @@ class QueryExecutionManager:
         """
         # Validate cron expression
         try:
-            cron = croniter(cron_expression)
+            cron = croniter(cron_expression, datetime.now(timezone.utc))
             next_run = cron.get_next(datetime)
+            # Ensure timezone-aware datetime
+            if next_run.tzinfo is None:
+                next_run = next_run.replace(tzinfo=timezone.utc)
         except ValueError as e:
             raise ValueError(f"Invalid cron expression: {e}")
         
@@ -605,7 +608,11 @@ class QueryExecutionManager:
                         
                         # Calculate next execution time
                         cron = croniter(scheduled.cron_expression, now)
-                        scheduled.next_execution = cron.get_next(datetime)
+                        next_run = cron.get_next(datetime)
+                        # Ensure timezone-aware datetime
+                        if next_run.tzinfo is None:
+                            next_run = next_run.replace(tzinfo=timezone.utc)
+                        scheduled.next_execution = next_run
                         scheduled.last_execution = now
                 
                 # Sleep until next check (every 30 seconds)
@@ -687,13 +694,23 @@ class QueryExecutionManager:
             scheduled.query_id,
             scheduled.cron_expression,
             scheduled.endpoint_id,
-            json.dumps(scheduled.config.__dict__),
+            json.dumps(self._serialize_config(scheduled.config)),
             scheduled.enabled,
             scheduled.created_at,
             scheduled.next_execution
         ])
         
         await self.db_session.commit()
+    
+    def _serialize_config(self, config: ExecutionConfig) -> dict:
+        """Serialize ExecutionConfig to JSON-compatible dictionary."""
+        result = config.__dict__.copy()
+        # Convert enum keys to strings
+        if 'priority_weights' in result:
+            result['priority_weights'] = {
+                str(k): v for k, v in result['priority_weights'].items()
+            }
+        return result
     
     # Metrics and Monitoring
     
