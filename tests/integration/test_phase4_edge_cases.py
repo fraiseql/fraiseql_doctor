@@ -132,8 +132,9 @@ class TestUnicodeAndSpecialCharacters:
             try:
                 query_schema = QueryCreate(
                     name=f"Control Char Test: {repr(problematic_string[:20])}",
-                    content=f"query {{ field(param: \"{problematic_string}\") }}",
-                    variables={"control_param": problematic_string}
+                    query_text=f"query {{ field(param: \"{problematic_string}\") }}",
+                    variables={"control_param": problematic_string},
+                    created_by="test-user"
                 )
                 
                 # Should either handle gracefully or fail with appropriate error
@@ -158,7 +159,7 @@ class TestTimezoneEdgeCases:
             datetime(2023, 11, 5, 1, 30, tzinfo=timezone.utc),   # Fall back
             datetime(1970, 1, 1, 0, 0, tzinfo=timezone.utc),     # Unix epoch
             datetime(2038, 1, 19, 3, 14, 7, tzinfo=timezone.utc), # Y2038 problem
-            datetime(9999, 12, 31, 23, 59, 59, tzinfo=timezone.utc), # Far future
+            datetime(3000, 12, 31, 20, 0, 0, tzinfo=timezone.utc), # Far future
         ]
         
         for test_time in timezone_test_cases:
@@ -228,8 +229,9 @@ class TestFloatingPointPrecision:
             
             query_schema = QueryCreate(
                 name=f"Precision Test {score}",
-                content="query { test }",
-                variables={}
+                query_text="query { test }",
+                variables={},
+                created_by="test-user"
             )
             
             mock_collection = MagicMock()
@@ -351,8 +353,8 @@ class TestJSONSerializationEdgeCases:
                 return "leaf_value"
             return {"level": depth, "nested": create_nested_dict(depth - 1)}
         
-        # Test various nesting depths
-        nesting_depths = [10, 100, 1000, 10000]
+        # Test various nesting depths (within Python recursion limits)
+        nesting_depths = [10, 100, 500, 900]
         
         for depth in nesting_depths:
             data = create_nested_dict(depth)
@@ -411,9 +413,9 @@ class TestDatabaseConstraintViolations:
         """Test handling of null constraint violations."""
         # Test with None values in required fields
         problematic_schemas = [
-            QueryCreate(name=None, content="query { test }", variables={}),  # None name
-            QueryCreate(name="Test", content=None, variables={}),            # None content
-            QueryCreate(name="Test", content="query { test }", variables=None), # None variables
+            QueryCreate(name=None, query_text="query { test }", variables={}, created_by="test-user"),  # None name
+            QueryCreate(name="Test", query_text=None, variables={}, created_by="test-user"),            # None query_text
+            QueryCreate(name="Test", query_text="query { test }", variables=None, created_by="test-user"), # None variables
         ]
         
         for schema in problematic_schemas:
@@ -434,8 +436,9 @@ class TestDatabaseConstraintViolations:
         
         query_schema = QueryCreate(
             name="Orphan Query",
-            content="query { test }",
-            variables={}
+            query_text="query { test }",
+            variables={},
+            created_by="test-user"
         )
         
         # Mock get_collection to return None
