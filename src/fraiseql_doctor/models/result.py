@@ -30,18 +30,18 @@ class QueryResult(Base, TimestampMixin):
     def from_dict(cls, data: Dict[str, Any]) -> "QueryResult":
         """Create QueryResult instance from dictionary."""
         return cls(
-            pk_query_result=data.get("pk_query_result"),
-            fk_query=data["fk_query"],
-            fk_execution=data["fk_execution"],
-            result_hash=data["result_hash"],
+            pk_query_result=data.get("pk_query_result") or data.get("id"),
+            fk_query=data.get("fk_query") or data.get("query_id"),
+            fk_execution=data.get("fk_execution") or data.get("execution_id"),
+            result_hash=data.get("result_hash"),
             result_data=data.get("result_data", {}),
             compression_type=data.get("compression_type", "none"),
             original_size_bytes=data.get("original_size_bytes", 0),
             compressed_size_bytes=data.get("compressed_size_bytes", 0),
             storage_backend=data.get("storage_backend", "database"),
-            storage_path=data.get("storage_path"),
+            storage_path=data.get("storage_path") or data.get("storage_key"),
             ttl_expires_at=data.get("ttl_expires_at"),
-            search_metadata=data.get("search_metadata", {}),
+            search_metadata=data.get("search_metadata") or data.get("metadata", {}),
             created_at=data.get("created_at"),
             updated_at=data.get("updated_at")
         )

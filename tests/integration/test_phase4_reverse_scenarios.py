@@ -143,6 +143,7 @@ class TestBoundaryConditions:
             name="Empty Collection",
             description="",
             tags=[],
+            created_by="test-user",
             initial_queries=[]
         )
         
@@ -206,12 +207,13 @@ class TestBoundaryConditions:
         collection_schema = QueryCollectionCreate(
             name="Long Query Collection",
             description="Testing long content",
+            created_by="test-user",
             initial_queries=[
                 QueryCreate(
                     name="Extremely Long Query",
-                    content=long_content,
+                    query_text=long_content,
                     variables={},
-                    status="draft"
+                    created_by="test-user"
                 )
             ]
         )
@@ -422,8 +424,9 @@ class TestDataCorruption:
         for i, corrupted_content in enumerate(corrupted_queries):
             query_schema = QueryCreate(
                 name=f"Corrupted Query {i}",
-                content=corrupted_content,
-                variables={}
+                query_text=corrupted_content or "",  # Handle None values
+                variables={},
+                created_by="test-user"
             )
             
             # Mock validation to raise errors for corrupted content

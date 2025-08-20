@@ -34,9 +34,13 @@ logger = logging.getLogger(__name__)
 class ResultSearchFilter:
     """Search filter for query results."""
     query_id: Optional[UUID] = None
+    query_ids: Optional[list[UUID]] = None  # Support multiple query IDs
+    execution_ids: Optional[list[UUID]] = None  # Support multiple execution IDs
     result_type: Optional[str] = None
     min_execution_time: Optional[int] = None
     max_execution_time: Optional[int] = None
+    min_size_bytes: Optional[int] = None  # Add missing fields used in tests
+    max_size_bytes: Optional[int] = None
     created_after: Optional[datetime] = None
     created_before: Optional[datetime] = None
     limit: int = 100
