@@ -99,11 +99,10 @@ class TestQueryExecutionCore:
         sample_endpoint
     ):
         """Test successful single query execution."""
-        # Import here to avoid import issues
-        from src.fraiseql_doctor.core.execution_manager import (
+        from fraiseql_doctor.core.execution_manager import (
             QueryExecutionManager, ExecutionConfig, ExecutionStatus
         )
-        from src.fraiseql_doctor.core.query_collection import QueryCollectionManager
+        from fraiseql_doctor.core.query_collection import QueryCollectionManager
         
         # Create mock collection manager
         collection_manager = MagicMock()
@@ -153,7 +152,7 @@ class TestQueryExecutionCore:
         sample_endpoint
     ):
         """Test query execution with GraphQL errors."""
-        from src.fraiseql_doctor.core.execution_manager import (
+        from fraiseql_doctor.core.execution_manager import (
             QueryExecutionManager, ExecutionConfig, ExecutionStatus
         )
         
@@ -202,7 +201,7 @@ class TestQueryExecutionCore:
         sample_endpoint
     ):
         """Test parallel batch execution."""
-        from src.fraiseql_doctor.core.execution_manager import (
+        from fraiseql_doctor.core.execution_manager import (
             QueryExecutionManager, ExecutionConfig, BatchMode
         )
         
@@ -264,7 +263,7 @@ class TestResultStorageCore:
     @pytest.mark.asyncio
     async def test_store_and_retrieve_result(self, mock_db_session, tmp_path):
         """Test basic result storage and retrieval."""
-        from src.fraiseql_doctor.core.result_storage import (
+        from fraiseql_doctor.core.result_storage import (
             ResultStorageManager, StorageConfig, StorageBackend, CompressionType
         )
         
@@ -309,7 +308,7 @@ class TestResultStorageCore:
     @pytest.mark.asyncio
     async def test_compression_effectiveness(self, mock_db_session, tmp_path):
         """Test that compression reduces storage size."""
-        from src.fraiseql_doctor.core.result_storage import (
+        from fraiseql_doctor.core.result_storage import (
             ResultStorageManager, StorageConfig, StorageBackend, CompressionType
         )
         
@@ -365,10 +364,10 @@ class TestIntegrationWorkflow:
         tmp_path
     ):
         """Test complete workflow from query execution to result storage."""
-        from src.fraiseql_doctor.core.execution_manager import (
+        from fraiseql_doctor.core.execution_manager import (
             QueryExecutionManager, ExecutionConfig
         )
-        from src.fraiseql_doctor.core.result_storage import (
+        from fraiseql_doctor.core.result_storage import (
             ResultStorageManager, StorageConfig, StorageBackend
         )
         
@@ -429,10 +428,10 @@ class TestIntegrationWorkflow:
         tmp_path
     ):
         """Test error handling across the integrated workflow."""
-        from src.fraiseql_doctor.core.execution_manager import (
+        from fraiseql_doctor.core.execution_manager import (
             QueryExecutionManager, ExecutionConfig, ExecutionStatus
         )
-        from src.fraiseql_doctor.core.result_storage import (
+        from fraiseql_doctor.core.result_storage import (
             ResultStorageManager, StorageConfig, StorageBackend
         )
         
