@@ -78,3 +78,258 @@ describe('Apollo Studio Integration - Cycle 2', () => {
     expect(wrapper.find('[data-testid="studio-loading"]').exists()).toBe(false)
   })
 })
+
+describe('Apollo Studio Integration - Cycle 8: Full Integration', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('should integrate with configuration service for authentication', async () => {
+    const mockEndpoint = {
+      id: '1',
+      name: 'Test API',
+      url: 'https://auth.api.com/graphql',
+      status: 'ACTIVE' as const,
+      introspectionEnabled: true,
+      isHealthy: true,
+      headers: {
+        'Authorization': 'Bearer test-token-123'
+      },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+
+    const wrapper = mount(ApolloStudioIntegration, {
+      props: {
+        endpoint: mockEndpoint,
+        authType: 'bearer'
+      }
+    })
+
+    // Should render iframe with authenticated URL
+    const iframe = wrapper.find('[data-testid="apollo-studio-iframe"]')
+    expect(iframe.exists()).toBe(true)
+    expect(iframe.attributes('src')).toContain('studio.apollographql.com')
+  })
+
+  it('should handle endpoint switching with different auth types', async () => {
+    const bearerEndpoint = {
+      id: '1',
+      name: 'Bearer API',
+      url: 'https://bearer.api.com/graphql',
+      status: 'ACTIVE' as const,
+      introspectionEnabled: true,
+      isHealthy: true,
+      headers: { 'Authorization': 'Bearer token' },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+
+    const apiKeyEndpoint = {
+      id: '2', 
+      name: 'API Key API',
+      url: 'https://apikey.api.com/graphql',
+      status: 'ACTIVE' as const,
+      introspectionEnabled: true,
+      isHealthy: true,
+      headers: { 'X-API-Key': 'api-key-value' },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+
+    const wrapper = mount(ApolloStudioIntegration, {
+      props: {
+        endpoint: bearerEndpoint,
+        authType: 'bearer'
+      }
+    })
+
+    // Switch to API key endpoint
+    await wrapper.setProps({
+      endpoint: apiKeyEndpoint,
+      authType: 'apikey'
+    })
+
+    const iframe = wrapper.find('[data-testid="apollo-studio-iframe"]')
+    expect(iframe.attributes('src')).toContain(apiKeyEndpoint.url)
+  })
+
+  it('should display error states with recovery options', async () => {
+    const invalidEndpoint = {
+      id: '1',
+      name: 'Invalid API',
+      url: 'invalid-url-format',
+      status: 'INACTIVE' as const,
+      introspectionEnabled: false,
+      isHealthy: false,
+      headers: {},
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+
+    const wrapper = mount(ApolloStudioIntegration, {
+      props: {
+        endpoint: invalidEndpoint,
+        showErrorBoundary: true
+      }
+    })
+
+    expect(wrapper.find('[data-testid="error-boundary"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="error-message"]').text()).toContain('Configuration Error')
+    expect(wrapper.find('[data-testid="retry-button"]').exists()).toBe(true)
+  })
+
+  it('should handle network errors with retry functionality', async () => {
+    const wrapper = mount(ApolloStudioIntegration, {
+      props: {
+        endpointUrl: 'https://timeout.api.com/graphql',
+        enableRetry: true,
+        maxRetries: 3
+      }
+    })
+
+    // Simulate iframe error
+    const iframe = wrapper.find('[data-testid="apollo-studio-iframe"]')
+    await iframe.trigger('error')
+
+    expect(wrapper.find('[data-testid="error-state"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="retry-counter"]').text()).toContain('Attempt 1 of 3')
+    
+    // Test retry button
+    const retryButton = wrapper.find('[data-testid="retry-button"]')
+    expect(retryButton.exists()).toBe(true)
+    
+    await retryButton.trigger('click')
+    expect(wrapper.find('[data-testid="retry-counter"]').text()).toContain('Attempt 2 of 3')
+  })
+
+  it('should emit configuration events for parent components', async () => {
+    const wrapper = mount(ApolloStudioIntegration, {
+      props: {
+        endpointUrl: 'https://api.example.com/graphql'
+      }
+    })
+
+    const iframe = wrapper.find('[data-testid="apollo-studio-iframe"]')
+    await iframe.trigger('load')
+
+    expect(wrapper.emitted('studio-loaded')).toBeTruthy()
+    expect(wrapper.emitted('studio-loaded')![0]).toEqual([{
+      url: expect.stringContaining('studio.apollographql.com'),
+      timestamp: expect.any(Date)
+    }])
+  })
+
+  it('should handle custom parameters and theming', async () => {
+    const customParams = {
+      theme: 'dark',
+      showDocs: 'true',
+      operation: 'query'
+    }
+
+    const wrapper = mount(ApolloStudioIntegration, {
+      props: {
+        endpointUrl: 'https://api.example.com/graphql',
+        customParams,
+        theme: 'dark'
+      }
+    })
+
+    const iframe = wrapper.find('[data-testid="apollo-studio-iframe"]')
+    const src = iframe.attributes('src')
+    
+    expect(src).toContain('theme=dark')
+    expect(src).toContain('showDocs=true')
+    expect(src).toContain('operation=query')
+  })
+
+  it('should support accessibility features and ARIA labels', () => {
+    const wrapper = mount(ApolloStudioIntegration, {
+      props: {
+        endpointUrl: 'https://api.example.com/graphql',
+        ariaLabel: 'GraphQL API Explorer'
+      }
+    })
+
+    const container = wrapper.find('[data-testid="apollo-studio-container"]')
+    expect(container.attributes('role')).toBe('application')
+    expect(container.attributes('aria-label')).toBe('GraphQL API Explorer')
+
+    const iframe = wrapper.find('[data-testid="apollo-studio-iframe"]')
+    expect(iframe.attributes('title')).toBe('Apollo GraphQL Studio')
+    expect(iframe.attributes('aria-label')).toBe('GraphQL API Explorer Interface')
+  })
+
+  it('should handle responsive layout and sizing', async () => {
+    const wrapper = mount(ApolloStudioIntegration, {
+      props: {
+        endpointUrl: 'https://api.example.com/graphql',
+        height: '600px',
+        responsive: true
+      }
+    })
+
+    const container = wrapper.find('[data-testid="apollo-studio-container"]')
+    expect(container.classes()).toContain('responsive-layout')
+
+    // Test different viewport sizes
+    const iframe = wrapper.find('[data-testid="apollo-studio-iframe"]')
+    expect(iframe.attributes('style')).toContain('height: 600px')
+  })
+
+  it('should provide comprehensive error information for debugging', async () => {
+    const wrapper = mount(ApolloStudioIntegration, {
+      props: {
+        endpointUrl: 'javascript:alert("xss")',
+        debugMode: true
+      }
+    })
+
+    expect(wrapper.find('[data-testid="debug-panel"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="security-warning"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="error-details"]').text()).toContain('Dangerous URL pattern detected')
+  })
+
+  it('should manage iframe lifecycle and cleanup', async () => {
+    const wrapper = mount(ApolloStudioIntegration, {
+      props: {
+        endpointUrl: 'https://api.example.com/graphql'
+      }
+    })
+
+    const iframe = wrapper.find('[data-testid="apollo-studio-iframe"]')
+    expect(iframe.exists()).toBe(true)
+
+    // Test cleanup on unmount
+    wrapper.unmount()
+    
+    // Verify no memory leaks or lingering event listeners
+    expect(wrapper.vm).toBe(undefined)
+  })
+
+  it('should support custom studio configuration options', () => {
+    const studioConfig = {
+      endpoint: 'https://api.example.com/graphql',
+      headers: {
+        'Authorization': 'Bearer custom-token',
+        'X-Custom-Header': 'custom-value'
+      },
+      introspection: true,
+      theme: 'light'
+    }
+
+    const wrapper = mount(ApolloStudioIntegration, {
+      props: {
+        studioConfig,
+        configMode: 'advanced'
+      }
+    })
+
+    const iframe = wrapper.find('[data-testid="apollo-studio-iframe"]')
+    expect(iframe.exists()).toBe(true)
+    
+    // Verify config is applied
+    expect(wrapper.find('[data-testid="config-summary"]').text()).toContain('Bearer authentication')
+    expect(wrapper.find('[data-testid="config-summary"]').text()).toContain('Introspection enabled')
+  })
+})
