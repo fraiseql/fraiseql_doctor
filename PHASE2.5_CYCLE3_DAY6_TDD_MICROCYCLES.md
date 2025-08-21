@@ -1,4 +1,5 @@
 # 🧪 **Phase 2.5 Cycle 3 - Day 6: TDD Micro-Cycles**
+
 ## **Apollo Studio Integration Foundation**
 
 ---
@@ -27,11 +28,13 @@
 ---
 
 # 🔄 **TDD Cycle 1: Basic Component Render**
+
 **Time**: 9:00-9:30 (30 minutes)
 
 ## ❌ **RED Phase** (10 minutes)
 
 ### **Test 1: Component Renders**
+
 ```typescript
 // src/components/__tests__/ApolloStudioIntegration.test.ts
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -72,6 +75,7 @@ describe('Apollo Studio Integration - Cycle 1', () => {
 ## ✅ **GREEN Phase** (15 minutes)
 
 ### **Minimal Implementation**
+
 ```vue
 <!-- src/components/ApolloStudioIntegration.vue -->
 <template>
@@ -96,6 +100,7 @@ describe('Apollo Studio Integration - Cycle 1', () => {
 ## 🔧 **REFACTOR Phase** (5 minutes)
 
 ### **Clean Up Structure**
+
 ```vue
 <template>
   <div 
@@ -122,6 +127,7 @@ describe('Apollo Studio Integration - Cycle 1', () => {
 ```
 
 ### **Cycle 1 Checkpoint** ✅
+
 - [x] Component renders correctly
 - [x] Basic layout structure in place
 - [x] CSS classes properly applied
@@ -131,11 +137,13 @@ describe('Apollo Studio Integration - Cycle 1', () => {
 ---
 
 # 🔄 **TDD Cycle 2: Iframe Integration**
+
 **Time**: 9:30-10:15 (45 minutes)
 
 ## ❌ **RED Phase** (15 minutes)
 
 ### **Add Iframe Tests**
+
 ```typescript
 // Add to existing test file
 describe('Apollo Studio Integration - Cycle 2', () => {
@@ -192,6 +200,7 @@ describe('Apollo Studio Integration - Cycle 2', () => {
 ## ✅ **GREEN Phase** (25 minutes)
 
 ### **Add Props and Iframe**
+
 ```vue
 <template>
   <div 
@@ -281,6 +290,7 @@ function handleIframeLoad() {
 ## 🔧 **REFACTOR Phase** (5 minutes)
 
 ### **Extract URL Building Logic**
+
 ```typescript
 // src/utils/apolloStudioUrl.ts
 export function buildApolloStudioUrl(endpointUrl: string): string {
@@ -306,6 +316,7 @@ const studioUrl = computed(() => {
 ```
 
 ### **Cycle 2 Checkpoint** ✅
+
 - [x] Iframe integration working
 - [x] Loading state implemented
 - [x] URL building extracted to utility
@@ -315,11 +326,13 @@ const studioUrl = computed(() => {
 ---
 
 # 🔄 **TDD Cycle 3: Auth Configuration Service**
+
 **Time**: 10:30-11:15 (45 minutes)
 
 ## ❌ **RED Phase** (15 minutes)
 
 ### **Create Service Tests**
+
 ```typescript
 // src/services/__tests__/apolloStudioConfig.test.ts
 import { describe, it, expect } from 'vitest'
@@ -417,6 +430,7 @@ describe('Apollo Studio Configuration Service', () => {
 ## ✅ **GREEN Phase** (25 minutes)
 
 ### **Implement Service**
+
 ```typescript
 // src/services/apolloStudioConfig.ts
 import type { GraphQLEndpoint } from '../types/endpoint'
@@ -482,6 +496,7 @@ export function useApolloStudioConfig() {
 ## 🔧 **REFACTOR Phase** (5 minutes)
 
 ### **Add TypeScript Improvements**
+
 ```typescript
 // Add better type definitions
 export interface StudioHeaders {
@@ -508,6 +523,7 @@ function generateStudioUrl(endpoint: GraphQLEndpoint): string {
 ```
 
 ### **Cycle 3 Checkpoint** ✅
+
 - [x] Configuration service implemented
 - [x] All auth header handling working
 - [x] URL generation with parameters
@@ -518,11 +534,13 @@ function generateStudioUrl(endpoint: GraphQLEndpoint): string {
 ---
 
 # 🔄 **TDD Cycle 4: Bearer Token Auth**
+
 **Time**: 11:15-12:00 (45 minutes)
 
 ## ❌ **RED Phase** (15 minutes)
 
 ### **Bearer Auth Tests**
+
 ```typescript
 // Add to apolloStudioConfig.test.ts
 describe('Bearer Token Authentication', () => {
@@ -581,6 +599,7 @@ describe('Bearer Token Authentication', () => {
 ## ✅ **GREEN Phase** (25 minutes)
 
 ### **Implement Bearer Auth Logic**
+
 ```typescript
 // Add to apolloStudioConfig.ts
 export type AuthType = 'bearer' | 'api-key' | 'basic' | 'none'
@@ -627,6 +646,7 @@ export function useApolloStudioConfig() {
 ## 🔧 **REFACTOR Phase** (5 minutes)
 
 ### **Extract Auth Utilities**
+
 ```typescript
 // src/utils/authHelpers.ts
 export function isBearerToken(token: string): boolean {
@@ -647,6 +667,7 @@ function formatBearerToken(token: string): string {
 ```
 
 ### **Cycle 4 Checkpoint** ✅
+
 - [x] Bearer token formatting working
 - [x] Double-prefix prevention
 - [x] Token extraction logic
@@ -659,21 +680,25 @@ function formatBearerToken(token: string): string {
 # 🔄 **TDD Cycles 5-8 Summary**
 
 ## **Cycle 5: API Key & Basic Auth** (13:00-13:45)
+
 - **Tests**: API key header formatting, basic auth encoding, multi-auth support
 - **Implementation**: Support for X-API-Key, custom header names, base64 basic auth
 - **Refactor**: Auth strategy pattern
 
 ## **Cycle 6: Endpoint Switching** (13:45-14:30)
+
 - **Tests**: Dynamic config updates, iframe refresh, state management
 - **Implementation**: Reactive configuration, endpoint change detection
 - **Refactor**: Configuration caching
 
 ## **Cycle 7: Error Handling** (14:45-15:30)
+
 - **Tests**: Network errors, invalid URLs, auth failures
 - **Implementation**: Error boundaries, user feedback, retry logic
 - **Refactor**: Error state management
 
 ## **Cycle 8: Integration Testing** (15:30-16:00)
+
 - **Tests**: End-to-end scenarios, real iframe interaction
 - **Implementation**: Component integration, message passing
 - **Refactor**: Final cleanup and optimization
@@ -683,6 +708,7 @@ function formatBearerToken(token: string): string {
 # 📊 **Day 6 Success Metrics**
 
 ## **Completion Checklist**
+
 - [ ] All 31 tests passing
 - [ ] Apollo Studio iframe functional
 - [ ] All authentication types working
@@ -693,12 +719,14 @@ function formatBearerToken(token: string): string {
 - [ ] Clean, maintainable code
 
 ## **Performance Targets**
+
 - [ ] Iframe load time <3 seconds
 - [ ] Endpoint switch time <1 second
 - [ ] No memory leaks
 - [ ] Responsive design works
 
 ## **Code Quality Metrics**
+
 - [ ] Test coverage >90%
 - [ ] No console errors
 - [ ] Proper TypeScript typing
@@ -710,8 +738,10 @@ function formatBearerToken(token: string): string {
 ## 🎯 **Next Steps for Day 7**
 
 With Day 6 foundation complete, Day 7 will focus on:
+
 1. **Query History Capture** (TDD Cycles 9-12)
-2. **Theme Integration** (TDD Cycles 13-15) 
+2. **Theme Integration** (TDD Cycles 13-15)
 3. **Performance Optimization** (TDD Cycles 16-17)
 
 The micro-cycle approach ensures steady progress with clear checkpoints and maintains the high-quality TDD methodology established in previous cycles.
+
