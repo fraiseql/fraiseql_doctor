@@ -326,3 +326,223 @@ describe('Bearer Token Authentication', () => {
     expect(token).toBe('secret-token-value')
   })
 })
+
+describe('Endpoint Switching & URL Management', () => {
+  it('should switch endpoint configuration dynamically', () => {
+    const { switchEndpoint } = useApolloStudioConfig()
+    
+    const oldEndpoint: GraphQLEndpoint = {
+      id: '1',
+      name: 'Old API',
+      url: 'https://old.api.com/graphql',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: true,
+      isHealthy: true,
+      headers: {
+        'Authorization': 'Bearer old-token'
+      },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    const newEndpoint: GraphQLEndpoint = {
+      id: '2',
+      name: 'New API',
+      url: 'https://new.api.com/graphql',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: false,
+      isHealthy: true,
+      headers: {
+        'X-API-Key': 'new-api-key'
+      },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    const result = switchEndpoint(oldEndpoint, newEndpoint)
+    
+    expect(result.endpoint).toBe('https://new.api.com/graphql')
+    expect(result.headers['Authorization']).toBeUndefined()
+    expect(result.headers['X-API-Key']).toBe('new-api-key')
+    expect(result.introspection).toBe(false)
+  })
+
+  it('should preserve auth type when switching endpoints', () => {
+    const { switchEndpoint } = useApolloStudioConfig()
+    
+    const endpoint1: GraphQLEndpoint = {
+      id: '1',
+      name: 'API 1',
+      url: 'https://api1.com/graphql',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: true,
+      isHealthy: true,
+      headers: {
+        'Authorization': 'Bearer token-1'
+      },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    const endpoint2: GraphQLEndpoint = {
+      id: '2',
+      name: 'API 2',
+      url: 'https://api2.com/graphql',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: true,
+      isHealthy: true,
+      headers: {
+        'Authorization': 'Bearer token-2'
+      },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    const result = switchEndpoint(endpoint1, endpoint2, { preserveAuthType: true })
+    
+    expect(result.endpoint).toBe('https://api2.com/graphql')
+    expect(result.headers['Authorization']).toBe('Bearer token-2')
+  })
+
+  it('should generate studio URLs with custom parameters', () => {
+    const { generateStudioUrlWithParams } = useApolloStudioConfig()
+    
+    const endpoint: GraphQLEndpoint = {
+      id: '1',
+      name: 'Test API',
+      url: 'https://api.example.com/graphql',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: true,
+      isHealthy: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    const customParams = {
+      theme: 'dark',
+      showDocs: 'true',
+      operation: 'query'
+    }
+    
+    const url = generateStudioUrlWithParams(endpoint, customParams)
+    
+    expect(url).toContain('theme=dark')
+    expect(url).toContain('showDocs=true')
+    expect(url).toContain('operation=query')
+    expect(url).toContain('endpoint=' + encodeURIComponent(endpoint.url))
+  })
+
+  it('should sanitize URL parameters', () => {
+    const { sanitizeUrlParams } = useApolloStudioConfig()
+    
+    const unsafeParams = {
+      'safe-param': 'value',
+      '<script>alert("xss")</script>': 'malicious',
+      'normal_param': 'normal-value',
+      'javascript:alert()': 'another-malicious'
+    }
+    
+    const sanitized = sanitizeUrlParams(unsafeParams)
+    
+    expect(sanitized['safe-param']).toBe('value')
+    expect(sanitized['normal_param']).toBe('normal-value')
+    expect(sanitized['<script>alert("xss")</script>']).toBeUndefined()
+    expect(sanitized['javascript:alert()']).toBeUndefined()
+  })
+
+  it('should validate endpoint URLs before switching', () => {
+    const { validateEndpointUrl } = useApolloStudioConfig()
+    
+    expect(validateEndpointUrl('https://valid.api.com/graphql')).toBe(true)
+    expect(validateEndpointUrl('http://localhost:4000/graphql')).toBe(true)
+    expect(validateEndpointUrl('invalid-url')).toBe(false)
+    expect(validateEndpointUrl('javascript:alert()')).toBe(false)
+    expect(validateEndpointUrl('')).toBe(false)
+    expect(validateEndpointUrl('ftp://not-http.com')).toBe(false)
+  })
+
+  it('should build URL query string from parameters', () => {
+    const { buildQueryString } = useApolloStudioConfig()
+    
+    const params = {
+      endpoint: 'https://api.example.com/graphql',
+      introspection: 'true',
+      theme: 'dark',
+      empty: '',
+      undefined: undefined,
+      null: null
+    }
+    
+    const queryString = buildQueryString(params)
+    
+    expect(queryString).toContain('endpoint=' + encodeURIComponent('https://api.example.com/graphql'))
+    expect(queryString).toContain('introspection=true')
+    expect(queryString).toContain('theme=dark')
+    expect(queryString).not.toContain('empty=')
+    expect(queryString).not.toContain('undefined')
+    expect(queryString).not.toContain('null')
+  })
+
+  it('should handle endpoint switching with different auth types', () => {
+    const { switchEndpointWithAuth } = useApolloStudioConfig()
+    
+    const bearerEndpoint: GraphQLEndpoint = {
+      id: '1',
+      name: 'Bearer API',
+      url: 'https://bearer.api.com/graphql',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: true,
+      isHealthy: true,
+      headers: {
+        'Authorization': 'Bearer bearer-token'
+      },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    const apiKeyEndpoint: GraphQLEndpoint = {
+      id: '2',
+      name: 'API Key API',
+      url: 'https://apikey.api.com/graphql',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: true,
+      isHealthy: true,
+      headers: {
+        'X-API-Key': 'api-key-value'
+      },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    const result = switchEndpointWithAuth(bearerEndpoint, apiKeyEndpoint, 'apikey')
+    
+    expect(result.endpoint).toBe('https://apikey.api.com/graphql')
+    expect(result.headers['Authorization']).toBeUndefined()
+    expect(result.headers['X-API-Key']).toBe('api-key-value')
+  })
+
+  it('should generate Studio URLs with authentication parameters', () => {
+    const { generateAuthenticatedStudioUrl } = useApolloStudioConfig()
+    
+    const endpoint: GraphQLEndpoint = {
+      id: '1',
+      name: 'Auth API',
+      url: 'https://auth.api.com/graphql',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: true,
+      isHealthy: true,
+      headers: {
+        'Authorization': 'Bearer secret-token'
+      },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    const url = generateAuthenticatedStudioUrl(endpoint)
+    
+    expect(url).toContain('studio.apollographql.com')
+    expect(url).toContain('endpoint=' + encodeURIComponent(endpoint.url))
+    // Note: Should NOT contain actual auth tokens in URL for security
+    expect(url).not.toContain('secret-token')
+  })
+})

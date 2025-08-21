@@ -26,12 +26,27 @@ export interface BasicAuthCredentials {
   password: string
 }
 
+export interface SwitchEndpointOptions {
+  preserveAuthType?: boolean
+}
+
+export interface UrlParams {
+  [key: string]: string | number | boolean | undefined | null
+}
+
 export function useApolloStudioConfig() {
-  // Helper function to remove API key headers
+  // Constants
   const API_KEY_HEADERS = ['X-API-Key', 'X-Api-Key', 'API-Key', 'Api-Key']
+  const APOLLO_STUDIO_BASE_URL = 'https://studio.apollographql.com/sandbox/explorer'
+  const DANGEROUS_URL_PATTERNS = ['<script', 'javascript:', 'data:']
   
+  // Helper functions
   function clearApiKeyHeaders(headers: StudioHeaders): void {
     API_KEY_HEADERS.forEach(header => delete headers[header])
+  }
+  
+  function isValidValue(value: any): boolean {
+    return value !== undefined && value !== null && value !== ''
   }
   
   function createStudioConfig(endpoint: GraphQLEndpoint): StudioConfig {
@@ -46,14 +61,47 @@ export function useApolloStudioConfig() {
     return { ...headers }
   }
 
+  // URL Generation Helper Functions (defined early for use by other functions)
+  function sanitizeUrlParams(params: UrlParams): UrlParams {
+    const sanitized: UrlParams = {}
+    
+    for (const [key, value] of Object.entries(params)) {
+      // Skip dangerous keys that could contain scripts
+      const isDangerous = DANGEROUS_URL_PATTERNS.some(pattern => key.includes(pattern))
+      if (isDangerous) {
+        continue
+      }
+      
+      // Only include valid values
+      if (isValidValue(value)) {
+        sanitized[key] = value
+      }
+    }
+    
+    return sanitized
+  }
+
+  function buildQueryString(params: UrlParams): string {
+    const sanitized = sanitizeUrlParams(params)
+    const searchParams = new URLSearchParams()
+    
+    for (const [key, value] of Object.entries(sanitized)) {
+      if (value !== undefined && value !== null) {
+        searchParams.append(key, String(value))
+      }
+    }
+    
+    return searchParams.toString()
+  }
+
   function generateStudioUrl(endpoint: GraphQLEndpoint): string {
-    const baseUrl = 'https://studio.apollographql.com/sandbox/explorer'
-    const params = new URLSearchParams({
+    const params = {
       endpoint: endpoint.url,
       ...(endpoint.introspectionEnabled && { introspection: 'true' })
-    })
+    }
     
-    return `${baseUrl}?${params.toString()}`
+    const queryString = buildQueryString(params)
+    return `${APOLLO_STUDIO_BASE_URL}?${queryString}`
   }
 
   function validateEndpointConfig(endpoint: GraphQLEndpoint): boolean {
@@ -199,6 +247,71 @@ export function useApolloStudioConfig() {
     return config
   }
 
+  // Endpoint Switching Functions
+  function switchEndpoint(
+    fromEndpoint: GraphQLEndpoint,
+    toEndpoint: GraphQLEndpoint,
+    options?: SwitchEndpointOptions
+  ): StudioConfig {
+    const config = createStudioConfig(toEndpoint)
+    
+    if (options?.preserveAuthType) {
+      // Keep the same auth type but use new endpoint's credentials
+      const fromAuthType = detectAuthType(fromEndpoint.headers || {})
+      return createConfigWithAuth(toEndpoint, fromAuthType)
+    }
+    
+    // Use the target endpoint's natural auth configuration
+    const targetAuthType = detectAuthType(config.headers)
+    return createConfigWithAuth(toEndpoint, targetAuthType)
+  }
+
+  function switchEndpointWithAuth(
+    fromEndpoint: GraphQLEndpoint,
+    toEndpoint: GraphQLEndpoint,
+    forceAuthType: AuthType
+  ): StudioConfig {
+    return createConfigWithAuth(toEndpoint, forceAuthType)
+  }
+
+  // URL Generation Functions  
+  function validateEndpointUrl(url: string): boolean {
+    if (!url || typeof url !== 'string' || url.trim().length === 0) {
+      return false
+    }
+    
+    try {
+      const parsed = new URL(url)
+      // Only allow http and https protocols
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+    } catch {
+      return false
+    }
+  }
+
+  function generateStudioUrlWithParams(
+    endpoint: GraphQLEndpoint,
+    customParams: UrlParams = {}
+  ): string {
+    const params: UrlParams = {
+      endpoint: endpoint.url,
+      ...(endpoint.introspectionEnabled && { introspection: 'true' }),
+      ...customParams
+    }
+    
+    const queryString = buildQueryString(params)
+    return `${APOLLO_STUDIO_BASE_URL}?${queryString}`
+  }
+
+  function generateAuthenticatedStudioUrl(endpoint: GraphQLEndpoint): string {
+    // For security, we don't pass auth tokens in the URL
+    // The iframe will handle authentication through headers
+    return generateStudioUrlWithParams(endpoint, {
+      // Add any safe, non-sensitive parameters here
+      hasAuth: 'true' // Indicates auth is configured but don't expose tokens
+    })
+  }
+
   return {
     createStudioConfig,
     buildAuthHeaders,
@@ -216,6 +329,15 @@ export function useApolloStudioConfig() {
     decodeBasicAuth,
     validateBasicAuth,
     // Multi-auth functions
-    detectAuthType
+    detectAuthType,
+    // Endpoint switching functions
+    switchEndpoint,
+    switchEndpointWithAuth,
+    // URL management functions
+    validateEndpointUrl,
+    sanitizeUrlParams,
+    buildQueryString,
+    generateStudioUrlWithParams,
+    generateAuthenticatedStudioUrl
   }
 }
