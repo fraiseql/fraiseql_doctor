@@ -88,7 +88,15 @@ describe('EndpointForm', () => {
       await wrapper.find('[data-testid="url-input"]').setValue('https://api.example.com/graphql')
       await wrapper.find('[data-testid="description-input"]').setValue('Test description')
       await wrapper.find('[data-testid="introspection-checkbox"]').setChecked(true)
-      await wrapper.find('form').trigger('submit')
+      // Wait for reactive updates
+      await wrapper.vm.$nextTick()
+      
+      // Verify form data is set correctly
+      expect(wrapper.vm.formData.name).toBe('Test Endpoint')
+      expect(wrapper.vm.formData.url).toBe('https://api.example.com/graphql')
+      
+      // Trigger form submission
+      await wrapper.find('form').trigger('submit.prevent')
       await wrapper.vm.$nextTick()
       
       expect(wrapper.emitted('create')).toBeTruthy()
@@ -153,7 +161,13 @@ describe('EndpointForm', () => {
       })
       
       await wrapper.find('[data-testid="name-input"]').setValue('Updated Name')
-      await wrapper.find('form').trigger('submit')
+      await wrapper.vm.$nextTick()
+      
+      // Verify form data updated
+      expect(wrapper.vm.formData.name).toBe('Updated Name')
+      
+      // Trigger form submission
+      await wrapper.find('form').trigger('submit.prevent')
       await wrapper.vm.$nextTick()
       
       expect(wrapper.emitted('update')).toBeTruthy()
@@ -209,7 +223,10 @@ describe('EndpointForm', () => {
       
       await wrapper.find('[data-testid="name-input"]').setValue('Test')
       await wrapper.find('[data-testid="url-input"]').setValue('https://api.example.com/graphql')
-      await wrapper.find('form').trigger('submit')
+      await wrapper.vm.$nextTick()
+      
+      // Trigger form submission
+      await wrapper.find('form').trigger('submit.prevent')
       await wrapper.vm.$nextTick()
       
       expect(wrapper.emitted('create')?.[0][0].headers).toEqual({

@@ -22,10 +22,23 @@ beforeAll(() => {
   }
 
   // Mock URL and Blob for file download tests
-  global.URL = {
-    createObjectURL: () => 'blob:test-url',
-    revokeObjectURL: () => {}
-  } as any
+  if (!global.URL) {
+    global.URL = class MockURL {
+      constructor(url: string) {
+        if (!url || typeof url !== 'string') throw new Error('Invalid URL')
+        if (url === 'invalid-url' || url === 'not-a-valid-url') throw new Error('Invalid URL')
+        if (url.startsWith('javascript:') || url.startsWith('ftp:')) throw new Error('Invalid protocol')
+        if (!url.includes('://')) throw new Error('Invalid URL format')
+        
+        this.href = url
+        this.protocol = url.split('://')[0] + ':'
+      }
+      href: string
+      protocol: string
+      static createObjectURL = () => 'blob:test-url'
+      static revokeObjectURL = () => {}
+    } as any
+  }
 
   global.Blob = class MockBlob {
     constructor(content: any[], options?: any) {

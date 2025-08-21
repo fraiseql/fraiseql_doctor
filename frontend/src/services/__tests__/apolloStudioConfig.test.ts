@@ -64,7 +64,7 @@ describe('Apollo Studio Configuration Service', () => {
     const isValid = validateEndpointConfig(mockEndpoint)
     const isInvalid = validateEndpointConfig({
       ...mockEndpoint,
-      url: 'invalid-url'
+      url: 'not-a-valid-url'
     })
     
     expect(isValid).toBe(true)
