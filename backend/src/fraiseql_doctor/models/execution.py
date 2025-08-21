@@ -11,45 +11,55 @@ from .base import Base
 
 class Execution(Base):
     """Query execution history model."""
-    __tablename__ = "tb_execution"
+    __tablename__ = "query_executions"
 
-    pk_execution: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    fk_query: Mapped[UUID] = mapped_column(ForeignKey("tb_query.pk_query", ondelete="CASCADE"))
-    fk_endpoint: Mapped[UUID] = mapped_column(ForeignKey("tb_endpoint.pk_endpoint", ondelete="CASCADE"))
-    execution_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
-    execution_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    query_id: Mapped[UUID] = mapped_column(ForeignKey("queries.id", ondelete="CASCADE"))
+    endpoint_id: Mapped[UUID] = mapped_column(ForeignKey("endpoints.id", ondelete="CASCADE"))
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     status: Mapped[str] = mapped_column(String(20), nullable=False)  # pending, success, error, timeout
     response_time_ms: Mapped[int | None] = mapped_column(Integer)
-    response_size_bytes: Mapped[int | None] = mapped_column(Integer)
-    actual_complexity_score: Mapped[int | None] = mapped_column(Integer)
+    complexity_score: Mapped[int | None] = mapped_column(Integer)
     error_message: Mapped[str | None] = mapped_column(Text)
-    error_code: Mapped[str | None] = mapped_column(String(50))
+    error_details: Mapped[dict[str, Any] | None] = mapped_column()
     response_data: Mapped[dict[str, Any] | None] = mapped_column()
-    variables_used: Mapped[dict[str, Any]] = mapped_column(default=dict)
+    variables: Mapped[dict[str, Any]] = mapped_column(default=dict)
     execution_context: Mapped[dict[str, Any]] = mapped_column(default=dict)
+    operation_name: Mapped[str | None] = mapped_column(String(255))
+    user_agent: Mapped[str | None] = mapped_column(String(500))
+    trace_id: Mapped[str | None] = mapped_column(String(255))
+    span_id: Mapped[str | None] = mapped_column(String(255))
+    triggered_by: Mapped[str | None] = mapped_column(String(100))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
-    # Relationships (using string references to avoid circular imports)
-    query = relationship("Query", back_populates="executions")
-    endpoint = relationship("Endpoint", back_populates="executions")
+    # Relationships disabled temporarily for API testing
+    # query = relationship("Query", back_populates="executions")
+    # endpoint = relationship("Endpoint", back_populates="executions")
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Execution":
         """Create Execution instance from dictionary."""
         return cls(
-            pk_execution=data.get("pk_execution"),
-            fk_query=data["fk_query"],
-            fk_endpoint=data["fk_endpoint"],
-            execution_start=data["execution_start"],
-            execution_end=data.get("execution_end"),
+            id=data.get("id"),
+            query_id=data["query_id"],
+            endpoint_id=data["endpoint_id"],
+            started_at=data["started_at"],
+            completed_at=data.get("completed_at"),
             status=data["status"],
             response_time_ms=data.get("response_time_ms"),
-            response_size_bytes=data.get("response_size_bytes"),
-            actual_complexity_score=data.get("actual_complexity_score"),
+            complexity_score=data.get("complexity_score"),
             error_message=data.get("error_message"),
-            error_code=data.get("error_code"),
+            error_details=data.get("error_details"),
             response_data=data.get("response_data"),
-            variables_used=data.get("variables_used", {}),
+            variables=data.get("variables", {}),
             execution_context=data.get("execution_context", {}),
-            created_at=data.get("created_at")
+            operation_name=data.get("operation_name"),
+            user_agent=data.get("user_agent"),
+            trace_id=data.get("trace_id"),
+            span_id=data.get("span_id"),
+            triggered_by=data.get("triggered_by"),
+            created_at=data.get("created_at"),
+            updated_at=data.get("updated_at")
         )

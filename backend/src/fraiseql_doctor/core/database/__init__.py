@@ -1,18 +1,10 @@
 """Database module for FraiseQL Doctor."""
 
-# Import from the database.py file to avoid conflicts
-from ..database import (
-    get_database_session,
-    get_db_session,
-    get_config,
-    init_database,
-    DatabaseConfig
-)
+# Import from models and schemas to avoid circular imports
+from .models import *
+from .schemas import *
 
 __all__ = [
-    "get_database_session", 
-    "get_db_session", 
-    "get_config", 
-    "init_database",
-    "DatabaseConfig"
+    "Base",
+    "TimestampMixin"
 ]

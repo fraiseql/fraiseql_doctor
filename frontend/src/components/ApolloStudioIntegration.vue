@@ -142,7 +142,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { buildApolloStudioUrl } from '../utils/apolloStudioUrl'
 import { useApolloStudioConfig } from '../services/apolloStudioConfig'
-import { useQueryHistory } from '../services/queryHistory'
+import { useQueryHistoryHybrid } from '../services/queryHistoryHybrid'
 import QueryHistory from './QueryHistory.vue'
 import type { GraphQLEndpoint, AuthType, StudioConfig, UrlParams } from '../services/apolloStudioConfig'
 import type { QueryHistoryEntry } from '../types/queryHistory'
@@ -197,7 +197,7 @@ const {
   detectAuthType
 } = useApolloStudioConfig()
 
-const queryHistoryService = useQueryHistory()
+const queryHistoryService = useQueryHistoryHybrid()
 
 // State
 const isLoading = ref(true)
@@ -442,18 +442,22 @@ function handleSaveTemplate(entry: QueryHistoryEntry) {
 }
 
 // Method to manually add a query to history (for iframe integration)
-function addQueryToHistory(query: string, variables?: Record<string, any>, result?: any, success: boolean = true, executionTime: number = 0) {
+async function addQueryToHistory(query: string, variables?: Record<string, any>, result?: any, success: boolean = true, executionTime: number = 0) {
   if (!props.endpoint || !props.enableQueryHistory) return
 
-  queryHistoryService.addQuery({
-    endpointId: props.endpoint.id,
-    query,
-    variables,
-    executionTime,
-    success,
-    result,
-    statusCode: success ? 200 : 500
-  })
+  try {
+    await queryHistoryService.addQuery({
+      endpointId: props.endpoint.id,
+      query,
+      variables,
+      executionTime,
+      success,
+      result,
+      statusCode: success ? 200 : 500
+    })
+  } catch (error) {
+    console.error('Failed to add query to history:', error)
+  }
 }
 
 // Watchers

@@ -5,7 +5,7 @@ description = "Test-driven health monitoring and query execution tool for Fraise
 authors = [
     {name = "Your Name", email = "your.email@example.com"}
 ]
-readme = "README.md"
+readme = {file = "../README.md", content-type = "text/markdown"}
 license = {text = "MIT"}
 requires-python = ">=3.11"
 classifiers = [
@@ -34,6 +34,11 @@ dependencies = [
     "pytest-asyncio>=1.1.0",
     "aiofiles>=24.1.0",
     "psutil>=7.0.0",
+    # Web API dependencies
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "python-multipart>=0.0.6",
+    "websockets>=12.0.0",
 ]
 
 [project.optional-dependencies]
@@ -54,6 +59,7 @@ dev = [
 
 [project.scripts]
 fraiseql-doctor = "fraiseql_doctor.cli.main:app"
+fraiseql-doctor-api = "fraiseql_doctor.web.main:main"
 
 [tool.ruff]
 target-version = "py311"
