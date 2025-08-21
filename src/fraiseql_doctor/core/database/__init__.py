@@ -1,19 +1,18 @@
 """Database module for FraiseQL Doctor."""
 
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
-from fraiseql_doctor.core.config import get_settings
+# Import from the database.py file to avoid conflicts
+from ..database import (
+    get_database_session,
+    get_db_session,
+    get_config,
+    init_database,
+    DatabaseConfig
+)
 
-
-async def get_database_session() -> AsyncSession:
-    """Get database session."""
-    settings = get_settings()
-    engine = create_async_engine(settings.database_url)
-
-    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
-    async with async_session() as session:
-        yield session
-
-
-__all__ = ["get_database_session"]
+__all__ = [
+    "get_database_session", 
+    "get_db_session", 
+    "get_config", 
+    "init_database",
+    "DatabaseConfig"
+]
