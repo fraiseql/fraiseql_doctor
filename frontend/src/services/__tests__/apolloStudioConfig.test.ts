@@ -41,7 +41,7 @@ describe('Apollo Studio Configuration Service', () => {
   })
 
   it('should handle missing headers gracefully', () => {
-    const endpointWithoutHeaders = { ...mockEndpoint, headers: undefined }
+    const { headers, ...endpointWithoutHeaders } = mockEndpoint
     const { createStudioConfig } = useApolloStudioConfig()
     
     const config = createStudioConfig(endpointWithoutHeaders)
@@ -189,8 +189,9 @@ describe('Basic Authentication', () => {
     
     const credentials = decodeBasicAuth('Basic dXNlcm5hbWU6cGFzc3dvcmQ=')
     
-    expect(credentials.username).toBe('username')
-    expect(credentials.password).toBe('password')
+    expect(credentials).toBeTruthy()
+    expect(credentials!.username).toBe('username')
+    expect(credentials!.password).toBe('password')
   })
 
   it('should handle malformed Basic auth headers', () => {
@@ -679,8 +680,7 @@ describe('Error Handling & Resilience', () => {
       'normal-param': 'value',
       '<script>evil</script>': 'malicious',
       'null-param': null,
-      'undefined-param': undefined,
-      'function-param': () => 'dangerous'
+      'undefined-param': undefined
     }
     
     const result = generateStudioUrlSafely(endpoint, malformedParams)

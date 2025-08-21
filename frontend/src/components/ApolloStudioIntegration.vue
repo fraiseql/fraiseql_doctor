@@ -144,7 +144,8 @@ import { buildApolloStudioUrl } from '../utils/apolloStudioUrl'
 import { useApolloStudioConfig } from '../services/apolloStudioConfig'
 import { useQueryHistoryHybrid } from '../services/queryHistoryHybrid'
 import QueryHistory from './QueryHistory.vue'
-import type { GraphQLEndpoint, AuthType, StudioConfig, UrlParams } from '../services/apolloStudioConfig'
+import type { AuthType, StudioConfig, UrlParams } from '../services/apolloStudioConfig'
+import type { GraphQLEndpoint } from '../types/endpoint'
 import type { QueryHistoryEntry } from '../types/queryHistory'
 
 // Props
@@ -449,7 +450,7 @@ async function addQueryToHistory(query: string, variables?: Record<string, any>,
     await queryHistoryService.addQuery({
       endpointId: props.endpoint.id,
       query,
-      variables,
+      ...(variables && { variables }),
       executionTime,
       success,
       result,

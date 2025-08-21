@@ -128,6 +128,7 @@
       <div v-else class="divide-y divide-gray-200 dark:divide-gray-700">
         <QueryHistoryEntry
           v-for="entry in paginatedHistory"
+          v-if="getEndpoint(entry.endpointId)"
           :key="entry.id"
           :entry="entry"
           :endpoint="getEndpoint(entry.endpointId)"
@@ -183,6 +184,7 @@ import { useQueryHistoryHybrid } from '../services/queryHistoryHybrid'
 import type { 
   QueryHistoryEntry as HistoryEntry,
   QueryHistoryFilter,
+  QueryHistoryStats,
   QueryHistoryExportOptions
 } from '../types/queryHistory'
 import type { GraphQLEndpoint } from '../types/endpoint'
@@ -208,7 +210,14 @@ const queryHistoryService = useQueryHistoryHybrid()
 // State
 const loading = ref(true)
 const history = ref<HistoryEntry[]>([])
-const stats = ref({ totalQueries: 0, successfulQueries: 0, failedQueries: 0, averageResponseTime: 0 })
+const stats = ref<QueryHistoryStats>({ 
+  totalQueries: 0, 
+  successfulQueries: 0, 
+  failedQueries: 0, 
+  averageExecutionTime: 0,
+  mostUsedEndpoints: [],
+  recentTags: []
+})
 const connectionStatus = ref({ connected: false, source: 'localStorage' })
 const currentPage = ref(1)
 const pageSize = ref(20)
@@ -224,7 +233,6 @@ const filters = ref<{
   toDate?: string
 }>({
   endpointId: props.currentEndpoint?.id || '',
-  success: undefined,
   searchTerm: '',
   onlyFavorites: false,
   fromDate: '',
@@ -321,7 +329,6 @@ async function loadHistory() {
 function clearFilters() {
   filters.value = {
     endpointId: '',
-    success: undefined,
     searchTerm: '',
     onlyFavorites: false,
     fromDate: '',
@@ -377,12 +384,12 @@ function exportHistory() {
 async function handleExport(options: QueryHistoryExportOptions) {
   try {
     const filter: QueryHistoryFilter = {
-      endpointId: filters.value.endpointId || undefined,
-      success: filters.value.success,
-      searchTerm: filters.value.searchTerm || undefined,
-      favorite: filters.value.onlyFavorites ? true : undefined,
-      fromDate: filters.value.fromDate ? new Date(filters.value.fromDate) : undefined,
-      toDate: filters.value.toDate ? new Date(filters.value.toDate) : undefined
+      ...(filters.value.endpointId && { endpointId: filters.value.endpointId }),
+      ...(filters.value.success !== undefined && { success: filters.value.success }),
+      ...(filters.value.searchTerm && { searchTerm: filters.value.searchTerm }),
+      ...(filters.value.onlyFavorites && { favorite: true }),
+      ...(filters.value.fromDate && { fromDate: new Date(filters.value.fromDate) }),
+      ...(filters.value.toDate && { toDate: new Date(filters.value.toDate) })
     }
     
     const result = await queryHistoryService.exportHistory({

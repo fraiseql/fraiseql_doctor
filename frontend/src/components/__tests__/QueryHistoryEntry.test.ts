@@ -423,8 +423,7 @@ describe('QueryHistoryEntry', () => {
     it('should handle missing endpoint gracefully', () => {
       const wrapper = mount(QueryHistoryEntry, {
         props: {
-          entry: mockSuccessfulEntry,
-          endpoint: undefined
+          entry: mockSuccessfulEntry
         }
       })
       
@@ -432,7 +431,7 @@ describe('QueryHistoryEntry', () => {
     })
 
     it('should handle missing variables section', () => {
-      const entryWithoutVariables = { ...mockSuccessfulEntry, variables: undefined }
+      const { variables, ...entryWithoutVariables } = mockSuccessfulEntry
       const wrapper = mount(QueryHistoryEntry, {
         props: {
           entry: entryWithoutVariables,
