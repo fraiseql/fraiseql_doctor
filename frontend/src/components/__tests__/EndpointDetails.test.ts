@@ -107,10 +107,7 @@ describe('EndpointDetails', () => {
     })
 
     it('should hide headers section when no headers', () => {
-      const endpointWithoutHeaders = {
-        ...mockEndpoint,
-        headers: undefined
-      }
+      const { headers, ...endpointWithoutHeaders } = mockEndpoint
 
       const wrapper = mount(EndpointDetails, {
         props: {

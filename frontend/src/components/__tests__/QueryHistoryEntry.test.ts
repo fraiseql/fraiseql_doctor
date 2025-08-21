@@ -3,12 +3,13 @@ import { mount } from '@vue/test-utils'
 import QueryHistoryEntry from '../QueryHistoryEntry.vue'
 import type { QueryHistoryEntry as HistoryEntry } from '../../types/queryHistory'
 import type { GraphQLEndpoint } from '../../types/endpoint'
+import { EndpointStatus } from '../../types/endpoint'
 
 const mockEndpoint: GraphQLEndpoint = {
   id: 'endpoint-1',
   name: 'Test API',
   url: 'https://api.test.com/graphql',
-  status: 'active' as const,
+  status: EndpointStatus.ACTIVE,
   introspectionEnabled: true,
   isHealthy: true,
   createdAt: new Date(),
@@ -279,10 +280,7 @@ describe('QueryHistoryEntry', () => {
 
   describe('Operation Name Extraction', () => {
     it('should extract operation name from query when not provided', () => {
-      const entryWithoutName = {
-        ...mockSuccessfulEntry,
-        operationName: undefined
-      }
+      const { operationName, ...entryWithoutName } = mockSuccessfulEntry
       
       const wrapper = mount(QueryHistoryEntry, {
         props: {
@@ -295,9 +293,8 @@ describe('QueryHistoryEntry', () => {
     })
 
     it('should show "Unnamed Query" when no operation name found', () => {
-      const entryWithoutName = {
+      const { operationName, ...entryWithoutName } = {
         ...mockSuccessfulEntry,
-        operationName: undefined,
         query: '{ users { id } }'
       }
       
@@ -312,9 +309,8 @@ describe('QueryHistoryEntry', () => {
     })
 
     it('should handle mutation operation names', () => {
-      const mutationEntry = {
+      const { operationName, ...mutationEntry } = {
         ...mockSuccessfulEntry,
-        operationName: undefined,
         query: 'mutation CreateUser($input: UserInput!) { createUser(input: $input) { id } }'
       }
       
@@ -336,7 +332,8 @@ describe('QueryHistoryEntry', () => {
         props: { entry: fastEntry, endpoint: mockEndpoint }
       })
       
-      expect(wrapper.vm.executionTimeClass).toContain('text-green-600')
+      const timeElement = wrapper.find('[data-testid="execution-time"]')
+      expect(timeElement.classes()).toContain('text-green-600')
     })
 
     it('should show blue for moderate queries (1000-2000ms)', () => {
@@ -345,7 +342,8 @@ describe('QueryHistoryEntry', () => {
         props: { entry: moderateEntry, endpoint: mockEndpoint }
       })
       
-      expect(wrapper.vm.executionTimeClass).toContain('text-blue-600')
+      const timeElement = wrapper.find('[data-testid="execution-time"]')
+      expect(timeElement.classes()).toContain('text-blue-600')
     })
 
     it('should show yellow for slow queries (2000-5000ms)', () => {
@@ -354,7 +352,8 @@ describe('QueryHistoryEntry', () => {
         props: { entry: slowEntry, endpoint: mockEndpoint }
       })
       
-      expect(wrapper.vm.executionTimeClass).toContain('text-yellow-600')
+      const timeElement = wrapper.find('[data-testid="execution-time"]')
+      expect(timeElement.classes()).toContain('text-yellow-600')
     })
 
     it('should show red for very slow queries (> 5000ms)', () => {
@@ -363,7 +362,8 @@ describe('QueryHistoryEntry', () => {
         props: { entry: verySlowEntry, endpoint: mockEndpoint }
       })
       
-      expect(wrapper.vm.executionTimeClass).toContain('text-red-600')
+      const timeElement = wrapper.find('[data-testid="execution-time"]')
+      expect(timeElement.classes()).toContain('text-red-600')
     })
   })
 
@@ -374,48 +374,52 @@ describe('QueryHistoryEntry', () => {
         props: { entry: recentEntry, endpoint: mockEndpoint }
       })
       
-      const formatted = wrapper.vm.formatTimestamp(recentEntry.timestamp)
-      expect(formatted).toBe('Just now')
+      const timestampElement = wrapper.find('[data-testid="timestamp"]')
+      expect(timestampElement.text()).toBe('Just now')
     })
 
     it('should show minutes for recent queries', () => {
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
+      const entryWithTimestamp = { ...mockSuccessfulEntry, timestamp: fiveMinutesAgo }
       const wrapper = mount(QueryHistoryEntry, {
-        props: { entry: mockSuccessfulEntry, endpoint: mockEndpoint }
+        props: { entry: entryWithTimestamp, endpoint: mockEndpoint }
       })
       
-      const formatted = wrapper.vm.formatTimestamp(fiveMinutesAgo)
-      expect(formatted).toBe('5m ago')
+      const timestampElement = wrapper.find('[data-testid="timestamp"]')
+      expect(timestampElement.text()).toBe('5m ago')
     })
 
     it('should show hours for queries from today', () => {
       const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000)
+      const entryWithTimestamp = { ...mockSuccessfulEntry, timestamp: twoHoursAgo }
       const wrapper = mount(QueryHistoryEntry, {
-        props: { entry: mockSuccessfulEntry, endpoint: mockEndpoint }
+        props: { entry: entryWithTimestamp, endpoint: mockEndpoint }
       })
       
-      const formatted = wrapper.vm.formatTimestamp(twoHoursAgo)
-      expect(formatted).toBe('2h ago')
+      const timestampElement = wrapper.find('[data-testid="timestamp"]')
+      expect(timestampElement.text()).toBe('2h ago')
     })
 
     it('should show days for recent queries', () => {
       const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+      const entryWithTimestamp = { ...mockSuccessfulEntry, timestamp: threeDaysAgo }
       const wrapper = mount(QueryHistoryEntry, {
-        props: { entry: mockSuccessfulEntry, endpoint: mockEndpoint }
+        props: { entry: entryWithTimestamp, endpoint: mockEndpoint }
       })
       
-      const formatted = wrapper.vm.formatTimestamp(threeDaysAgo)
-      expect(formatted).toBe('3d ago')
+      const timestampElement = wrapper.find('[data-testid="timestamp"]')
+      expect(timestampElement.text()).toBe('3d ago')
     })
 
     it('should show date for old queries', () => {
       const oldDate = new Date('2024-01-01')
+      const entryWithTimestamp = { ...mockSuccessfulEntry, timestamp: oldDate }
       const wrapper = mount(QueryHistoryEntry, {
-        props: { entry: mockSuccessfulEntry, endpoint: mockEndpoint }
+        props: { entry: entryWithTimestamp, endpoint: mockEndpoint }
       })
       
-      const formatted = wrapper.vm.formatTimestamp(oldDate)
-      expect(formatted).toMatch(/\d{1,2}\/\d{1,2}\/\d{4}/)
+      const timestampElement = wrapper.find('[data-testid="timestamp"]')
+      expect(timestampElement.text()).toMatch(/\d{1,2}\/\d{1,2}\/\d{4}/)
     })
   })
 

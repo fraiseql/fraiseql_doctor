@@ -27,11 +27,11 @@
 
           <!-- Timestamp and Execution Time -->
           <div class="flex-shrink-0 text-right">
-            <div class="text-xs text-gray-500 dark:text-gray-400">
+            <div class="text-xs text-gray-500 dark:text-gray-400" data-testid="timestamp">
               {{ formatTimestamp(entry.timestamp) }}
             </div>
             <div class="text-xs">
-              <span :class="executionTimeClass">
+              <span :class="executionTimeClass" data-testid="execution-time">
                 {{ entry.executionTime }}ms
               </span>
             </div>

@@ -127,11 +127,10 @@
 
       <div v-else class="divide-y divide-gray-200 dark:divide-gray-700">
         <QueryHistoryEntry
-          v-for="entry in paginatedHistory"
-          v-if="getEndpoint(entry.endpointId)"
-          :key="entry.id"
-          :entry="entry"
-          :endpoint="getEndpoint(entry.endpointId)"
+          v-for="item in paginatedHistoryWithEndpoints"
+          :key="item.entry.id"
+          :entry="item.entry"
+          :endpoint="item.endpoint"
           @toggle-favorite="toggleFavorite"
           @delete="deleteEntry"
           @replay="replayQuery"
@@ -296,6 +295,17 @@ const endIndex = computed(() => Math.min(startIndex.value + pageSize.value, filt
 
 const paginatedHistory = computed(() => {
   return filteredHistory.value.slice(startIndex.value, endIndex.value)
+})
+
+const paginatedHistoryWithEndpoints = computed(() => {
+  return paginatedHistory.value
+    .map(entry => ({
+      entry,
+      endpoint: getEndpoint(entry.endpointId)
+    }))
+    .filter((item): item is { entry: HistoryEntry; endpoint: GraphQLEndpoint } => 
+      item.endpoint !== undefined
+    )
 })
 
 // Methods

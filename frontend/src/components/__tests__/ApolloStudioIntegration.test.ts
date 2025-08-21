@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import ApolloStudioIntegration from '../ApolloStudioIntegration.vue'
+import { EndpointStatus } from '../../types/endpoint'
 
 describe('Apollo Studio Integration - Cycle 1', () => {
   beforeEach(() => {
@@ -89,7 +90,7 @@ describe('Apollo Studio Integration - Cycle 8: Full Integration', () => {
       id: '1',
       name: 'Test API',
       url: 'https://auth.api.com/graphql',
-      status: 'ACTIVE' as const,
+      status: EndpointStatus.ACTIVE,
       introspectionEnabled: true,
       isHealthy: true,
       headers: {
@@ -117,7 +118,7 @@ describe('Apollo Studio Integration - Cycle 8: Full Integration', () => {
       id: '1',
       name: 'Bearer API',
       url: 'https://bearer.api.com/graphql',
-      status: 'ACTIVE' as const,
+      status: EndpointStatus.ACTIVE,
       introspectionEnabled: true,
       isHealthy: true,
       headers: { 'Authorization': 'Bearer token' },
@@ -129,7 +130,7 @@ describe('Apollo Studio Integration - Cycle 8: Full Integration', () => {
       id: '2', 
       name: 'API Key API',
       url: 'https://apikey.api.com/graphql',
-      status: 'ACTIVE' as const,
+      status: EndpointStatus.ACTIVE,
       introspectionEnabled: true,
       isHealthy: true,
       headers: { 'X-API-Key': 'api-key-value' },
@@ -160,7 +161,7 @@ describe('Apollo Studio Integration - Cycle 8: Full Integration', () => {
       id: '1',
       name: 'Invalid API',
       url: 'invalid-url-format',
-      status: 'INACTIVE' as const,
+      status: EndpointStatus.INACTIVE,
       introspectionEnabled: false,
       isHealthy: false,
       headers: {},
@@ -319,7 +320,7 @@ describe('Apollo Studio Integration - Cycle 8: Full Integration', () => {
       id: '1',
       name: 'Custom API',
       url: 'https://api.example.com/graphql',
-      status: 'ACTIVE' as const,
+      status: EndpointStatus.ACTIVE,
       introspectionEnabled: true,
       isHealthy: true,
       headers: {

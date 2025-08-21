@@ -2,8 +2,7 @@
   <div 
     data-testid="apollo-studio-container"
     :class="containerClasses"
-    :role="ariaLabel ? 'application' : undefined"
-    :aria-label="ariaLabel"
+    v-bind="ariaLabel ? { role: 'application', 'aria-label': ariaLabel } : {}"
     :style="containerStyles"
   >
     <header class="studio-header">
@@ -128,8 +127,8 @@
         class="studio-history w-96 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
       >
         <QueryHistory
-          :endpoints="availableEndpoints"
-          :current-endpoint="endpoint"
+          :endpoints="availableEndpoints || []"
+          v-bind="endpoint ? { 'current-endpoint': endpoint } : {}"
           @replay-query="handleReplayQuery"
           @save-template="handleSaveTemplate"
         />
@@ -146,6 +145,7 @@ import { useQueryHistoryHybrid } from '../services/queryHistoryHybrid'
 import QueryHistory from './QueryHistory.vue'
 import type { AuthType, StudioConfig, UrlParams } from '../services/apolloStudioConfig'
 import type { GraphQLEndpoint } from '../types/endpoint'
+import { EndpointStatus } from '../types/endpoint'
 import type { QueryHistoryEntry } from '../types/queryHistory'
 
 // Props
@@ -285,7 +285,7 @@ const finalStudioUrl = computed(() => {
         id: '1',
         name: 'Configured API',
         url: props.studioConfig.endpoint,
-        status: 'ACTIVE' as const,
+        status: EndpointStatus.ACTIVE,
         introspectionEnabled: true,
         isHealthy: true,
         createdAt: new Date(),
@@ -319,7 +319,7 @@ const finalStudioUrl = computed(() => {
         id: '1',
         name: 'Simple API',
         url: props.endpointUrl,
-        status: 'ACTIVE' as const,
+        status: EndpointStatus.ACTIVE,
         introspectionEnabled: true,
         isHealthy: true,
         createdAt: new Date(),
@@ -415,7 +415,7 @@ function validateConfiguration() {
       id: '1',
       name: 'Simple API',
       url: props.endpointUrl,
-      status: 'ACTIVE' as const,
+      status: EndpointStatus.ACTIVE,
       introspectionEnabled: true,
       isHealthy: true,
       createdAt: new Date(),
