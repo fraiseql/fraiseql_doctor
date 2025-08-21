@@ -86,6 +86,198 @@ describe('Apollo Studio Configuration Service', () => {
   })
 })
 
+describe('API Key Authentication', () => {
+  it('should handle X-API-Key header format', () => {
+    const { formatApiKey } = useApolloStudioConfig()
+    
+    const apiKey = formatApiKey('my-api-key-123')
+    
+    expect(apiKey).toBe('my-api-key-123')
+  })
+
+  it('should create config with API Key authentication', () => {
+    const { createConfigWithAuth } = useApolloStudioConfig()
+    
+    const endpoint: GraphQLEndpoint = {
+      id: '1',
+      name: 'API Key API',
+      url: 'https://apikey.api.com/graphql',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: true,
+      isHealthy: true,
+      headers: {
+        'X-API-Key': 'secret-api-key-value'
+      },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    const config = createConfigWithAuth(endpoint, 'apikey')
+    
+    expect(config.headers['X-API-Key']).toBe('secret-api-key-value')
+  })
+
+  it('should handle custom API Key header names', () => {
+    const { createConfigWithAuth } = useApolloStudioConfig()
+    
+    const endpoint: GraphQLEndpoint = {
+      id: '1',
+      name: 'Custom API Key API',
+      url: 'https://custom.api.com/graphql',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: true,
+      isHealthy: true,
+      headers: {
+        'X-Custom-API-Key': 'custom-key-value'
+      },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    const config = createConfigWithAuth(endpoint, 'apikey', { headerName: 'X-Custom-API-Key' })
+    
+    expect(config.headers['X-Custom-API-Key']).toBe('custom-key-value')
+  })
+
+  it('should validate API Key format', () => {
+    const { validateApiKey } = useApolloStudioConfig()
+    
+    const validKey = validateApiKey('valid-api-key-123')
+    const emptyKey = validateApiKey('')
+    const nullKey = validateApiKey(null)
+    
+    expect(validKey).toBe(true)
+    expect(emptyKey).toBe(false)
+    expect(nullKey).toBe(false)
+  })
+})
+
+describe('Basic Authentication', () => {
+  it('should encode Basic auth credentials', () => {
+    const { encodeBasicAuth } = useApolloStudioConfig()
+    
+    const encoded = encodeBasicAuth('username', 'password')
+    const expected = 'Basic ' + btoa('username:password')
+    
+    expect(encoded).toBe(expected)
+  })
+
+  it('should create config with Basic authentication', () => {
+    const { createConfigWithAuth } = useApolloStudioConfig()
+    
+    const endpoint: GraphQLEndpoint = {
+      id: '1',
+      name: 'Basic Auth API',
+      url: 'https://basic.api.com/graphql',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: true,
+      isHealthy: true,
+      headers: {
+        'Authorization': 'Basic dXNlcm5hbWU6cGFzc3dvcmQ='
+      },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    const config = createConfigWithAuth(endpoint, 'basic')
+    
+    expect(config.headers.Authorization).toBe('Basic dXNlcm5hbWU6cGFzc3dvcmQ=')
+  })
+
+  it('should decode Basic auth credentials', () => {
+    const { decodeBasicAuth } = useApolloStudioConfig()
+    
+    const credentials = decodeBasicAuth('Basic dXNlcm5hbWU6cGFzc3dvcmQ=')
+    
+    expect(credentials.username).toBe('username')
+    expect(credentials.password).toBe('password')
+  })
+
+  it('should handle malformed Basic auth headers', () => {
+    const { decodeBasicAuth } = useApolloStudioConfig()
+    
+    const invalidHeader = decodeBasicAuth('InvalidHeader')
+    const missingPrefix = decodeBasicAuth('dXNlcm5hbWU6cGFzc3dvcmQ=')
+    
+    expect(invalidHeader).toBeNull()
+    expect(missingPrefix).toBeNull()
+  })
+
+  it('should validate Basic auth credentials', () => {
+    const { validateBasicAuth } = useApolloStudioConfig()
+    
+    const validAuth = validateBasicAuth('username', 'password')
+    const emptyUsername = validateBasicAuth('', 'password')
+    const emptyPassword = validateBasicAuth('username', '')
+    
+    expect(validAuth).toBe(true)
+    expect(emptyUsername).toBe(false)
+    expect(emptyPassword).toBe(false)
+  })
+})
+
+describe('Multi-Authentication Support', () => {
+  it('should detect authentication type from headers', () => {
+    const { detectAuthType } = useApolloStudioConfig()
+    
+    const bearerHeaders = { 'Authorization': 'Bearer token123' }
+    const basicHeaders = { 'Authorization': 'Basic dXNlcm5hbWU6cGFzc3dvcmQ=' }
+    const apiKeyHeaders = { 'X-API-Key': 'api-key-value' }
+    const noAuthHeaders = { 'Content-Type': 'application/json' }
+    
+    expect(detectAuthType(bearerHeaders)).toBe('bearer')
+    expect(detectAuthType(basicHeaders)).toBe('basic')
+    expect(detectAuthType(apiKeyHeaders)).toBe('apikey')
+    expect(detectAuthType(noAuthHeaders)).toBe('none')
+  })
+
+  it('should prioritize Bearer over Basic when both present', () => {
+    const { detectAuthType } = useApolloStudioConfig()
+    
+    const mixedHeaders = {
+      'Authorization': 'Bearer token123',
+      'X-API-Key': 'api-key'
+    }
+    
+    expect(detectAuthType(mixedHeaders)).toBe('bearer')
+  })
+
+  it('should handle authentication type switching', () => {
+    const { createConfigWithAuth } = useApolloStudioConfig()
+    
+    const endpoint: GraphQLEndpoint = {
+      id: '1',
+      name: 'Multi Auth API',
+      url: 'https://multi.api.com/graphql',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: true,
+      isHealthy: true,
+      headers: {
+        'Authorization': 'Bearer original-token'
+      },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    // Switch from Bearer to API Key
+    const apiKeyConfig = createConfigWithAuth(endpoint, 'apikey', { 
+      apiKey: 'new-api-key',
+      headerName: 'X-API-Key'
+    })
+    
+    expect(apiKeyConfig.headers['Authorization']).toBeUndefined()
+    expect(apiKeyConfig.headers['X-API-Key']).toBe('new-api-key')
+    
+    // Switch to Basic auth
+    const basicConfig = createConfigWithAuth(endpoint, 'basic', {
+      username: 'user',
+      password: 'pass'
+    })
+    
+    expect(basicConfig.headers['Authorization']).toBe('Basic ' + btoa('user:pass'))
+  })
+})
+
 describe('Bearer Token Authentication', () => {
   it('should handle Bearer token format correctly', () => {
     const { formatBearerToken } = useApolloStudioConfig()
