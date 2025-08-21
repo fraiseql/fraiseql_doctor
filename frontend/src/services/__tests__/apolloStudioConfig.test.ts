@@ -546,3 +546,240 @@ describe('Endpoint Switching & URL Management', () => {
     expect(url).not.toContain('secret-token')
   })
 })
+
+describe('Error Handling & Resilience', () => {
+  it('should handle invalid endpoint configurations gracefully', () => {
+    const { validateConfigurationSafely } = useApolloStudioConfig()
+    
+    const invalidEndpoint = {
+      id: '1',
+      name: 'Invalid API',
+      url: 'invalid-url-format',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: true,
+      isHealthy: false,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    } as GraphQLEndpoint
+    
+    const result = validateConfigurationSafely(invalidEndpoint)
+    
+    expect(result.isValid).toBe(false)
+    expect(result.errors).toContain('Invalid URL format')
+    expect(result.config).toBeNull()
+  })
+
+  it('should handle missing or corrupt headers gracefully', () => {
+    const { createStudioConfigSafely } = useApolloStudioConfig()
+    
+    const endpointWithCorruptHeaders = {
+      id: '1',
+      name: 'Corrupt Headers API',
+      url: 'https://api.example.com/graphql',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: true,
+      isHealthy: true,
+      headers: null as any, // Corrupt headers
+      createdAt: new Date(),
+      updatedAt: new Date()
+    } as GraphQLEndpoint
+    
+    const result = createStudioConfigSafely(endpointWithCorruptHeaders)
+    
+    expect(result.success).toBe(true)
+    expect(result.config?.headers).toEqual({})
+    expect(result.error).toBeNull()
+  })
+
+  it('should handle authentication errors with fallback', () => {
+    const { createConfigWithAuthSafely } = useApolloStudioConfig()
+    
+    const endpoint: GraphQLEndpoint = {
+      id: '1',
+      name: 'Auth Error API',
+      url: 'https://auth-error.api.com/graphql',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: true,
+      isHealthy: true,
+      headers: {
+        'Authorization': 'Invalid-Format-Token'
+      },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    const result = createConfigWithAuthSafely(endpoint, 'bearer')
+    
+    expect(result.success).toBe(true)
+    expect(result.config?.headers.Authorization).toBeDefined()
+    expect(result.warnings).toContain('Invalid token format, applied fallback')
+  })
+
+  it('should handle network simulation errors', () => {
+    const { simulateNetworkError } = useApolloStudioConfig()
+    
+    const endpoint: GraphQLEndpoint = {
+      id: '1',
+      name: 'Network Test API',
+      url: 'https://network-test.api.com/graphql',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: true,
+      isHealthy: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    const result = simulateNetworkError(endpoint, 'timeout')
+    
+    expect(result.error).toBe('timeout')
+    expect(result.retryable).toBe(true)
+    expect(result.fallbackConfig).toBeDefined()
+  })
+
+  it('should provide retry logic for transient failures', () => {
+    const { createConfigWithRetry } = useApolloStudioConfig()
+    
+    const endpoint: GraphQLEndpoint = {
+      id: '1',
+      name: 'Retry Test API',
+      url: 'https://retry-test.api.com/graphql',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: true,
+      isHealthy: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    const result = createConfigWithRetry(endpoint, {
+      maxRetries: 3,
+      retryDelay: 100,
+      retryableErrors: ['timeout', 'network']
+    })
+    
+    expect(result.config).toBeDefined()
+    expect(result.retryCount).toBe(0)
+    expect(result.canRetry).toBe(true)
+  })
+
+  it('should handle malformed URL parameters safely', () => {
+    const { generateStudioUrlSafely } = useApolloStudioConfig()
+    
+    const endpoint: GraphQLEndpoint = {
+      id: '1',
+      name: 'URL Test API',
+      url: 'https://url-test.api.com/graphql',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: true,
+      isHealthy: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    const malformedParams = {
+      'normal-param': 'value',
+      '<script>evil</script>': 'malicious',
+      'null-param': null,
+      'undefined-param': undefined,
+      'function-param': () => 'dangerous'
+    }
+    
+    const result = generateStudioUrlSafely(endpoint, malformedParams)
+    
+    expect(result.success).toBe(true)
+    expect(result.url).toContain('normal-param=value')
+    expect(result.url).not.toContain('script')
+    expect(result.url).not.toContain('null')
+    expect(result.url).not.toContain('undefined')
+    expect(result.sanitizedParams).not.toHaveProperty('<script>evil</script>')
+    expect(result.warnings).toContain('Dangerous parameters removed')
+  })
+
+  it('should handle endpoint switching failures gracefully', () => {
+    const { switchEndpointSafely } = useApolloStudioConfig()
+    
+    const validEndpoint: GraphQLEndpoint = {
+      id: '1',
+      name: 'Valid API',
+      url: 'https://valid.api.com/graphql',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: true,
+      isHealthy: true,
+      headers: {
+        'Authorization': 'Bearer valid-token'
+      },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    const invalidEndpoint = {
+      id: '2',
+      name: 'Invalid API',
+      url: 'not-a-valid-url',
+      status: EndpointStatus.INACTIVE,
+      introspectionEnabled: false,
+      isHealthy: false,
+      headers: {
+        'Authorization': 'Malformed Token Format'
+      },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    } as GraphQLEndpoint
+    
+    const result = switchEndpointSafely(validEndpoint, invalidEndpoint)
+    
+    expect(result.success).toBe(false)
+    expect(result.error).toContain('Invalid target endpoint')
+    expect(result.fallbackConfig).toEqual(expect.objectContaining({
+      endpoint: validEndpoint.url
+    }))
+  })
+
+  it('should provide comprehensive error logging', () => {
+    const { getErrorLog, clearErrorLog } = useApolloStudioConfig()
+    
+    // Clear any existing logs
+    clearErrorLog()
+    
+    const { validateConfigurationSafely } = useApolloStudioConfig()
+    
+    // Trigger some errors
+    validateConfigurationSafely({ url: 'invalid' } as any)
+    validateConfigurationSafely({ url: 'javascript:alert()' } as any)
+    
+    const errorLog = getErrorLog()
+    
+    expect(errorLog.length).toBeGreaterThan(0)
+    expect(errorLog[0]).toHaveProperty('timestamp')
+    expect(errorLog[0]).toHaveProperty('error')
+    expect(errorLog[0]).toHaveProperty('context')
+    expect(errorLog[0].error).toContain('Invalid URL')
+  })
+
+  it('should handle iframe loading failures with fallback UI', () => {
+    const { createIframeConfig } = useApolloStudioConfig()
+    
+    const endpoint: GraphQLEndpoint = {
+      id: '1',
+      name: 'Iframe Test API',
+      url: 'https://iframe-test.api.com/graphql',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: true,
+      isHealthy: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    const config = createIframeConfig(endpoint, {
+      enableErrorBoundary: true,
+      fallbackContent: '<div>Apollo Studio is temporarily unavailable</div>',
+      retryOnError: true,
+      maxRetries: 3
+    })
+    
+    expect(config.src).toContain('studio.apollographql.com')
+    expect(config.errorBoundary).toBe(true)
+    expect(config.fallbackContent).toContain('temporarily unavailable')
+    expect(config.onError).toBeDefined()
+    expect(config.onRetry).toBeDefined()
+  })
+})
