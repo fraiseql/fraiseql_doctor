@@ -38,7 +38,7 @@ describe('Dashboard Layout', () => {
         plugins: [createPinia(), router]
       }
     })
-    
+
     const sidebar = wrapper.find('[data-testid="sidebar"]')
     expect(sidebar.exists()).toBeTruthy()
   })
@@ -49,13 +49,13 @@ describe('Dashboard Layout', () => {
         plugins: [createPinia(), router]
       }
     })
-    
+
     const toggleButton = wrapper.find('[data-testid="sidebar-toggle"]')
     expect(toggleButton.exists()).toBeTruthy()
-    
+
     // Should start with sidebar closed on mobile
     expect(wrapper.vm.sidebarOpen).toBe(false)
-    
+
     // Click toggle
     await toggleButton.trigger('click')
     expect(wrapper.vm.sidebarOpen).toBe(true)
@@ -65,17 +65,17 @@ describe('Dashboard Layout', () => {
     // Login first, then mount component
     const { login, isAuthenticated, user } = useAuth()
     await login()
-    
+
     wrapper = mount(DashboardLayout, {
       global: {
         plugins: [createPinia(), router]
       }
     })
-    
+
     // Check that auth state is correct
     expect(isAuthenticated.value).toBe(true)
     expect(user.value).toBeDefined()
-    
+
     const userMenu = wrapper.find('[data-testid="user-menu"]')
     expect(userMenu.exists()).toBeTruthy()
   })
@@ -87,7 +87,7 @@ describe('Dashboard Layout', () => {
         plugins: [createPinia(), router]
       }
     })
-    
+
     const userMenu = wrapper.find('[data-testid="user-menu"]')
     expect(userMenu.exists()).toBeFalsy()
   })
@@ -98,7 +98,7 @@ describe('Dashboard Layout', () => {
         plugins: [createPinia(), router]
       }
     })
-    
+
     // Should have proper responsive classes
     const sidebar = wrapper.find('[data-testid="sidebar"]')
     expect(sidebar.classes()).toContain('w-64') // Desktop width
@@ -110,11 +110,11 @@ describe('Dashboard Layout', () => {
         plugins: [createPinia(), router]
       }
     })
-    
+
     // Should have main navigation links
     const dashboardLink = wrapper.find('[data-testid="nav-dashboard"]')
     expect(dashboardLink.exists()).toBeTruthy()
-    
+
     const endpointsLink = wrapper.find('[data-testid="nav-endpoints"]')
     expect(endpointsLink.exists()).toBeTruthy()
   })
@@ -125,22 +125,22 @@ describe('Dashboard Layout', () => {
         plugins: [createPinia(), router]
       }
     })
-    
+
     // Login first so we can test logout
     const { login, isAuthenticated } = useAuth()
     await login()
     await wrapper.vm.$nextTick()
-    
+
     // Find and click logout button
     const logoutButton = wrapper.find('[data-testid="logout-button"]')
     expect(logoutButton.exists()).toBeTruthy()
-    
+
     await logoutButton.trigger('click')
-    
+
     // Wait a bit for logout to process (MockProvider has a 50ms delay)
     await new Promise(resolve => setTimeout(resolve, 100))
     await wrapper.vm.$nextTick()
-    
+
     // Should be logged out now
     expect(isAuthenticated.value).toBe(false)
   })

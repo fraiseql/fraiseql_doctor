@@ -54,7 +54,7 @@
           <span class="text-gray-600 dark:text-gray-400">
             <strong>Endpoint:</strong> {{ endpoint?.name || 'Unknown' }}
           </span>
-          
+
           <span v-if="entry.statusCode" class="text-gray-600 dark:text-gray-400">
             <strong>Status:</strong> {{ entry.statusCode }}
           </span>
@@ -196,7 +196,7 @@ const props = defineProps<Props>()
 defineEmits<Emits>()
 
 const queryPreview = computed(() => {
-  return props.entry.query.replace(/\s+/g, ' ').trim().substring(0, 100) + 
+  return props.entry.query.replace(/\s+/g, ' ').trim().substring(0, 100) +
     (props.entry.query.length > 100 ? '...' : '')
 })
 
@@ -224,7 +224,7 @@ function formatTimestamp(timestamp: Date): string {
   if (diffMins < 60) return `${diffMins}m ago`
   if (diffHours < 24) return `${diffHours}h ago`
   if (diffDays < 7) return `${diffDays}d ago`
-  
+
   return timestamp.toLocaleDateString()
 }
 </script>

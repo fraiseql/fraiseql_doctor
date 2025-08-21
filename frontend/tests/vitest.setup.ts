@@ -8,7 +8,7 @@ beforeAll(() => {
     if (!document.body) {
       document.body = document.createElement('body')
     }
-    
+
     // Mock insertBefore if it doesn't exist properly
     const originalInsertBefore = document.body.insertBefore
     if (!originalInsertBefore || typeof originalInsertBefore !== 'function') {
@@ -29,7 +29,7 @@ beforeAll(() => {
         if (url === 'invalid-url' || url === 'not-a-valid-url') throw new Error('Invalid URL')
         if (url.startsWith('javascript:') || url.startsWith('ftp:')) throw new Error('Invalid protocol')
         if (!url.includes('://')) throw new Error('Invalid URL format')
-        
+
         this.href = url
         this.protocol = url.split('://')[0] + ':'
       }

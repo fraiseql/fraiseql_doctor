@@ -38,12 +38,12 @@ describe('Authentication System', () => {
   it('should handle login flow with mock provider', async () => {
     // This will fail until we implement authentication logic
     const { login, isAuthenticated, user } = useAuth()
-    
+
     expect(isAuthenticated.value).toBe(false)
     expect(user.value).toBe(null)
-    
+
     await login()
-    
+
     expect(isAuthenticated.value).toBe(true)
     expect(user.value).toBeDefined()
     expect(user.value?.name).toBeDefined()
@@ -51,11 +51,11 @@ describe('Authentication System', () => {
 
   it('should handle logout flow', async () => {
     const { login, logout, isAuthenticated, user } = useAuth()
-    
+
     // Login first
     await login()
     expect(isAuthenticated.value).toBe(true)
-    
+
     // Then logout
     await logout()
     expect(isAuthenticated.value).toBe(false)
@@ -64,11 +64,11 @@ describe('Authentication System', () => {
 
   it('should provide authentication token when logged in', async () => {
     const { login, getToken } = useAuth()
-    
+
     // No token when logged out
     const tokenBefore = await getToken()
     expect(tokenBefore).toBe(null)
-    
+
     // Should have token when logged in
     await login()
     const tokenAfter = await getToken()
@@ -78,10 +78,10 @@ describe('Authentication System', () => {
 
   it('should check authentication status on initialization', async () => {
     const { checkAuth, isAuthenticated } = useAuth()
-    
+
     // Should start as unauthenticated
     expect(isAuthenticated.value).toBe(false)
-    
+
     // checkAuth should work
     const isAuth = await checkAuth()
     expect(typeof isAuth).toBe('boolean')
@@ -94,7 +94,7 @@ describe('Authentication System', () => {
         plugins: [createPinia()]
       }
     })
-    
+
     expect(wrapper.text()).toContain('false') // Should start unauthenticated
   })
 })

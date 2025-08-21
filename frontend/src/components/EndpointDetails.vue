@@ -16,7 +16,7 @@
               <h1 data-testid="endpoint-name" class="text-2xl font-bold text-gray-900">
                 {{ endpoint.name }}
               </h1>
-              
+
               <!-- Status Badge -->
               <div class="flex items-center space-x-2">
                 <div
@@ -65,7 +65,7 @@
               <ArrowPathIcon class="h-4 w-4 mr-2" />
               Check Health
             </button>
-            
+
             <button
               @click="$emit('edit')"
               data-testid="edit-btn"
@@ -74,7 +74,7 @@
               <PencilIcon class="h-4 w-4 mr-2" />
               Edit
             </button>
-            
+
             <button
               @click="$emit('delete')"
               data-testid="delete-btn"
@@ -192,7 +192,7 @@
       <div v-if="endpoint.introspectionEnabled" class="bg-white shadow rounded-lg p-6">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-medium text-gray-900">GraphQL Schema</h3>
-          
+
           <button
             v-if="!isLoadingSchema && !schema"
             @click="loadSchema"
@@ -279,9 +279,9 @@ const schema = ref<string | null>(null)
 // Methods
 async function loadSchema() {
   if (!props.endpoint?.url || !props.endpoint.introspectionEnabled) return
-  
+
   isLoadingSchema.value = true
-  
+
   try {
     const result = await getIntrospectionSchema(props.endpoint.url)
     schema.value = result
@@ -297,16 +297,16 @@ function formatDate(date: Date): string {
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
   const diffMins = Math.floor(diffMs / 60000)
-  
+
   if (diffMins < 1) return 'Just now'
   if (diffMins < 60) return `${diffMins} minutes ago`
-  
+
   const diffHours = Math.floor(diffMins / 60)
   if (diffHours < 24) return `${diffHours} hours ago`
-  
+
   const diffDays = Math.floor(diffHours / 24)
   if (diffDays < 7) return `${diffDays} days ago`
-  
+
   return date.toLocaleDateString()
 }
 

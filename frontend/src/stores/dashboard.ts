@@ -63,11 +63,11 @@ export const useDashboard = defineStore('dashboard', () => {
     chartData,
     isLoading,
     error,
-    
+
     // Getters
     hasData,
     isEmpty,
-    
+
     // Actions
     updateDashboardData,
     setLoading,

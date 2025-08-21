@@ -29,7 +29,7 @@ describe('EndpointForm', () => {
           mode: 'create'
         }
       })
-      
+
       expect(wrapper.find('[data-testid="form-title"]').text()).toBe('Add New Endpoint')
       expect(wrapper.find('[data-testid="submit-btn"]').text()).toBe('Add Endpoint')
     })
@@ -40,7 +40,7 @@ describe('EndpointForm', () => {
           mode: 'create'
         }
       })
-      
+
       expect(wrapper.find('[data-testid="name-input"]').element.value).toBe('')
       expect(wrapper.find('[data-testid="url-input"]').element.value).toBe('')
       expect(wrapper.find('[data-testid="description-input"]').element.value).toBe('')
@@ -52,10 +52,10 @@ describe('EndpointForm', () => {
           mode: 'create'
         }
       })
-      
+
       await wrapper.find('form').trigger('submit')
       await wrapper.vm.$nextTick()
-      
+
       expect(wrapper.find('[data-testid="name-error"]').exists()).toBe(true)
       expect(wrapper.find('[data-testid="url-error"]').exists()).toBe(true)
     })
@@ -66,12 +66,12 @@ describe('EndpointForm', () => {
           mode: 'create'
         }
       })
-      
+
       await wrapper.find('[data-testid="name-input"]').setValue('Test')
       await wrapper.find('[data-testid="url-input"]').setValue('invalid-url')
       await wrapper.find('form').trigger('submit')
       await wrapper.vm.$nextTick()
-      
+
       const urlError = wrapper.find('[data-testid="url-error"]')
       expect(urlError.exists()).toBe(true)
       expect(urlError.text()).toContain('valid URL')
@@ -83,22 +83,22 @@ describe('EndpointForm', () => {
           mode: 'create'
         }
       })
-      
+
       await wrapper.find('[data-testid="name-input"]').setValue('Test Endpoint')
       await wrapper.find('[data-testid="url-input"]').setValue('https://api.example.com/graphql')
       await wrapper.find('[data-testid="description-input"]').setValue('Test description')
       await wrapper.find('[data-testid="introspection-checkbox"]').setChecked(true)
       // Wait for reactive updates
       await wrapper.vm.$nextTick()
-      
+
       // Verify form data is set correctly
       expect(wrapper.vm.formData.name).toBe('Test Endpoint')
       expect(wrapper.vm.formData.url).toBe('https://api.example.com/graphql')
-      
+
       // Trigger form submission
       await wrapper.find('form').trigger('submit.prevent')
       await wrapper.vm.$nextTick()
-      
+
       expect(wrapper.emitted('create')).toBeTruthy()
       expect(wrapper.emitted('create')?.[0]).toEqual([{
         name: 'Test Endpoint',
@@ -133,7 +133,7 @@ describe('EndpointForm', () => {
           endpoint: mockEndpoint
         }
       })
-      
+
       expect(wrapper.find('[data-testid="form-title"]').text()).toBe('Edit Endpoint')
       expect(wrapper.find('[data-testid="submit-btn"]').text()).toBe('Update Endpoint')
     })
@@ -145,7 +145,7 @@ describe('EndpointForm', () => {
           endpoint: mockEndpoint
         }
       })
-      
+
       expect(wrapper.find('[data-testid="name-input"]').element.value).toBe('Existing Endpoint')
       expect(wrapper.find('[data-testid="url-input"]').element.value).toBe('https://existing.com/graphql')
       expect(wrapper.find('[data-testid="description-input"]').element.value).toBe('Existing description')
@@ -159,17 +159,17 @@ describe('EndpointForm', () => {
           endpoint: mockEndpoint
         }
       })
-      
+
       await wrapper.find('[data-testid="name-input"]').setValue('Updated Name')
       await wrapper.vm.$nextTick()
-      
+
       // Verify form data updated
       expect(wrapper.vm.formData.name).toBe('Updated Name')
-      
+
       // Trigger form submission
       await wrapper.find('form').trigger('submit.prevent')
       await wrapper.vm.$nextTick()
-      
+
       expect(wrapper.emitted('update')).toBeTruthy()
       expect(wrapper.emitted('update')?.[0]).toEqual([{
         name: 'Updated Name',
@@ -190,9 +190,9 @@ describe('EndpointForm', () => {
           mode: 'create'
         }
       })
-      
+
       await wrapper.find('[data-testid="add-header-btn"]').trigger('click')
-      
+
       expect(wrapper.find('[data-testid="header-row-0"]').exists()).toBe(true)
     })
 
@@ -202,10 +202,10 @@ describe('EndpointForm', () => {
           mode: 'create'
         }
       })
-      
+
       await wrapper.find('[data-testid="add-header-btn"]').trigger('click')
       await wrapper.find('[data-testid="remove-header-0"]').trigger('click')
-      
+
       expect(wrapper.find('[data-testid="header-row-0"]').exists()).toBe(false)
     })
 
@@ -215,20 +215,20 @@ describe('EndpointForm', () => {
           mode: 'create'
         }
       })
-      
+
       await wrapper.find('[data-testid="add-header-btn"]').trigger('click')
       await wrapper.vm.$nextTick()
       await wrapper.find('[data-testid="header-key-0"]').setValue('Authorization')
       await wrapper.find('[data-testid="header-value-0"]').setValue('Bearer token')
-      
+
       await wrapper.find('[data-testid="name-input"]').setValue('Test')
       await wrapper.find('[data-testid="url-input"]').setValue('https://api.example.com/graphql')
       await wrapper.vm.$nextTick()
-      
+
       // Trigger form submission
       await wrapper.find('form').trigger('submit.prevent')
       await wrapper.vm.$nextTick()
-      
+
       expect(wrapper.emitted('create')?.[0][0].headers).toEqual({
         'Authorization': 'Bearer token'
       })
@@ -242,14 +242,14 @@ describe('EndpointForm', () => {
           mode: 'create'
         }
       })
-      
+
       await wrapper.find('[data-testid="url-input"]').setValue('https://api.example.com/graphql')
       await wrapper.find('[data-testid="test-btn"]').trigger('click')
-      
+
       // Wait for async operation to complete
       await new Promise(resolve => setTimeout(resolve, 50))
       await wrapper.vm.$nextTick()
-      
+
       expect(wrapper.find('[data-testid="test-result"]').exists()).toBe(true)
     })
 
@@ -259,15 +259,15 @@ describe('EndpointForm', () => {
           mode: 'create'
         }
       })
-      
+
       await wrapper.find('[data-testid="url-input"]').setValue('https://api.example.com/graphql')
-      
+
       // Trigger test and immediately check loading state
       const testPromise = wrapper.find('[data-testid="test-btn"]').trigger('click')
       await wrapper.vm.$nextTick()
-      
+
       expect(wrapper.find('[data-testid="test-loading"]').exists()).toBe(true)
-      
+
       await testPromise
       await new Promise(resolve => setTimeout(resolve, 50))
       await wrapper.vm.$nextTick()
@@ -282,7 +282,7 @@ describe('EndpointForm', () => {
           loading: true
         }
       })
-      
+
       expect(wrapper.find('[data-testid="submit-btn"]').attributes('disabled')).toBeDefined()
     })
 
@@ -292,9 +292,9 @@ describe('EndpointForm', () => {
           mode: 'create'
         }
       })
-      
+
       await wrapper.find('[data-testid="cancel-btn"]').trigger('click')
-      
+
       expect(wrapper.emitted('cancel')).toBeTruthy()
     })
 
@@ -304,10 +304,10 @@ describe('EndpointForm', () => {
           mode: 'create'
         }
       })
-      
+
       await wrapper.find('[data-testid="name-input"]').setValue('Test')
       await wrapper.find('[data-testid="cancel-btn"]').trigger('click')
-      
+
       expect(wrapper.find('[data-testid="name-input"]').element.value).toBe('')
     })
   })

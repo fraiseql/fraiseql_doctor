@@ -54,9 +54,9 @@ function loadFromStorage<T>(key: string, defaultValue: T): T {
   try {
     const stored = localStorage.getItem(key)
     if (!stored) return defaultValue
-    
+
     const parsed = JSON.parse(stored)
-    
+
     // Convert date strings back to Date objects for history entries
     if (key === STORAGE_KEYS.HISTORY && Array.isArray(parsed)) {
       return parsed.map(entry => ({
@@ -67,7 +67,7 @@ function loadFromStorage<T>(key: string, defaultValue: T): T {
         ...(entry.lastUsed && { lastUsed: new Date(entry.lastUsed) })
       })) as T
     }
-    
+
     // Convert date strings back to Date objects for templates
     if (key === STORAGE_KEYS.TEMPLATES && Array.isArray(parsed)) {
       return parsed.map(template => ({
@@ -77,7 +77,7 @@ function loadFromStorage<T>(key: string, defaultValue: T): T {
         ...(template.lastUsed && { lastUsed: new Date(template.lastUsed) })
       })) as T
     }
-    
+
     return parsed
   } catch (error) {
     console.warn(`Failed to load ${key} from localStorage:`, error)
@@ -100,33 +100,33 @@ function saveToStorage<T>(key: string, data: T): void {
 
 function validateQueryInput(input: CreateQueryHistoryInput): string[] {
   const errors: string[] = []
-  
+
   if (!input.endpointId || input.endpointId.trim().length === 0) {
     errors.push('Endpoint ID is required')
   }
-  
+
   if (!input.query || input.query.trim().length === 0) {
     errors.push('Query is required')
   }
-  
+
   if (input.executionTime < 0) {
     errors.push('Execution time must be non-negative')
   }
-  
+
   return errors
 }
 
 function validateTemplateInput(input: CreateQueryTemplateInput): string[] {
   const errors: string[] = []
-  
+
   if (!input.name || input.name.trim().length === 0) {
     errors.push('Template name is required')
   }
-  
+
   if (!input.query || input.query.trim().length === 0) {
     errors.push('Template query is required')
   }
-  
+
   return errors
 }
 
@@ -139,15 +139,15 @@ function maintainHistoryLimit(): void {
 }
 
 function updateTemplateUsage(query: string): void {
-  const matchingTemplate = templatesCache.find(template => 
+  const matchingTemplate = templatesCache.find(template =>
     template.query.trim() === query.trim()
   )
-  
+
   if (matchingTemplate) {
     matchingTemplate.usageCount += 1
     matchingTemplate.lastUsed = new Date()
     matchingTemplate.updatedAt = new Date()
-    
+
     try {
       saveToStorage(STORAGE_KEYS.TEMPLATES, templatesCache)
     } catch (error) {
@@ -158,11 +158,11 @@ function updateTemplateUsage(query: string): void {
 
   function initializeStorage(): void {
     if (initialized) return
-    
+
     historyCache = loadFromStorage(STORAGE_KEYS.HISTORY, [])
     templatesCache = loadFromStorage(STORAGE_KEYS.TEMPLATES, [])
     preferencesCache = { ...DEFAULT_PREFERENCES, ...loadFromStorage(STORAGE_KEYS.PREFERENCES, {}) }
-    
+
     initialized = true
   }
 
@@ -172,7 +172,7 @@ function updateTemplateUsage(query: string): void {
   function addQuery(input: CreateQueryHistoryInput): QueryHistoryResult<QueryHistoryEntry> {
     try {
       const validationErrors = validateQueryInput(input)
-      
+
       if (validationErrors.length > 0) {
         return {
           success: false,
@@ -203,12 +203,12 @@ function updateTemplateUsage(query: string): void {
 
       historyCache.unshift(entry) // Add to beginning for newest-first
       maintainHistoryLimit()
-      
+
       // Update template usage if query matches a template
       updateTemplateUsage(input.query)
-      
+
       saveToStorage(STORAGE_KEYS.HISTORY, historyCache)
-      
+
       return {
         success: true,
         entry
@@ -235,17 +235,17 @@ function updateTemplateUsage(query: string): void {
   function deleteQuery(id: string): QueryHistoryResult<null> {
     try {
       const index = historyCache.findIndex(entry => entry.id === id)
-      
+
       if (index === -1) {
         return {
           success: false,
           error: 'Query not found in history'
         }
       }
-      
+
       historyCache.splice(index, 1)
       saveToStorage(STORAGE_KEYS.HISTORY, historyCache)
-      
+
       return { success: true }
     } catch (error) {
       return {
@@ -258,7 +258,7 @@ function updateTemplateUsage(query: string): void {
   function updateQuery(id: string, updates: UpdateQueryHistoryInput): QueryHistoryResult<QueryHistoryEntry> {
     try {
       const entry = historyCache.find(entry => entry.id === id)
-      
+
       if (!entry) {
         return {
           success: false,
@@ -266,10 +266,10 @@ function updateTemplateUsage(query: string): void {
           error: 'Query not found in history'
         }
       }
-      
+
       Object.assign(entry, updates, { updatedAt: new Date() })
       saveToStorage(STORAGE_KEYS.HISTORY, historyCache)
-      
+
       return {
         success: true,
         entry
@@ -290,23 +290,23 @@ function updateTemplateUsage(query: string): void {
 
   function searchHistory(filter: QueryHistoryFilter = {}): QueryHistoryEntry[] {
     let filtered = [...historyCache]
-    
+
     if (filter.endpointId) {
       filtered = filtered.filter(entry => entry.endpointId === filter.endpointId)
     }
-    
+
     if (filter.success !== undefined) {
       filtered = filtered.filter(entry => entry.success === filter.success)
     }
-    
+
     if (filter.fromDate) {
       filtered = filtered.filter(entry => entry.timestamp >= filter.fromDate!)
     }
-    
+
     if (filter.toDate) {
       filtered = filtered.filter(entry => entry.timestamp <= filter.toDate!)
     }
-    
+
     if (filter.searchTerm) {
       const searchTerm = filter.searchTerm.toLowerCase()
       filtered = filtered.filter(entry =>
@@ -315,17 +315,17 @@ function updateTemplateUsage(query: string): void {
         entry.tags.some(tag => tag.toLowerCase().includes(searchTerm))
       )
     }
-    
+
     if (filter.tags && filter.tags.length > 0) {
       filtered = filtered.filter(entry =>
         filter.tags!.some(tag => entry.tags.includes(tag))
       )
     }
-    
+
     if (filter.favorite !== undefined) {
       filtered = filtered.filter(entry => entry.favorite === filter.favorite)
     }
-    
+
     return filtered.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
   }
 
@@ -337,20 +337,20 @@ function updateTemplateUsage(query: string): void {
     const total = historyCache.length
     const successful = historyCache.filter(entry => entry.success).length
     const failed = total - successful
-    
+
     const totalExecutionTime = historyCache.reduce((sum, entry) => sum + entry.executionTime, 0)
     const averageExecutionTime = total > 0 ? Math.round(totalExecutionTime / total) : 0
-    
+
     // Count endpoint usage
     const endpointCounts = historyCache.reduce((acc, entry) => {
       acc[entry.endpointId] = (acc[entry.endpointId] || 0) + 1
       return acc
     }, {} as Record<string, number>)
-    
+
     const mostUsedEndpoints = Object.entries(endpointCounts)
       .map(([endpointId, count]) => ({ endpointId, count }))
       .sort((a, b) => b.count - a.count)
-    
+
     // Get recent tags (from last 50 entries)
     const recentEntries = getHistory().slice(0, 50)
     const tagCounts = recentEntries.reduce((acc, entry) => {
@@ -359,9 +359,9 @@ function updateTemplateUsage(query: string): void {
       })
       return acc
     }, {} as Record<string, number>)
-    
+
     const recentTags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a])
-    
+
     return {
       totalQueries: total,
       successfulQueries: successful,
@@ -375,9 +375,9 @@ function updateTemplateUsage(query: string): void {
   function exportHistory(options: QueryHistoryExportOptions): QueryHistoryResult<QueryHistoryExportResult> {
     try {
       const { format, filter, includeResults = true, includeVariables = true } = options
-      
+
       let dataToExport = filter ? searchHistory(filter) : getHistory()
-      
+
       // Remove sensitive data if requested
       if (!includeResults) {
         dataToExport = dataToExport.map(entry => {
@@ -385,17 +385,17 @@ function updateTemplateUsage(query: string): void {
           return entryWithoutResult
         })
       }
-      
+
       if (!includeVariables) {
         dataToExport = dataToExport.map(entry => {
           const { variables, ...entryWithoutVariables } = entry
           return entryWithoutVariables
         })
       }
-      
+
       const timestamp = new Date().toISOString().split('T')[0]
       let exportResult: QueryHistoryExportResult
-      
+
       switch (format) {
         case 'json':
           exportResult = {
@@ -404,18 +404,18 @@ function updateTemplateUsage(query: string): void {
             mimeType: 'application/json'
           }
           break
-          
+
         case 'csv':
           const headers = [
             'id', 'endpointId', 'query', 'operationName', 'timestamp',
             'executionTime', 'success', 'error', 'statusCode', 'tags', 'favorite'
           ]
-          
+
           if (includeVariables) headers.splice(-2, 0, 'variables')
           if (includeResults) headers.splice(-2, 0, 'result')
-          
+
           const csvRows = [headers.join(',')]
-          
+
           dataToExport.forEach(entry => {
             const row = [
               `"${entry.id}"`,
@@ -430,25 +430,25 @@ function updateTemplateUsage(query: string): void {
               `"${entry.tags.join(';')}"`,
               entry.favorite.toString()
             ]
-            
+
             if (includeVariables) {
               row.splice(-2, 0, `"${JSON.stringify(entry.variables || {}).replace(/"/g, '""')}"`)
             }
-            
+
             if (includeResults) {
               row.splice(-2, 0, `"${JSON.stringify(entry.result || {}).replace(/"/g, '""')}"`)
             }
-            
+
             csvRows.push(row.join(','))
           })
-          
+
           exportResult = {
             data: csvRows.join('\n'),
             filename: `query-history-${timestamp}.csv`,
             mimeType: 'text/csv'
           }
           break
-          
+
         case 'graphql':
           const graphqlQueries = dataToExport
             .map(entry => {
@@ -457,18 +457,18 @@ function updateTemplateUsage(query: string): void {
               return comment + variables + entry.query
             })
             .join('\n\n# ---\n\n')
-          
+
           exportResult = {
             data: graphqlQueries,
             filename: `query-history-${timestamp}.graphql`,
             mimeType: 'application/graphql'
           }
           break
-          
+
         default:
           throw new Error(`Unsupported export format: ${format}`)
       }
-      
+
       return {
         success: true,
         result: exportResult
@@ -485,7 +485,7 @@ function updateTemplateUsage(query: string): void {
   function addTemplate(input: CreateQueryTemplateInput): QueryHistoryResult<QueryTemplate> {
     try {
       const validationErrors = validateTemplateInput(input)
-      
+
       if (validationErrors.length > 0) {
         return {
           success: false,
@@ -511,7 +511,7 @@ function updateTemplateUsage(query: string): void {
 
       templatesCache.push(template)
       saveToStorage(STORAGE_KEYS.TEMPLATES, templatesCache)
-      
+
       return {
         success: true,
         template
@@ -532,17 +532,17 @@ function updateTemplateUsage(query: string): void {
   function deleteTemplate(id: string): QueryHistoryResult<null> {
     try {
       const index = templatesCache.findIndex(template => template.id === id)
-      
+
       if (index === -1) {
         return {
           success: false,
           error: 'Template not found'
         }
       }
-      
+
       templatesCache.splice(index, 1)
       saveToStorage(STORAGE_KEYS.TEMPLATES, templatesCache)
-      
+
       return { success: true }
     } catch (error) {
       return {
@@ -555,7 +555,7 @@ function updateTemplateUsage(query: string): void {
   function updateTemplate(id: string, updates: Partial<QueryTemplate>): QueryHistoryResult<QueryTemplate> {
     try {
       const template = templatesCache.find(template => template.id === id)
-      
+
       if (!template) {
         return {
           success: false,
@@ -563,10 +563,10 @@ function updateTemplateUsage(query: string): void {
           error: 'Template not found'
         }
       }
-      
+
       Object.assign(template, updates, { updatedAt: new Date() })
       saveToStorage(STORAGE_KEYS.TEMPLATES, templatesCache)
-      
+
       return {
         success: true,
         template
@@ -588,15 +588,15 @@ function updateTemplateUsage(query: string): void {
     deleteQuery,
     updateQuery,
     clearHistory,
-    
+
     // Search and filtering
     searchHistory,
     getRecentQueries,
     getStats,
-    
+
     // Export
     exportHistory,
-    
+
     // Template management
     addTemplate,
     getTemplates,

@@ -123,16 +123,16 @@ export function useApolloStudioConfig() {
   const API_KEY_HEADERS = ['X-API-Key', 'X-Api-Key', 'API-Key', 'Api-Key']
   const APOLLO_STUDIO_BASE_URL = 'https://studio.apollographql.com/sandbox/explorer'
   const DANGEROUS_URL_PATTERNS = ['<script', 'javascript:', 'data:']
-  
+
   // Helper functions
   function clearApiKeyHeaders(headers: StudioHeaders): void {
     API_KEY_HEADERS.forEach(header => delete headers[header])
   }
-  
+
   function isValidValue(value: any): boolean {
     return value !== undefined && value !== null && value !== ''
   }
-  
+
   function createFallbackConfig(endpoint?: GraphQLEndpoint): StudioConfig {
     return {
       endpoint: endpoint?.url || 'https://api.example.com/graphql',
@@ -140,7 +140,7 @@ export function useApolloStudioConfig() {
       introspection: false
     }
   }
-  
+
   // Common error handling patterns
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function handleError<T>(
@@ -160,7 +160,7 @@ export function useApolloStudioConfig() {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       logError(`${context} failed`, { ...logContext, error: errorMessage })
-      
+
       return {
         success: false,
         data: fallback,
@@ -169,27 +169,27 @@ export function useApolloStudioConfig() {
       }
     }
   }
-  
+
   function validateEndpointStructure(endpoint: GraphQLEndpoint): string[] {
     const errors: string[] = []
-    
+
     // Check URL first (most critical)
     if (!validateEndpointUrl(endpoint.url)) {
       errors.push('Invalid URL format')
     }
-    
+
     if (DANGEROUS_URL_PATTERNS.some(pattern => endpoint.url.includes(pattern))) {
       errors.push('Dangerous URL pattern detected')
     }
-    
+
     // Then check required fields
     if (!endpoint.id || !endpoint.name) {
       errors.push('Missing required endpoint fields')
     }
-    
+
     return errors
   }
-  
+
   function createStudioConfig(endpoint: GraphQLEndpoint): StudioConfig {
     return {
       endpoint: endpoint.url,
@@ -205,33 +205,33 @@ export function useApolloStudioConfig() {
   // URL Generation Helper Functions (defined early for use by other functions)
   function sanitizeUrlParams(params: UrlParams): UrlParams {
     const sanitized: UrlParams = {}
-    
+
     for (const [key, value] of Object.entries(params)) {
       // Skip dangerous keys that could contain scripts
       const isDangerous = DANGEROUS_URL_PATTERNS.some(pattern => key.includes(pattern))
       if (isDangerous) {
         continue
       }
-      
+
       // Only include valid values
       if (isValidValue(value)) {
         sanitized[key] = value
       }
     }
-    
+
     return sanitized
   }
 
   function buildQueryString(params: UrlParams): string {
     const sanitized = sanitizeUrlParams(params)
     const searchParams = new URLSearchParams()
-    
+
     for (const [key, value] of Object.entries(sanitized)) {
       if (value !== undefined && value !== null) {
         searchParams.append(key, String(value))
       }
     }
-    
+
     return searchParams.toString()
   }
 
@@ -240,7 +240,7 @@ export function useApolloStudioConfig() {
       endpoint: endpoint.url,
       ...(endpoint.introspectionEnabled && { introspection: 'true' })
     }
-    
+
     const queryString = buildQueryString(params)
     return `${APOLLO_STUDIO_BASE_URL}?${queryString}`
   }
@@ -292,15 +292,15 @@ export function useApolloStudioConfig() {
       if (!authHeader.startsWith('Basic ')) {
         return null
       }
-      
+
       const base64 = authHeader.replace('Basic ', '')
       const decoded = atob(base64)
       const [username, password] = decoded.split(':')
-      
+
       if (!username || !password) {
         return null
       }
-      
+
       return { username, password }
     } catch {
       return null
@@ -308,14 +308,14 @@ export function useApolloStudioConfig() {
   }
 
   function validateBasicAuth(username: string, password: string): boolean {
-    return Boolean(username && username.trim().length > 0 && 
+    return Boolean(username && username.trim().length > 0 &&
                    password && password.trim().length > 0)
   }
 
   // Multi-Authentication Support
   function detectAuthType(headers: StudioHeaders): AuthType {
     const authHeader = headers.Authorization
-    
+
     if (authHeader) {
       if (authHeader.startsWith('Bearer ')) {
         return 'bearer'
@@ -324,24 +324,24 @@ export function useApolloStudioConfig() {
         return 'basic'
       }
     }
-    
+
     // Check for common API key headers
     for (const header of API_KEY_HEADERS) {
       if (headers[header]) {
         return 'apikey'
       }
     }
-    
+
     return 'none'
   }
 
   function createConfigWithAuth(
-    endpoint: GraphQLEndpoint, 
+    endpoint: GraphQLEndpoint,
     authType: AuthType,
     options?: AuthOptions
   ): StudioConfig {
     const config = createStudioConfig(endpoint)
-    
+
     switch (authType) {
       case 'bearer':
         if (config.headers.Authorization) {
@@ -350,11 +350,11 @@ export function useApolloStudioConfig() {
         // Clear non-bearer auth headers
         clearApiKeyHeaders(config.headers)
         break
-        
+
       case 'apikey':
         // Clear auth header for API key auth
         delete config.headers.Authorization
-        
+
         if (options?.apiKey && options?.headerName) {
           config.headers[options.headerName] = options.apiKey
         } else if (endpoint.headers) {
@@ -367,24 +367,24 @@ export function useApolloStudioConfig() {
           }
         }
         break
-        
+
       case 'basic':
         // Clear API key headers for Basic auth
         clearApiKeyHeaders(config.headers)
-        
+
         if (options?.username && options?.password) {
           config.headers.Authorization = encodeBasicAuth(options.username, options.password)
         } else if (config.headers.Authorization?.startsWith('Basic ')) {
           // Keep existing Basic auth header
         }
         break
-        
+
       case 'none':
         delete config.headers.Authorization
         clearApiKeyHeaders(config.headers)
         break
     }
-    
+
     return config
   }
 
@@ -395,13 +395,13 @@ export function useApolloStudioConfig() {
     options?: SwitchEndpointOptions
   ): StudioConfig {
     const config = createStudioConfig(toEndpoint)
-    
+
     if (options?.preserveAuthType) {
       // Keep the same auth type but use new endpoint's credentials
       const fromAuthType = detectAuthType(fromEndpoint.headers || {})
       return createConfigWithAuth(toEndpoint, fromAuthType)
     }
-    
+
     // Use the target endpoint's natural auth configuration
     const targetAuthType = detectAuthType(config.headers)
     return createConfigWithAuth(toEndpoint, targetAuthType)
@@ -416,12 +416,12 @@ export function useApolloStudioConfig() {
     return createConfigWithAuth(toEndpoint, forceAuthType)
   }
 
-  // URL Generation Functions  
+  // URL Generation Functions
   function validateEndpointUrl(url: string): boolean {
     if (!url || typeof url !== 'string' || url.trim().length === 0) {
       return false
     }
-    
+
     try {
       const parsed = new URL(url)
       // Only allow http and https protocols
@@ -440,7 +440,7 @@ export function useApolloStudioConfig() {
       ...(endpoint.introspectionEnabled && { introspection: 'true' }),
       ...customParams
     }
-    
+
     const queryString = buildQueryString(params)
     return `${APOLLO_STUDIO_BASE_URL}?${queryString}`
   }
@@ -457,10 +457,10 @@ export function useApolloStudioConfig() {
   // Error Handling and Resilience Functions
   function validateConfigurationSafely(endpoint: GraphQLEndpoint): ValidationResult {
     const warnings: string[] = []
-    
+
     try {
       const errors = validateEndpointStructure(endpoint)
-      
+
       if (errors.length > 0) {
         errors.forEach(error => logError(error, { endpoint: endpoint.url }))
         return {
@@ -470,7 +470,7 @@ export function useApolloStudioConfig() {
           warnings
         }
       }
-      
+
       const config = createStudioConfig(endpoint)
       return {
         isValid: true,
@@ -497,9 +497,9 @@ export function useApolloStudioConfig() {
         ...endpoint,
         headers: endpoint.headers || {}
       }
-      
+
       const config = createStudioConfig(safeEndpoint)
-      
+
       return {
         success: true,
         config,
@@ -509,7 +509,7 @@ export function useApolloStudioConfig() {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       logError('Safe config creation failed', { endpoint, error: errorMessage })
-      
+
       return {
         success: false,
         config: createFallbackConfig(endpoint),
@@ -525,7 +525,7 @@ export function useApolloStudioConfig() {
   ): SafeResult<StudioConfig> {
     try {
       const warnings: string[] = []
-      
+
       // Handle invalid token formats with fallback
       if (authType === 'bearer' && endpoint.headers?.Authorization) {
         const authHeader = endpoint.headers.Authorization
@@ -533,9 +533,9 @@ export function useApolloStudioConfig() {
           warnings.push('Invalid token format, applied fallback')
         }
       }
-      
+
       const config = createConfigWithAuth(endpoint, authType)
-      
+
       return {
         success: true,
         config,
@@ -545,7 +545,7 @@ export function useApolloStudioConfig() {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown auth error'
       logError('Safe auth config creation failed', { endpoint, authType, error: errorMessage })
-      
+
       return {
         success: false,
         config: createFallbackConfig(endpoint),
@@ -560,17 +560,17 @@ export function useApolloStudioConfig() {
     errorType: 'timeout' | 'network' | 'cors' | 'auth'
   ): NetworkErrorResult {
     const fallbackConfig = createFallbackConfig(endpoint)
-    
+
     const errorMap = {
       timeout: { retryable: true, message: 'Request timeout' },
       network: { retryable: true, message: 'Network error' },
       cors: { retryable: false, message: 'CORS policy error' },
       auth: { retryable: false, message: 'Authentication failed' }
     }
-    
+
     const errorInfo = errorMap[errorType]
     logError(`Simulated ${errorType} error`, { endpoint: endpoint.url }, 'warning')
-    
+
     return {
       error: errorType,
       retryable: errorInfo.retryable,
@@ -584,7 +584,7 @@ export function useApolloStudioConfig() {
   ): RetryResult {
     try {
       const config = createStudioConfig(endpoint)
-      
+
       return {
         config,
         retryCount: 0,
@@ -593,7 +593,7 @@ export function useApolloStudioConfig() {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       logError('Config creation failed, retry available', { endpoint, options, error: errorMessage })
-      
+
       return {
         config: createFallbackConfig(endpoint),
         retryCount: 0,
@@ -608,30 +608,30 @@ export function useApolloStudioConfig() {
     customParams: UrlParams = {}
   ): UrlSafetyResult {
     const warnings: string[] = []
-    
+
     try {
       // Check for dangerous parameters
       const dangerousKeys = Object.keys(customParams).filter(key =>
         DANGEROUS_URL_PATTERNS.some(pattern => key.includes(pattern))
       )
-      
+
       if (dangerousKeys.length > 0) {
         warnings.push('Dangerous parameters removed')
         logError('Dangerous URL parameters detected', { dangerousKeys }, 'warning')
       }
-      
+
       // Check for function parameters (not serializable)
-      const functionParams = Object.entries(customParams).filter(([_, value]) => 
+      const functionParams = Object.entries(customParams).filter(([_, value]) =>
         typeof value === 'function'
       )
-      
+
       if (functionParams.length > 0) {
         warnings.push('Non-serializable parameters removed')
       }
-      
+
       const sanitizedParams = sanitizeUrlParams(customParams)
       const url = generateStudioUrlWithParams(endpoint, sanitizedParams)
-      
+
       return {
         success: true,
         url,
@@ -641,7 +641,7 @@ export function useApolloStudioConfig() {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'URL generation failed'
       logError('Safe URL generation failed', { endpoint, customParams, error: errorMessage })
-      
+
       return {
         success: false,
         url: generateStudioUrl(endpoint), // Fallback to basic URL
@@ -659,7 +659,7 @@ export function useApolloStudioConfig() {
     try {
       // Validate target endpoint first
       const validation = validateConfigurationSafely(toEndpoint)
-      
+
       if (!validation.isValid) {
         return {
           success: false,
@@ -668,9 +668,9 @@ export function useApolloStudioConfig() {
           warnings: ['Using original endpoint as fallback']
         }
       }
-      
+
       const config = switchEndpoint(fromEndpoint, toEndpoint, options)
-      
+
       return {
         success: true,
         config,
@@ -679,7 +679,7 @@ export function useApolloStudioConfig() {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Endpoint switching failed'
       logError('Safe endpoint switching failed', { fromEndpoint, toEndpoint, options, error: errorMessage })
-      
+
       return {
         success: false,
         error: errorMessage,
@@ -699,25 +699,25 @@ export function useApolloStudioConfig() {
       retryOnError = true,
       maxRetries = 3
     } = options
-    
+
     let retryCount = 0
-    
+
     const handleError = (error: Error) => {
       logError('Iframe loading error', { endpoint: endpoint.url, error: error.message })
-      
+
       if (retryOnError && retryCount < maxRetries) {
         retryCount++
         logError(`Retrying iframe load (attempt ${retryCount}/${maxRetries})`, { endpoint: endpoint.url }, 'info')
       }
     }
-    
+
     const handleRetry = () => {
       if (retryCount < maxRetries) {
         retryCount++
         logError(`Manual retry triggered (attempt ${retryCount}/${maxRetries})`, { endpoint: endpoint.url }, 'info')
       }
     }
-    
+
     return {
       src: generateStudioUrl(endpoint),
       errorBoundary: enableErrorBoundary,

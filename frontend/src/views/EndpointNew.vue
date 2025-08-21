@@ -49,7 +49,7 @@ const isLoading = ref(false)
 
 async function handleCreate(data: CreateEndpointInput) {
   isLoading.value = true
-  
+
   try {
     const endpoint = await endpointsStore.createEndpoint(data)
     if (endpoint) {

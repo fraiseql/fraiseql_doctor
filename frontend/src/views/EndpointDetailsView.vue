@@ -50,7 +50,7 @@ const props = defineProps<Props>()
 const router = useRouter()
 const endpointsStore = useEndpointsStore()
 
-const endpoint = computed(() => 
+const endpoint = computed(() =>
   endpointsStore.endpoints.find(e => e.id === props.id)
 )
 

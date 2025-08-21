@@ -8,7 +8,7 @@ let providerInstance: MockProvider | Auth0Provider
 
 function createProvider() {
   const authProviderType = import.meta.env.VITE_AUTH_PROVIDER as AuthProviderType
-  
+
   switch (authProviderType) {
     case AuthProviderType.AUTH0:
       return new Auth0Provider()
@@ -29,7 +29,7 @@ function getProvider() {
     }
     return testProviderInstance
   }
-  
+
   if (!providerInstance) {
     providerInstance = createProvider()
   }
@@ -38,17 +38,17 @@ function getProvider() {
 
 export function useAuth() {
   const provider = getProvider()
-  
+
   return {
     // Provider info
     provider: {
       type: provider.type
     },
-    
+
     // Auth state
     isAuthenticated: provider.isAuthenticated,
     user: provider.user,
-    
+
     // Auth methods
     login: provider.login.bind(provider),
     logout: provider.logout.bind(provider),

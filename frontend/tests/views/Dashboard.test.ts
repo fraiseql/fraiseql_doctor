@@ -58,7 +58,7 @@ describe('Dashboard Overview', () => {
         plugins: [createPinia()]
       }
     })
-    
+
     const statusCards = wrapper.findAll('[data-testid="status-card"]')
     expect(statusCards).toHaveLength(4) // Should show 4 status cards
   })
@@ -69,7 +69,7 @@ describe('Dashboard Overview', () => {
         plugins: [createPinia()]
       }
     })
-    
+
     // Should connect to WebSocket on mount
     expect(mockWebSocket.connect).toHaveBeenCalledWith('dashboard', expect.any(Function))
   })
@@ -80,15 +80,15 @@ describe('Dashboard Overview', () => {
         plugins: [createPinia()]
       }
     })
-    
+
     // Get the WebSocket message handler
     const connectCall = mockWebSocket.connect.mock.calls[0]
     const messageHandler = connectCall[1]
-    
+
     // Simulate WebSocket message
     messageHandler(mockDashboardData)
     await nextTick()
-    
+
     // Should update the display
     expect(wrapper.text()).toContain('Healthy: 8')
     expect(wrapper.text()).toContain('Warning: 2')
@@ -100,7 +100,7 @@ describe('Dashboard Overview', () => {
         plugins: [createPinia()]
       }
     })
-    
+
     // Should show loading indicators
     expect(wrapper.text()).toContain('Loading...')
   })
@@ -108,15 +108,15 @@ describe('Dashboard Overview', () => {
   it('should handle WebSocket connection errors', async () => {
     // Set up error before mounting
     mockWebSocket.error.value = new Error('Connection failed')
-    
+
     wrapper = mount(DashboardView, {
       global: {
         plugins: [createPinia()]
       }
     })
-    
+
     await nextTick()
-    
+
     // Should show error state
     expect(wrapper.find('[data-testid="error-message"]').exists()).toBeTruthy()
   })
@@ -127,13 +127,13 @@ describe('Dashboard Overview', () => {
         plugins: [createPinia()]
       }
     })
-    
+
     // Simulate receiving data
     const connectCall = mockWebSocket.connect.mock.calls[0]
     const messageHandler = connectCall[1]
     messageHandler(mockDashboardData)
     await nextTick()
-    
+
     // Should render chart component
     const chart = wrapper.find('[data-testid="health-chart"]')
     expect(chart.exists()).toBeTruthy()
@@ -145,7 +145,7 @@ describe('Dashboard Overview', () => {
         plugins: [createPinia()]
       }
     })
-    
+
     // Should set up periodic refresh
     expect(mockWebSocket.emit).toHaveBeenCalledWith('request-update')
   })
@@ -156,9 +156,9 @@ describe('Dashboard Overview', () => {
         plugins: [createPinia()]
       }
     })
-    
+
     wrapper.unmount()
-    
+
     // Should disconnect WebSocket
     expect(mockWebSocket.disconnect).toHaveBeenCalled()
   })
@@ -169,13 +169,13 @@ describe('Dashboard Overview', () => {
         plugins: [createPinia()]
       }
     })
-    
+
     // Simulate empty data response
     const connectCall = mockWebSocket.connect.mock.calls[0]
     const messageHandler = connectCall[1]
     messageHandler({ stats: [], chartData: null })
     await nextTick()
-    
+
     // Should show empty state
     expect(wrapper.find('[data-testid="empty-state"]').exists()).toBeTruthy()
   })

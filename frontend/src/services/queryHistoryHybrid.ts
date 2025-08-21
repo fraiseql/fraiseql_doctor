@@ -157,7 +157,7 @@ class HybridQueryHistoryService {
    * Update query (e.g., toggle favorite)
    */
   async updateQuery(
-    queryId: string, 
+    queryId: string,
     updates: UpdateQueryHistoryInput
   ): Promise<QueryHistoryResult<QueryHistoryEntry>> {
     await this.testApiConnection()

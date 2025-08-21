@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex">
     <!-- Sidebar -->
-    <aside 
+    <aside
       data-testid="sidebar"
       :class="[
         'bg-white shadow-lg w-64 transform transition-transform duration-300 ease-in-out',
@@ -13,7 +13,7 @@
       <div class="flex items-center justify-center h-16 border-b border-gray-200">
         <h1 class="text-xl font-semibold text-gray-800">FraiseQL Doctor</h1>
       </div>
-      
+
       <!-- Navigation -->
       <nav class="mt-6">
         <div class="px-4 space-y-2">
@@ -28,7 +28,7 @@
             </svg>
             Dashboard
           </router-link>
-          
+
           <router-link
             to="/endpoints"
             data-testid="nav-endpoints"
@@ -51,7 +51,7 @@
         <div class="flex items-center justify-between px-6 py-4">
           <div class="flex items-center">
             <!-- Mobile menu button -->
-            <button 
+            <button
               data-testid="sidebar-toggle"
               @click="toggleSidebar"
               class="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"

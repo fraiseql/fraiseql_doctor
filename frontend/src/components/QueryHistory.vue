@@ -9,7 +9,7 @@
         <div class="flex items-center space-x-2">
           <!-- Connection Status -->
           <div class="flex items-center space-x-1">
-            <div 
+            <div
               class="w-2 h-2 rounded-full"
               :class="connectionStatus.connected ? 'bg-green-500' : 'bg-orange-500'"
             ></div>
@@ -22,7 +22,7 @@
           <div class="text-sm text-gray-500 dark:text-gray-400">
             {{ stats.totalQueries }} queries, {{ stats.successfulQueries }} successful
           </div>
-          
+
           <!-- Actions -->
           <button
             @click="exportHistory"
@@ -116,11 +116,11 @@
       <div v-if="loading" class="p-8 text-center text-gray-500 dark:text-gray-400">
         Loading history...
       </div>
-      
+
       <div v-else-if="!hasHistory" class="p-8 text-center text-gray-500 dark:text-gray-400">
         No query history found.
       </div>
-      
+
       <div v-else-if="filteredHistory.length === 0" class="p-8 text-center text-gray-500 dark:text-gray-400">
         No queries match your current filters.
       </div>
@@ -180,7 +180,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQueryHistoryHybrid } from '../services/queryHistoryHybrid'
-import type { 
+import type {
   QueryHistoryEntry as HistoryEntry,
   QueryHistoryFilter,
   QueryHistoryStats,
@@ -209,10 +209,10 @@ const queryHistoryService = useQueryHistoryHybrid()
 // State
 const loading = ref(true)
 const history = ref<HistoryEntry[]>([])
-const stats = ref<QueryHistoryStats>({ 
-  totalQueries: 0, 
-  successfulQueries: 0, 
-  failedQueries: 0, 
+const stats = ref<QueryHistoryStats>({
+  totalQueries: 0,
+  successfulQueries: 0,
+  failedQueries: 0,
   averageExecutionTime: 0,
   mostUsedEndpoints: [],
   recentTags: []
@@ -253,38 +253,38 @@ const hasActiveFilters = computed(() => {
 const filteredHistory = computed(() => {
   // Client-side filtering since we already have the data loaded
   let filtered = history.value
-  
+
   if (filters.value.endpointId) {
     filtered = filtered.filter(entry => entry.endpointId === filters.value.endpointId)
   }
-  
+
   if (filters.value.success !== undefined) {
     filtered = filtered.filter(entry => entry.success === filters.value.success)
   }
-  
+
   if (filters.value.searchTerm) {
     const searchTerm = filters.value.searchTerm.toLowerCase()
-    filtered = filtered.filter(entry => 
+    filtered = filtered.filter(entry =>
       entry.query.toLowerCase().includes(searchTerm) ||
       entry.operationName?.toLowerCase().includes(searchTerm) ||
       entry.tags?.some(tag => tag.toLowerCase().includes(searchTerm))
     )
   }
-  
+
   if (filters.value.onlyFavorites) {
     filtered = filtered.filter(entry => entry.favorite)
   }
-  
+
   if (filters.value.fromDate) {
     const fromDate = new Date(filters.value.fromDate)
     filtered = filtered.filter(entry => entry.timestamp >= fromDate)
   }
-  
+
   if (filters.value.toDate) {
     const toDate = new Date(filters.value.toDate)
     filtered = filtered.filter(entry => entry.timestamp <= toDate)
   }
-  
+
   return filtered
 })
 
@@ -303,7 +303,7 @@ const paginatedHistoryWithEndpoints = computed(() => {
       entry,
       endpoint: getEndpoint(entry.endpointId)
     }))
-    .filter((item): item is { entry: HistoryEntry; endpoint: GraphQLEndpoint } => 
+    .filter((item): item is { entry: HistoryEntry; endpoint: GraphQLEndpoint } =>
       item.endpoint !== undefined
     )
 })
@@ -321,7 +321,7 @@ async function loadHistory() {
       queryHistoryService.getHistory(),
       queryHistoryService.getStats()
     ])
-    
+
     history.value = historyData
     stats.value = statsData
     connectionStatus.value = {
@@ -352,7 +352,7 @@ async function toggleFavorite(entry: HistoryEntry) {
     const result = await queryHistoryService.updateQuery(entry.id, {
       favorite: !entry.favorite
     })
-    
+
     if (result.success && result.entry) {
       // Update local copy
       const index = history.value.findIndex(h => h.id === entry.id)
@@ -369,7 +369,7 @@ async function deleteEntry(entry: HistoryEntry) {
   if (confirm('Are you sure you want to delete this query from history?')) {
     try {
       const result = await queryHistoryService.deleteQuery(entry.id)
-      
+
       if (result.success) {
         await loadHistory()
       }
@@ -401,29 +401,29 @@ async function handleExport(options: QueryHistoryExportOptions) {
       ...(filters.value.fromDate && { fromDate: new Date(filters.value.fromDate) }),
       ...(filters.value.toDate && { toDate: new Date(filters.value.toDate) })
     }
-    
+
     const result = await queryHistoryService.exportHistory({
       ...options,
       filter
     })
-    
+
     if (result.success && result.result) {
       const blob = new Blob([result.result.data], { type: result.result.mimeType })
       const url = URL.createObjectURL(blob)
-      
+
       const a = document.createElement('a')
       a.href = url
       a.download = result.result.filename
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
-      
+
       URL.revokeObjectURL(url)
     }
   } catch (error) {
     console.error('Failed to export history:', error)
   }
-  
+
   showExportModal.value = false
 }
 

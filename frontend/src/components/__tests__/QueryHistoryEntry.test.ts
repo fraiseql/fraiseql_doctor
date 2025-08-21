@@ -99,7 +99,7 @@ describe('QueryHistoryEntry', () => {
     it('should display tags', () => {
       expect(wrapper.text()).toContain('users')
       expect(wrapper.text()).toContain('test')
-      
+
       const tagElements = wrapper.findAll('.bg-blue-100')
       expect(tagElements.length).toBe(2)
     })
@@ -125,7 +125,7 @@ describe('QueryHistoryEntry', () => {
 
     it('should display error message', () => {
       expect(wrapper.text()).toContain('Network timeout after 5 seconds')
-      
+
       const errorBox = wrapper.find('.text-red-600, .bg-red-50')
       expect(errorBox.exists()).toBe(true)
     })
@@ -167,7 +167,7 @@ describe('QueryHistoryEntry', () => {
 
     it('should have variables section when variables exist', () => {
       const detailsElements = wrapper.findAll('details')
-      const variablesSection = detailsElements.find(detail => 
+      const variablesSection = detailsElements.find(detail =>
         detail.find('summary').text().includes('Variables')
       )
       expect(variablesSection).toBeDefined()
@@ -175,7 +175,7 @@ describe('QueryHistoryEntry', () => {
 
     it('should show variables content when expanded', () => {
       const detailsElements = wrapper.findAll('details')
-      const variablesSection = detailsElements.find(detail => 
+      const variablesSection = detailsElements.find(detail =>
         detail.find('summary').text().includes('Variables')
       )
       if (variablesSection) {
@@ -186,7 +186,7 @@ describe('QueryHistoryEntry', () => {
 
     it('should have result section when result exists', () => {
       const detailsElements = wrapper.findAll('details')
-      const resultSection = detailsElements.find(detail => 
+      const resultSection = detailsElements.find(detail =>
         detail.find('summary').text().includes('Result')
       )
       expect(resultSection).toBeDefined()
@@ -194,7 +194,7 @@ describe('QueryHistoryEntry', () => {
 
     it('should show result content when expanded', () => {
       const detailsElements = wrapper.findAll('details')
-      const resultSection = detailsElements.find(detail => 
+      const resultSection = detailsElements.find(detail =>
         detail.find('summary').text().includes('Result')
       )
       if (resultSection) {
@@ -206,7 +206,7 @@ describe('QueryHistoryEntry', () => {
 
     it('should have headers section when headers exist', () => {
       const detailsElements = wrapper.findAll('details')
-      const headersSection = detailsElements.find(detail => 
+      const headersSection = detailsElements.find(detail =>
         detail.find('summary').text().includes('Headers')
       )
       expect(headersSection).toBeDefined()
@@ -229,7 +229,7 @@ describe('QueryHistoryEntry', () => {
     it('should emit replay event when replay button is clicked', async () => {
       const replayBtn = wrapper.find('button[title="Replay this query"]')
       await replayBtn.trigger('click')
-      
+
       expect(wrapper.emitted('replay')).toBeTruthy()
       expect(wrapper.emitted('replay')![0]).toEqual([mockSuccessfulEntry])
     })
@@ -242,7 +242,7 @@ describe('QueryHistoryEntry', () => {
     it('should emit save-as-template event when template button is clicked', async () => {
       const saveBtn = wrapper.find('button[title="Save as template"]')
       await saveBtn.trigger('click')
-      
+
       expect(wrapper.emitted('save-as-template')).toBeTruthy()
       expect(wrapper.emitted('save-as-template')![0]).toEqual([mockSuccessfulEntry])
     })
@@ -255,20 +255,20 @@ describe('QueryHistoryEntry', () => {
     it('should emit delete event when delete button is clicked', async () => {
       const deleteBtn = wrapper.find('button[title="Delete from history"]')
       await deleteBtn.trigger('click')
-      
+
       expect(wrapper.emitted('delete')).toBeTruthy()
       expect(wrapper.emitted('delete')![0]).toEqual([mockSuccessfulEntry])
     })
 
     it('should emit toggle-favorite event when favorite button is clicked', async () => {
       const favoriteButtons = wrapper.findAll('button')
-      const favoriteBtn = favoriteButtons.find(btn => 
+      const favoriteBtn = favoriteButtons.find(btn =>
         btn.find('.text-gray-400').exists() || btn.text().includes('★')
       )
-      
+
       if (favoriteBtn) {
         await favoriteBtn.trigger('click')
-        
+
         expect(wrapper.emitted('toggle-favorite')).toBeTruthy()
         expect(wrapper.emitted('toggle-favorite')![0]).toEqual([mockSuccessfulEntry])
       } else {
@@ -281,14 +281,14 @@ describe('QueryHistoryEntry', () => {
   describe('Operation Name Extraction', () => {
     it('should extract operation name from query when not provided', () => {
       const { operationName, ...entryWithoutName } = mockSuccessfulEntry
-      
+
       const wrapper = mount(QueryHistoryEntry, {
         props: {
           entry: entryWithoutName,
           endpoint: mockEndpoint
         }
       })
-      
+
       expect(wrapper.text()).toContain('GetUsers')
     })
 
@@ -297,14 +297,14 @@ describe('QueryHistoryEntry', () => {
         ...mockSuccessfulEntry,
         query: '{ users { id } }'
       }
-      
+
       const wrapper = mount(QueryHistoryEntry, {
         props: {
           entry: entryWithoutName,
           endpoint: mockEndpoint
         }
       })
-      
+
       expect(wrapper.text()).toContain('Unnamed Query')
     })
 
@@ -313,14 +313,14 @@ describe('QueryHistoryEntry', () => {
         ...mockSuccessfulEntry,
         query: 'mutation CreateUser($input: UserInput!) { createUser(input: $input) { id } }'
       }
-      
+
       const wrapper = mount(QueryHistoryEntry, {
         props: {
           entry: mutationEntry,
           endpoint: mockEndpoint
         }
       })
-      
+
       expect(wrapper.text()).toContain('CreateUser')
     })
   })
@@ -331,7 +331,7 @@ describe('QueryHistoryEntry', () => {
       const wrapper = mount(QueryHistoryEntry, {
         props: { entry: fastEntry, endpoint: mockEndpoint }
       })
-      
+
       const timeElement = wrapper.find('[data-testid="execution-time"]')
       expect(timeElement.classes()).toContain('text-green-600')
     })
@@ -341,7 +341,7 @@ describe('QueryHistoryEntry', () => {
       const wrapper = mount(QueryHistoryEntry, {
         props: { entry: moderateEntry, endpoint: mockEndpoint }
       })
-      
+
       const timeElement = wrapper.find('[data-testid="execution-time"]')
       expect(timeElement.classes()).toContain('text-blue-600')
     })
@@ -351,7 +351,7 @@ describe('QueryHistoryEntry', () => {
       const wrapper = mount(QueryHistoryEntry, {
         props: { entry: slowEntry, endpoint: mockEndpoint }
       })
-      
+
       const timeElement = wrapper.find('[data-testid="execution-time"]')
       expect(timeElement.classes()).toContain('text-yellow-600')
     })
@@ -361,7 +361,7 @@ describe('QueryHistoryEntry', () => {
       const wrapper = mount(QueryHistoryEntry, {
         props: { entry: verySlowEntry, endpoint: mockEndpoint }
       })
-      
+
       const timeElement = wrapper.find('[data-testid="execution-time"]')
       expect(timeElement.classes()).toContain('text-red-600')
     })
@@ -373,7 +373,7 @@ describe('QueryHistoryEntry', () => {
       const wrapper = mount(QueryHistoryEntry, {
         props: { entry: recentEntry, endpoint: mockEndpoint }
       })
-      
+
       const timestampElement = wrapper.find('[data-testid="timestamp"]')
       expect(timestampElement.text()).toBe('Just now')
     })
@@ -384,7 +384,7 @@ describe('QueryHistoryEntry', () => {
       const wrapper = mount(QueryHistoryEntry, {
         props: { entry: entryWithTimestamp, endpoint: mockEndpoint }
       })
-      
+
       const timestampElement = wrapper.find('[data-testid="timestamp"]')
       expect(timestampElement.text()).toBe('5m ago')
     })
@@ -395,7 +395,7 @@ describe('QueryHistoryEntry', () => {
       const wrapper = mount(QueryHistoryEntry, {
         props: { entry: entryWithTimestamp, endpoint: mockEndpoint }
       })
-      
+
       const timestampElement = wrapper.find('[data-testid="timestamp"]')
       expect(timestampElement.text()).toBe('2h ago')
     })
@@ -406,7 +406,7 @@ describe('QueryHistoryEntry', () => {
       const wrapper = mount(QueryHistoryEntry, {
         props: { entry: entryWithTimestamp, endpoint: mockEndpoint }
       })
-      
+
       const timestampElement = wrapper.find('[data-testid="timestamp"]')
       expect(timestampElement.text()).toBe('3d ago')
     })
@@ -417,7 +417,7 @@ describe('QueryHistoryEntry', () => {
       const wrapper = mount(QueryHistoryEntry, {
         props: { entry: entryWithTimestamp, endpoint: mockEndpoint }
       })
-      
+
       const timestampElement = wrapper.find('[data-testid="timestamp"]')
       expect(timestampElement.text()).toMatch(/\d{1,2}\/\d{1,2}\/\d{4}/)
     })
@@ -430,7 +430,7 @@ describe('QueryHistoryEntry', () => {
           entry: mockSuccessfulEntry
         }
       })
-      
+
       expect(wrapper.text()).toContain('Unknown')
     })
 
@@ -442,9 +442,9 @@ describe('QueryHistoryEntry', () => {
           endpoint: mockEndpoint
         }
       })
-      
+
       const detailsElements = wrapper.findAll('details')
-      const variablesSection = detailsElements.find(detail => 
+      const variablesSection = detailsElements.find(detail =>
         detail.find('summary').text().includes('Variables')
       )
       expect(variablesSection).toBe(undefined)
@@ -458,9 +458,9 @@ describe('QueryHistoryEntry', () => {
           endpoint: mockEndpoint
         }
       })
-      
+
       const detailsElements = wrapper.findAll('details')
-      const resultSection = detailsElements.find(detail => 
+      const resultSection = detailsElements.find(detail =>
         detail.find('summary').text().includes('Result')
       )
       expect(resultSection).toBe(undefined)
@@ -474,9 +474,9 @@ describe('QueryHistoryEntry', () => {
           endpoint: mockEndpoint
         }
       })
-      
+
       const detailsElements = wrapper.findAll('details')
-      const headersSection = detailsElements.find(detail => 
+      const headersSection = detailsElements.find(detail =>
         detail.find('summary').text().includes('Headers')
       )
       expect(headersSection).toBe(undefined)
@@ -490,7 +490,7 @@ describe('QueryHistoryEntry', () => {
           endpoint: mockEndpoint
         }
       })
-      
+
       const tagElements = wrapper.findAll('.bg-blue-100')
       expect(tagElements.length).toBe(0)
     })

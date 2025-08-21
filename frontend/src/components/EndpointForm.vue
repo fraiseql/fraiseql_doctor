@@ -14,7 +14,7 @@
       <!-- Basic Information -->
       <div class="bg-white shadow rounded-lg p-6">
         <h3 class="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
-        
+
         <div class="grid grid-cols-1 gap-6">
           <!-- Name -->
           <div>
@@ -65,7 +65,7 @@
             <p v-if="errors.url" data-testid="url-error" class="mt-1 text-sm text-red-600">
               {{ errors.url }}
             </p>
-            
+
             <!-- Test Result -->
             <div v-if="testResult" data-testid="test-result" class="mt-2">
               <div v-if="testResult.success" class="text-sm text-green-600 flex items-center">
@@ -106,8 +106,8 @@
             <label for="introspection" class="ml-2 block text-sm text-gray-900">
               Enable introspection
             </label>
-            <InformationCircleIcon 
-              class="h-4 w-4 text-gray-400 ml-2" 
+            <InformationCircleIcon
+              class="h-4 w-4 text-gray-400 ml-2"
               title="Allows fetching the GraphQL schema for better tooling support"
             />
           </div>
@@ -261,17 +261,17 @@ const isFormValid = computed(() => {
 // Methods
 function validateForm(): boolean {
   let isValid = true
-  
+
   // Reset errors
   errors.name = ''
   errors.url = ''
-  
+
   // Validate name
   if (!formData.name.trim()) {
     errors.name = 'Name is required'
     isValid = false
   }
-  
+
   // Validate URL
   if (!formData.url.trim()) {
     errors.url = 'URL is required'
@@ -284,7 +284,7 @@ function validateForm(): boolean {
       isValid = false
     }
   }
-  
+
   return isValid
 }
 
@@ -298,22 +298,22 @@ function removeHeader(index: number) {
 
 function buildHeaders(): Record<string, string> {
   const headersObj: Record<string, string> = {}
-  
+
   headers.value.forEach(header => {
     if (header.key.trim() && header.value.trim()) {
       headersObj[header.key.trim()] = header.value.trim()
     }
   })
-  
+
   return headersObj
 }
 
 async function testEndpoint() {
   if (!formData.url.trim()) return
-  
+
   isTestingEndpoint.value = true
   testResult.value = null
-  
+
   try {
     // Add a small delay to show loading state in tests
     await new Promise(resolve => setTimeout(resolve, 10))
@@ -332,11 +332,11 @@ async function testEndpoint() {
 
 function handleSubmit() {
   validateForm()
-  
+
   if (!isFormValid.value) return
-  
+
   const headersData = buildHeaders()
-  
+
   if (props.mode === 'create') {
     const createData: CreateEndpointInput = {
       name: formData.name.trim(),
@@ -345,7 +345,7 @@ function handleSubmit() {
       ...(formData.description.trim() && { description: formData.description.trim() }),
       ...(Object.keys(headersData).length > 0 && { headers: headersData })
     }
-    
+
     emit('create', createData)
   } else {
     const updateData: UpdateEndpointInput = {
@@ -355,7 +355,7 @@ function handleSubmit() {
       ...(formData.description.trim() && { description: formData.description.trim() }),
       ...(Object.keys(headersData).length > 0 && { headers: headersData })
     }
-    
+
     emit('update', updateData)
   }
 }
@@ -382,7 +382,7 @@ function populateForm(endpoint: GraphQLEndpoint) {
   formData.url = endpoint.url
   formData.description = endpoint.description || ''
   formData.introspectionEnabled = endpoint.introspectionEnabled
-  
+
   // Populate headers
   headers.value = []
   if (endpoint.headers) {

@@ -45,25 +45,25 @@ class QueryHistoryApiService {
   ): Promise<QueryHistoryApiResult<QueryHistoryListResponse>> {
     try {
       const params = new URLSearchParams()
-      
+
       if (filter?.endpointId) params.append('endpoint_id', filter.endpointId)
       if (filter?.success !== undefined) params.append('success', filter.success.toString())
       if (filter?.searchTerm) params.append('search', filter.searchTerm)
       if (filter?.favorite) params.append('favorite', filter.favorite.toString())
       if (filter?.fromDate) params.append('from_date', filter.fromDate.toISOString())
       if (filter?.toDate) params.append('to_date', filter.toDate.toISOString())
-      
+
       params.append('limit', limit.toString())
       params.append('offset', offset.toString())
 
       const response = await fetch(`${this.baseUrl}/api/v1/executions/?${params}`)
-      
+
       if (!response.ok) {
         throw new Error(`API request failed: ${response.status} ${response.statusText}`)
       }
 
       const data = await response.json() as QueryHistoryListResponse
-      
+
       return {
         success: true,
         data
@@ -82,19 +82,19 @@ class QueryHistoryApiService {
   async getStats(filter?: QueryHistoryFilter): Promise<QueryHistoryApiResult<QueryHistoryStats>> {
     try {
       const params = new URLSearchParams()
-      
+
       if (filter?.endpointId) params.append('endpoint_id', filter.endpointId)
       if (filter?.fromDate) params.append('from_date', filter.fromDate.toISOString())
       if (filter?.toDate) params.append('to_date', filter.toDate.toISOString())
 
       const response = await fetch(`${this.baseUrl}/api/v1/executions/stats?${params}`)
-      
+
       if (!response.ok) {
         throw new Error(`API request failed: ${response.status}`)
       }
 
       const data = await response.json()
-      
+
       // Map backend response to frontend format
       const stats: QueryHistoryStats = {
         totalQueries: data.total_queries,
@@ -104,7 +104,7 @@ class QueryHistoryApiService {
         mostUsedEndpoints: data.most_used_endpoints || [],
         recentTags: data.recent_tags || []
       }
-      
+
       return {
         success: true,
         data: stats
@@ -124,7 +124,7 @@ class QueryHistoryApiService {
     try {
       // For now, this would need to be implemented on the backend
       // The backend would create both a Query and an Execution record
-      
+
       const response = await fetch(`${this.baseUrl}/api/v1/executions/`, {
         method: 'POST',
         headers: {
@@ -141,13 +141,13 @@ class QueryHistoryApiService {
           error: input.error
         })
       })
-      
+
       if (!response.ok) {
         throw new Error(`Failed to add query: ${response.status}`)
       }
 
       const data = await response.json() as QueryHistoryEntry
-      
+
       return {
         success: true,
         data
@@ -164,7 +164,7 @@ class QueryHistoryApiService {
    * Update query execution (e.g., toggle favorite)
    */
   async updateQuery(
-    queryId: string, 
+    queryId: string,
     updates: UpdateQueryHistoryInput
   ): Promise<QueryHistoryApiResult<QueryHistoryEntry>> {
     try {
@@ -173,7 +173,7 @@ class QueryHistoryApiService {
         const response = await fetch(`${this.baseUrl}/api/v1/executions/${queryId}/favorite`, {
           method: 'POST'
         })
-        
+
         if (!response.ok) {
           throw new Error(`Failed to toggle favorite: ${response.status}`)
         }
@@ -181,7 +181,7 @@ class QueryHistoryApiService {
         // Get updated execution
         const execResponse = await fetch(`${this.baseUrl}/api/v1/executions/${queryId}`)
         const data = await execResponse.json() as QueryHistoryEntry
-        
+
         return {
           success: true,
           data
@@ -206,7 +206,7 @@ class QueryHistoryApiService {
       const response = await fetch(`${this.baseUrl}/api/v1/executions/${queryId}`, {
         method: 'DELETE'
       })
-      
+
       if (!response.ok) {
         throw new Error(`Failed to delete query: ${response.status}`)
       }
@@ -232,7 +232,7 @@ class QueryHistoryApiService {
       const response = await fetch(`${this.baseUrl}/api/v1/executions/clear${params}`, {
         method: 'POST'
       })
-      
+
       if (!response.ok) {
         throw new Error(`Failed to clear history: ${response.status}`)
       }
@@ -256,15 +256,15 @@ class QueryHistoryApiService {
     try {
       // For now, get the data and export client-side
       // In the future, this could be a backend endpoint
-      
+
       const historyResult = await this.getHistory(options.filter, 10000, 0)  // Get all data
-      
+
       if (!historyResult.success || !historyResult.data) {
         throw new Error('Failed to fetch history for export')
       }
 
       const { executions } = historyResult.data
-      
+
       let exportData: string
       let mimeType: string
       let filename: string
@@ -277,7 +277,7 @@ class QueryHistoryApiService {
           mimeType = 'application/json'
           filename = `query-history-${timestamp}.json`
           break
-          
+
         case 'csv':
           const csvHeaders = ['Timestamp', 'Endpoint', 'Query', 'Success', 'Response Time', 'Error']
           const csvRows = executions.map(entry => [
@@ -288,23 +288,23 @@ class QueryHistoryApiService {
             entry.executionTime.toString(),
             entry.error || ''
           ])
-          
+
           exportData = [
             csvHeaders.join(','),
             ...csvRows.map(row => row.map(cell => `"${cell}"`).join(','))
           ].join('\n')
-          
+
           mimeType = 'text/csv'
           filename = `query-history-${timestamp}.csv`
           break
-          
+
         case 'graphql':
           const queries = executions.map(entry => entry.query).join('\n\n# ---\n\n')
           exportData = `# Query History Export - ${timestamp}\n\n${queries}`
           mimeType = 'text/plain'
           filename = `queries-${timestamp}.graphql`
           break
-          
+
         default:
           throw new Error(`Unsupported export format: ${options.format}`)
       }
@@ -331,13 +331,13 @@ class QueryHistoryApiService {
   async testConnection(): Promise<QueryHistoryApiResult<boolean>> {
     try {
       const response = await fetch(`${this.baseUrl}/health`)
-      
+
       if (!response.ok) {
         throw new Error(`API health check failed: ${response.status}`)
       }
 
       const data = await response.json()
-      
+
       if (data.status !== 'healthy') {
         throw new Error('API reported unhealthy status')
       }

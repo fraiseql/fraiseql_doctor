@@ -4,13 +4,13 @@ import type { EndpointTestResult } from '../../types/endpoint'
 export function useGraphQLClient() {
   async function testEndpoint(url: string): Promise<EndpointTestResult> {
     const startTime = Date.now()
-    
+
     try {
       // Simulate network request
       await new Promise(resolve => setTimeout(resolve, Math.random() * 500 + 100))
-      
+
       const responseTime = Date.now() - startTime
-      
+
       // Mock different responses based on URL
       if (url.includes('dev.com')) {
         return {
@@ -20,7 +20,7 @@ export function useGraphQLClient() {
           errorMessage: 'Connection timeout'
         }
       }
-      
+
       if (url.includes('staging.com')) {
         return {
           success: true,
@@ -28,7 +28,7 @@ export function useGraphQLClient() {
           statusCode: 200
         }
       }
-      
+
       // Default successful response
       return {
         success: true,

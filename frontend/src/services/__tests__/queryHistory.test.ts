@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createFreshQueryHistory } from '../queryHistory'
-import type { 
-  CreateQueryHistoryInput, 
+import type {
+  CreateQueryHistoryInput,
   QueryHistoryFilter,
   CreateQueryTemplateInput
 } from '../../types/queryHistory'
 
 describe('useQueryHistory', () => {
   let queryHistory: ReturnType<typeof createFreshQueryHistory>
-  
+
   beforeEach(() => {
     localStorage.clear()
     queryHistory = createFreshQueryHistory()
@@ -30,7 +30,7 @@ describe('useQueryHistory', () => {
       }
 
       const result = queryHistory.addQuery(input)
-      
+
       expect(result.success).toBe(true)
       expect(result.entry).toBeDefined()
       expect(result.entry!.id).toBeDefined()
@@ -51,7 +51,7 @@ describe('useQueryHistory', () => {
       } as CreateQueryHistoryInput
 
       const result = queryHistory.addQuery(input)
-      
+
       expect(result.success).toBe(false)
       expect(result.error).toContain('Invalid query input')
       expect(result.entry).toBeNull()
@@ -65,7 +65,7 @@ describe('useQueryHistory', () => {
         executionTime: 100,
         success: true
       })
-      
+
       queryHistory.addQuery({
         endpointId: 'endpoint-2',
         query: 'query { posts { id title } }',
@@ -75,7 +75,7 @@ describe('useQueryHistory', () => {
       })
 
       const history = queryHistory.getHistory()
-      
+
       expect(history).toHaveLength(2)
       expect(history[0].query).toContain('posts')
       expect(history[1].query).toContain('users')
@@ -88,7 +88,7 @@ describe('useQueryHistory', () => {
         executionTime: 100,
         success: true
       })
-      
+
       queryHistory.addQuery({
         endpointId: 'endpoint-2',
         query: 'query { posts { id } }',
@@ -98,7 +98,7 @@ describe('useQueryHistory', () => {
 
       const endpoint1History = queryHistory.getHistoryByEndpoint('endpoint-1')
       const endpoint2History = queryHistory.getHistoryByEndpoint('endpoint-2')
-      
+
       expect(endpoint1History).toHaveLength(1)
       expect(endpoint1History[0].query).toContain('users')
       expect(endpoint2History).toHaveLength(1)
@@ -115,14 +115,14 @@ describe('useQueryHistory', () => {
 
       const queryId = result.entry!.id
       const deleteResult = queryHistory.deleteQuery(queryId)
-      
+
       expect(deleteResult.success).toBe(true)
       expect(queryHistory.getHistory()).toHaveLength(0)
     })
 
     it('should handle deleting non-existent query', () => {
       const result = queryHistory.deleteQuery('non-existent-id')
-      
+
       expect(result.success).toBe(false)
       expect(result.error).toContain('Query not found')
     })
@@ -141,7 +141,7 @@ describe('useQueryHistory', () => {
         tags: ['updated', 'modified'],
         favorite: true
       })
-      
+
       expect(updateResult.success).toBe(true)
       expect(updateResult.entry!.tags).toEqual(['updated', 'modified'])
       expect(updateResult.entry!.favorite).toBe(true)
@@ -155,7 +155,7 @@ describe('useQueryHistory', () => {
         executionTime: 100,
         success: true
       })
-      
+
       queryHistory.addQuery({
         endpointId: 'endpoint-2',
         query: 'query { posts { id } }',
@@ -164,7 +164,7 @@ describe('useQueryHistory', () => {
       })
 
       queryHistory.clearHistory()
-      
+
       expect(queryHistory.getHistory()).toHaveLength(0)
     })
   })
@@ -219,7 +219,7 @@ describe('useQueryHistory', () => {
     it('should filter by endpoint', () => {
       const filter: QueryHistoryFilter = { endpointId: 'endpoint-1' }
       const filtered = queryHistory.searchHistory(filter)
-      
+
       expect(filtered).toHaveLength(2)
       expect(filtered.every(q => q.endpointId === 'endpoint-1')).toBe(true)
     })
@@ -227,10 +227,10 @@ describe('useQueryHistory', () => {
     it('should filter by success status', () => {
       const successFilter: QueryHistoryFilter = { success: true }
       const failedFilter: QueryHistoryFilter = { success: false }
-      
+
       const successful = queryHistory.searchHistory(successFilter)
       const failed = queryHistory.searchHistory(failedFilter)
-      
+
       expect(successful).toHaveLength(2)
       expect(failed).toHaveLength(1)
       expect(failed[0].success).toBe(false)
@@ -241,16 +241,16 @@ describe('useQueryHistory', () => {
         fromDate: new Date('2024-01-01T00:00:00Z'),
         toDate: new Date('2024-01-02T23:59:59Z')
       }
-      
+
       const filtered = queryHistory.searchHistory(filter)
-      
+
       expect(filtered).toHaveLength(2)
     })
 
     it('should filter by search term', () => {
       const filter: QueryHistoryFilter = { searchTerm: 'GetUsers' }
       const filtered = queryHistory.searchHistory(filter)
-      
+
       expect(filtered).toHaveLength(1)
       expect(filtered[0].query).toContain('GetUsers')
     })
@@ -258,7 +258,7 @@ describe('useQueryHistory', () => {
     it('should filter by tags', () => {
       const filter: QueryHistoryFilter = { tags: ['users'] }
       const filtered = queryHistory.searchHistory(filter)
-      
+
       expect(filtered).toHaveLength(1)
       expect(filtered[0].tags).toContain('users')
     })
@@ -266,14 +266,14 @@ describe('useQueryHistory', () => {
     it('should filter by favorite status', () => {
       const filter: QueryHistoryFilter = { favorite: true }
       const filtered = queryHistory.searchHistory(filter)
-      
+
       expect(filtered).toHaveLength(1)
       expect(filtered[0].favorite).toBe(true)
     })
 
     it('should get recent queries', () => {
       const recent = queryHistory.getRecentQueries(2)
-      
+
       expect(recent).toHaveLength(2)
       expect(recent[0].timestamp > recent[1].timestamp).toBe(true)
     })
@@ -299,7 +299,7 @@ describe('useQueryHistory', () => {
 
     it('should calculate query statistics', () => {
       const stats = queryHistory.getStats()
-      
+
       expect(stats.totalQueries).toBe(4)
       expect(stats.successfulQueries).toBe(3)
       expect(stats.failedQueries).toBe(1)
@@ -314,7 +314,7 @@ describe('useQueryHistory', () => {
     it('should handle empty history for stats', () => {
       queryHistory.clearHistory()
       const stats = queryHistory.getStats()
-      
+
       expect(stats.totalQueries).toBe(0)
       expect(stats.successfulQueries).toBe(0)
       expect(stats.failedQueries).toBe(0)
@@ -339,11 +339,11 @@ describe('useQueryHistory', () => {
 
     it('should export history as JSON', () => {
       const exportResult = queryHistory.exportHistory({ format: 'json' })
-      
+
       expect(exportResult.success).toBe(true)
       expect(exportResult.result!.mimeType).toBe('application/json')
       expect(exportResult.result!.filename).toMatch(/query-history-\d{4}-\d{2}-\d{2}\.json/)
-      
+
       const data = JSON.parse(exportResult.result!.data)
       expect(Array.isArray(data)).toBe(true)
       expect(data).toHaveLength(1)
@@ -352,11 +352,11 @@ describe('useQueryHistory', () => {
 
     it('should export history as CSV', () => {
       const exportResult = queryHistory.exportHistory({ format: 'csv' })
-      
+
       expect(exportResult.success).toBe(true)
       expect(exportResult.result!.mimeType).toBe('text/csv')
       expect(exportResult.result!.filename).toMatch(/query-history-\d{4}-\d{2}-\d{2}\.csv/)
-      
+
       const csvData = exportResult.result!.data
       expect(csvData).toContain('id,endpointId,query,operationName,timestamp')
       expect(csvData).toContain('users')
@@ -374,7 +374,7 @@ describe('useQueryHistory', () => {
         format: 'json',
         filter: { success: true }
       })
-      
+
       const data = JSON.parse(exportResult.result!.data)
       expect(data).toHaveLength(1)
       expect(data[0].success).toBe(true)
@@ -383,7 +383,7 @@ describe('useQueryHistory', () => {
     it('should handle empty export', () => {
       queryHistory.clearHistory()
       const exportResult = queryHistory.exportHistory({ format: 'json' })
-      
+
       expect(exportResult.success).toBe(true)
       const data = JSON.parse(exportResult.result!.data)
       expect(data).toHaveLength(0)
@@ -402,7 +402,7 @@ describe('useQueryHistory', () => {
       }
 
       const result = queryHistory.addTemplate(input)
-      
+
       expect(result.success).toBe(true)
       expect(result.template!.name).toBe(input.name)
       expect(result.template!.query).toBe(input.query)
@@ -415,14 +415,14 @@ describe('useQueryHistory', () => {
         name: 'Template 1',
         query: 'query { users { id } }'
       })
-      
+
       queryHistory.addTemplate({
         name: 'Template 2',
         query: 'query { posts { id } }'
       })
 
       const templates = queryHistory.getTemplates()
-      
+
       expect(templates).toHaveLength(2)
       expect(templates.find(t => t.name === 'Template 1')).toBeDefined()
       expect(templates.find(t => t.name === 'Template 2')).toBeDefined()
@@ -436,7 +436,7 @@ describe('useQueryHistory', () => {
 
       const templateId = result.template!.id
       const deleteResult = queryHistory.deleteTemplate(templateId)
-      
+
       expect(deleteResult.success).toBe(true)
       expect(queryHistory.getTemplates()).toHaveLength(0)
     })
@@ -454,7 +454,7 @@ describe('useQueryHistory', () => {
         tags: ['updated'],
         favorite: true
       })
-      
+
       expect(updateResult.success).toBe(true)
       expect(updateResult.template!.name).toBe('Updated Template')
       expect(updateResult.template!.tags).toEqual(['updated'])
@@ -468,7 +468,7 @@ describe('useQueryHistory', () => {
       })
 
       const template = result.template!
-      
+
       // Simulate using the template by adding a query with the same content
       queryHistory.addQuery({
         endpointId: 'endpoint-1',
@@ -480,7 +480,7 @@ describe('useQueryHistory', () => {
       // Template usage should be tracked
       const updatedTemplates = queryHistory.getTemplates()
       const usedTemplate = updatedTemplates.find(t => t.id === template.id)
-      
+
       expect(usedTemplate!.usageCount).toBe(1)
       expect(usedTemplate!.lastUsed).toBeInstanceOf(Date)
     })
@@ -498,7 +498,7 @@ describe('useQueryHistory', () => {
       // Check localStorage
       const stored = localStorage.getItem('queryHistory')
       expect(stored).toBeDefined()
-      
+
       const parsed = JSON.parse(stored!)
       expect(parsed).toHaveLength(1)
       expect(parsed[0].query).toContain('users')
@@ -518,13 +518,13 @@ describe('useQueryHistory', () => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }]
-      
+
       localStorage.setItem('queryHistory', JSON.stringify(mockHistory))
 
       // Create new instance
       const newQueryHistory = createFreshQueryHistory(); const getNewHistory = newQueryHistory.getHistory
       const loaded = getNewHistory()
-      
+
       expect(loaded).toHaveLength(1)
       expect(loaded[0].query).toBe('query { test }')
     })
@@ -535,7 +535,7 @@ describe('useQueryHistory', () => {
       // Should not throw and should return empty history
       const newQueryHistory = createFreshQueryHistory(); const getNewHistory = newQueryHistory.getHistory
       const loaded = getNewHistory()
-      
+
       expect(loaded).toHaveLength(0)
     })
   })
@@ -559,7 +559,7 @@ describe('useQueryHistory', () => {
       )
 
       const newQueryHistory = createFreshQueryHistory(); const getNewHistory = newQueryHistory.getHistory; const newAddQuery = newQueryHistory.addQuery
-      
+
       // Adding another query should remove the oldest
       const result = newAddQuery({
         endpointId: 'endpoint-1',
@@ -567,7 +567,7 @@ describe('useQueryHistory', () => {
         executionTime: 100,
         success: true
       })
-      
+
       expect(result.success).toBe(true)
       const history = getNewHistory()
       expect(history.length).toBeLessThanOrEqual(1000)
@@ -586,11 +586,11 @@ describe('useQueryHistory', () => {
         executionTime: 100,
         success: true
       })
-      
+
       // Should handle gracefully
       expect(result.success).toBe(false)
       expect(result.error).toContain('Storage quota exceeded')
-      
+
       mockSetItem.mockRestore()
     })
   })

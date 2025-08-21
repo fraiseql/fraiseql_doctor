@@ -1,5 +1,5 @@
 <template>
-  <div 
+  <div
     data-testid="apollo-studio-container"
     :class="containerClasses"
     v-bind="ariaLabel ? { role: 'application', 'aria-label': ariaLabel } : {}"
@@ -11,7 +11,7 @@
           <h2 data-testid="studio-title" class="text-xl font-semibold">
             GraphQL Playground
           </h2>
-          
+
           <!-- Configuration Summary -->
           <div v-if="configMode === 'advanced'" data-testid="config-summary" class="text-sm text-gray-600 mt-2">
             <span v-if="authSummary">{{ authSummary }}</span>
@@ -25,8 +25,8 @@
             @click="showQueryHistory = !showQueryHistory"
             :class="[
               'px-3 py-2 text-sm rounded transition-colors',
-              showQueryHistory 
-                ? 'bg-blue-600 text-white' 
+              showQueryHistory
+                ? 'bg-blue-600 text-white'
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             ]"
             title="Toggle Query History"
@@ -41,9 +41,9 @@
     </header>
 
     <!-- Error Boundary -->
-    <div 
+    <div
       v-if="showErrorState"
-      data-testid="error-boundary" 
+      data-testid="error-boundary"
       class="error-boundary"
     >
       <div class="error-content">
@@ -53,7 +53,7 @@
           </svg>
           <h3 data-testid="error-message" class="text-lg font-semibold">Configuration Error</h3>
         </div>
-        
+
         <div v-if="debugMode" data-testid="debug-panel" class="mt-4 p-4 bg-gray-100 rounded">
           <div v-if="hasSecurityWarning" data-testid="security-warning" class="text-red-600 font-semibold mb-2">
             ⚠️ Security Warning
@@ -62,8 +62,8 @@
             {{ errorDetails }}
           </div>
         </div>
-        
-        <button 
+
+        <button
           v-if="enableRetry && canRetry"
           data-testid="retry-button"
           @click="handleRetry"
@@ -75,17 +75,17 @@
     </div>
 
     <!-- Error State for Network Issues -->
-    <div 
+    <div
       v-if="showNetworkError"
-      data-testid="error-state" 
+      data-testid="error-state"
       class="network-error"
     >
       <p class="text-orange-600">Connection failed. Retrying...</p>
       <div data-testid="retry-counter" class="text-sm text-gray-600 mt-2">
         Attempt {{ retryCount }} of {{ maxRetries }}
       </div>
-      
-      <button 
+
+      <button
         data-testid="retry-button"
         @click="handleRetry"
         class="mt-4 px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700"
@@ -95,7 +95,7 @@
     </div>
 
     <!-- Loading State -->
-    <div 
+    <div
       v-if="isLoading && !showErrorState"
       data-testid="studio-loading"
       class="studio-loading"
@@ -122,7 +122,7 @@
       </div>
 
       <!-- Query History Sidebar -->
-      <div 
+      <div
         v-if="showQueryHistory"
         class="studio-history w-96 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
       >
@@ -242,9 +242,9 @@ const showNetworkError = computed(() => {
 
 const showIframe = computed(() => {
   const hasValidUrl = finalStudioUrl.value && finalStudioUrl.value.length > 0
-  return hasValidUrl && 
-         (props.endpointUrl || props.endpoint || props.studioConfig) && 
-         !showErrorState.value && 
+  return hasValidUrl &&
+         (props.endpointUrl || props.endpoint || props.studioConfig) &&
+         !showErrorState.value &&
          !showNetworkError.value
 })
 
@@ -254,9 +254,9 @@ const canRetry = computed(() => {
 
 const authSummary = computed(() => {
   if (!props.endpoint?.headers) return ''
-  
+
   const authType = detectAuthType(props.endpoint.headers)
-  
+
   switch (authType) {
     case 'bearer': return 'Bearer authentication'
     case 'apikey': return 'API Key authentication'
@@ -281,7 +281,7 @@ const finalStudioUrl = computed(() => {
   try {
     // Priority 1: Studio config
     if (props.studioConfig) {
-      const mockEndpoint = { 
+      const mockEndpoint = {
         id: '1',
         name: 'Configured API',
         url: props.studioConfig.endpoint,
@@ -293,7 +293,7 @@ const finalStudioUrl = computed(() => {
       } as GraphQLEndpoint
       return generateStudioUrlWithParams(mockEndpoint, props.customParams || {})
     }
-    
+
     // Priority 2: Endpoint with auth type
     if (props.endpoint && props.authType) {
       const result = createConfigWithAuthSafely(props.endpoint, props.authType)
@@ -301,19 +301,19 @@ const finalStudioUrl = computed(() => {
         return generateStudioUrlWithParams(props.endpoint, props.customParams || {})
       }
     }
-    
+
     // Priority 3: Endpoint without auth type
     if (props.endpoint) {
       return generateStudioUrlWithParams(props.endpoint, props.customParams || {})
     }
-    
+
     // Priority 4: Simple endpoint URL
     if (props.endpointUrl) {
       const customParamsWithTheme = {
         ...(props.customParams || {}),
         ...(props.theme !== 'light' ? { theme: props.theme } : {})
       }
-      
+
       // Always use advanced function for consistency
       const mockEndpoint = {
         id: '1',
@@ -325,10 +325,10 @@ const finalStudioUrl = computed(() => {
         createdAt: new Date(),
         updatedAt: new Date()
       } as GraphQLEndpoint
-      
+
       return generateStudioUrlWithParams(mockEndpoint, customParamsWithTheme)
     }
-    
+
     return ''
   } catch (error) {
     console.error('Error generating studio URL:', error)
@@ -356,7 +356,7 @@ function handleIframeLoad() {
   isLoading.value = false
   networkError.value = false
   retryCount.value = 0
-  
+
   emit('studio-loaded', {
     url: finalStudioUrl.value,
     timestamp: new Date()
@@ -367,19 +367,19 @@ function handleIframeError() {
   networkError.value = true
   isLoading.value = false
   retryCount.value++
-  
+
   const error = new Error(`Iframe loading failed (attempt ${retryCount.value})`)
   emit('studio-error', error)
 }
 
 function handleRetry() {
   if (!canRetry.value) return
-  
+
   retryCount.value++
   isLoading.value = true
   // Keep networkError.value = true to show retry counter
   hasError.value = false
-  
+
   // Force iframe reload by updating the src
   const iframe = document.querySelector('[data-testid="apollo-studio-iframe"]') as HTMLIFrameElement
   if (iframe) {
@@ -391,14 +391,14 @@ function validateConfiguration() {
   // Reset errors first
   hasError.value = false
   errorMessage.value = ''
-  
+
   // Check for security warnings first
   if (hasSecurityWarning.value) {
     hasError.value = true
     errorMessage.value = 'Dangerous URL pattern detected'
     return false
   }
-  
+
   // Validate endpoint if provided
   if (props.endpoint) {
     const validation = validateConfigurationSafely(props.endpoint)
@@ -408,7 +408,7 @@ function validateConfiguration() {
       return false
     }
   }
-  
+
   // Validate simple endpoint URL
   if (props.endpointUrl && !props.endpoint) {
     const mockEndpoint = {
@@ -421,7 +421,7 @@ function validateConfiguration() {
       createdAt: new Date(),
       updatedAt: new Date()
     } as GraphQLEndpoint
-    
+
     const validation = validateConfigurationSafely(mockEndpoint)
     if (!validation.isValid) {
       hasError.value = true
@@ -429,7 +429,7 @@ function validateConfiguration() {
       return false
     }
   }
-  
+
   return true
 }
 
@@ -464,7 +464,7 @@ async function addQueryToHistory(query: string, variables?: Record<string, any>,
 // Watchers
 watch([() => props.endpoint, () => props.authType, () => props.endpointUrl], () => {
   validateConfiguration()
-  
+
   if (props.endpoint && props.authType) {
     const result = createConfigWithAuthSafely(props.endpoint, props.authType)
     if (result.success && result.config) {
@@ -567,11 +567,11 @@ defineExpose({
   .responsive-layout .studio-header {
     @apply p-2;
   }
-  
+
   .responsive-layout .studio-content {
     @apply flex-col;
   }
-  
+
   .responsive-layout .studio-history {
     @apply w-full;
     min-width: unset;

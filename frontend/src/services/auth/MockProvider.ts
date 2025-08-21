@@ -16,7 +16,7 @@ export class MockProvider implements BaseAuthProvider {
   async login(): Promise<void> {
     // Simulate async login
     await new Promise(resolve => setTimeout(resolve, 100))
-    
+
     this.isAuthenticated.value = true
     this.user.value = this.mockUser
   }
@@ -24,7 +24,7 @@ export class MockProvider implements BaseAuthProvider {
   async logout(): Promise<void> {
     // Simulate async logout
     await new Promise(resolve => setTimeout(resolve, 50))
-    
+
     this.isAuthenticated.value = false
     this.user.value = null
   }
@@ -38,7 +38,7 @@ export class MockProvider implements BaseAuthProvider {
     if (!this.isAuthenticated.value) {
       return null
     }
-    
+
     // Return mock JWT token
     return 'mock-jwt-token-' + Date.now()
   }

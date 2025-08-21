@@ -11,20 +11,20 @@ describe('Apollo Studio Integration - Cycle 1', () => {
 
   it('should render Apollo Studio container', () => {
     const wrapper = mount(ApolloStudioIntegration)
-    
+
     expect(wrapper.find('[data-testid="apollo-studio-container"]').exists()).toBe(true)
   })
 
   it('should have correct CSS classes for layout', () => {
     const wrapper = mount(ApolloStudioIntegration)
     const container = wrapper.find('[data-testid="apollo-studio-container"]')
-    
+
     expect(container.classes()).toContain('apollo-studio-integration')
   })
 
   it('should render component title', () => {
     const wrapper = mount(ApolloStudioIntegration)
-    
+
     expect(wrapper.find('[data-testid="studio-title"]').text()).toBe('GraphQL Playground')
   })
 })
@@ -40,7 +40,7 @@ describe('Apollo Studio Integration - Cycle 2', () => {
         endpointUrl: 'https://api.example.com/graphql'
       }
     })
-    
+
     expect(wrapper.find('[data-testid="apollo-studio-iframe"]').exists()).toBe(true)
   })
 
@@ -50,7 +50,7 @@ describe('Apollo Studio Integration - Cycle 2', () => {
         endpointUrl: 'https://api.example.com/graphql'
       }
     })
-    
+
     const iframe = wrapper.find('[data-testid="apollo-studio-iframe"]')
     expect(iframe.attributes('src')).toContain('studio.apollographql.com')
   })
@@ -61,7 +61,7 @@ describe('Apollo Studio Integration - Cycle 2', () => {
         endpointUrl: 'https://api.example.com/graphql'
       }
     })
-    
+
     expect(wrapper.find('[data-testid="studio-loading"]').exists()).toBe(true)
   })
 
@@ -71,11 +71,11 @@ describe('Apollo Studio Integration - Cycle 2', () => {
         endpointUrl: 'https://api.example.com/graphql'
       }
     })
-    
+
     // Simulate iframe load
     const iframe = wrapper.find('[data-testid="apollo-studio-iframe"]')
     await iframe.trigger('load')
-    
+
     expect(wrapper.find('[data-testid="studio-loading"]').exists()).toBe(false)
   })
 })
@@ -127,7 +127,7 @@ describe('Apollo Studio Integration - Cycle 8: Full Integration', () => {
     }
 
     const apiKeyEndpoint = {
-      id: '2', 
+      id: '2',
       name: 'API Key API',
       url: 'https://apikey.api.com/graphql',
       status: EndpointStatus.ACTIVE,
@@ -197,14 +197,14 @@ describe('Apollo Studio Integration - Cycle 8: Full Integration', () => {
 
     expect(wrapper.find('[data-testid="error-state"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="retry-counter"]').text()).toContain('Attempt 1 of 3')
-    
+
     // Test retry button
-    let retryButton = wrapper.find('[data-testid="retry-button"]')
+    const retryButton = wrapper.find('[data-testid="retry-button"]')
     expect(retryButton.exists()).toBe(true)
-    
+
     await retryButton.trigger('click')
     await wrapper.vm.$nextTick() // Wait for DOM updates
-    
+
     // Get fresh reference to retry counter after click
     const retryCounterAfter = wrapper.find('[data-testid="retry-counter"]')
     expect(retryCounterAfter.text()).toContain('Attempt 2 of 3')
@@ -244,7 +244,7 @@ describe('Apollo Studio Integration - Cycle 8: Full Integration', () => {
 
     const iframe = wrapper.find('[data-testid="apollo-studio-iframe"]')
     const src = iframe.attributes('src')
-    
+
     expect(src).toContain('theme=dark')
     expect(src).toContain('showDocs=true')
     expect(src).toContain('operation=query')
@@ -310,7 +310,7 @@ describe('Apollo Studio Integration - Cycle 8: Full Integration', () => {
 
     // Test cleanup on unmount should not throw errors
     expect(() => wrapper.unmount()).not.toThrow()
-    
+
     // Component lifecycle management test completed successfully
     expect(true).toBe(true) // Test passes if unmount completed without errors
   })
@@ -339,7 +339,7 @@ describe('Apollo Studio Integration - Cycle 8: Full Integration', () => {
 
     const iframe = wrapper.find('[data-testid="apollo-studio-iframe"]')
     expect(iframe.exists()).toBe(true)
-    
+
     // Verify config is applied
     expect(wrapper.find('[data-testid="config-summary"]').text()).toContain('Bearer authentication')
     expect(wrapper.find('[data-testid="config-summary"]').text()).toContain('Introspection enabled')

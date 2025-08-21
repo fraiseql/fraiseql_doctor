@@ -6,19 +6,19 @@ describe('Project Foundation', () => {
     expect(import.meta.env.MODE).toBeDefined()
     expect(import.meta.env.DEV).toBeDefined()
   })
-  
+
   it('should compile TypeScript without errors', () => {
     // This test passes if TypeScript compiles successfully
     const testValue: string = 'TypeScript works!'
     expect(testValue).toBe('TypeScript works!')
   })
-  
+
   it('should have bundle size under 380KB', async () => {
     // This is more of a build-time check, but we can verify the target is set
     // In a real scenario, this would check actual bundle stats
     const targetSize = 380 * 1024 // 380KB in bytes
     const mockBundleSize = 95 * 1024 // Our current ~95KB bundle
-    
+
     expect(mockBundleSize).toBeLessThan(targetSize)
   })
 

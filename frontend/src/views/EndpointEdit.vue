@@ -71,13 +71,13 @@ const endpointsStore = useEndpointsStore()
 
 const isLoading = ref(false)
 
-const endpoint = computed(() => 
+const endpoint = computed(() =>
   endpointsStore.endpoints.find(e => e.id === props.id)
 )
 
 async function handleUpdate(data: UpdateEndpointInput) {
   isLoading.value = true
-  
+
   try {
     const success = await endpointsStore.updateEndpoint(props.id, data)
     if (success) {

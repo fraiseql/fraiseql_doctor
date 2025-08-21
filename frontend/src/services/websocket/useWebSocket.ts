@@ -2,21 +2,21 @@ import { ref, onUnmounted } from 'vue'
 
 // Mock WebSocket for development and testing
 class MockWebSocketService {
-  private connections: Map<string, { 
-    handler: (data: any) => void, 
-    errorHandler?: (error: Error) => void 
+  private connections: Map<string, {
+    handler: (data: any) => void,
+    errorHandler?: (error: Error) => void
   }> = new Map()
-  
+
   private intervalId: number | null = null
 
   connect(channel: string, messageHandler: (data: any) => void) {
     this.connections.set(channel, { handler: messageHandler })
-    
+
     // Simulate connection and start sending mock data
     setTimeout(() => {
       this.startMockDataFlow(channel)
     }, 100)
-    
+
     return true
   }
 
@@ -26,7 +26,7 @@ class MockWebSocketService {
     } else {
       this.connections.clear()
     }
-    
+
     if (this.intervalId) {
       window.clearInterval(this.intervalId)
       this.intervalId = null
@@ -37,7 +37,7 @@ class MockWebSocketService {
     // In a real implementation, this would send data to the server
     // For mock, we can simulate immediate response
     console.log('WebSocket emit:', event, data)
-    
+
     if (event === 'request-update') {
       // Simulate immediate response with updated data
       setTimeout(() => {
@@ -59,7 +59,7 @@ class MockWebSocketService {
     if (channel === 'dashboard') {
       // Send initial data
       this.sendMockDashboardData()
-      
+
       // Set up periodic updates
       this.intervalId = window.setInterval(() => {
         this.sendMockDashboardData()
@@ -73,25 +73,25 @@ class MockWebSocketService {
 
     const mockData = {
       stats: [
-        { 
-          label: 'Healthy Endpoints', 
-          value: Math.floor(Math.random() * 10) + 5, 
-          status: 'success' 
+        {
+          label: 'Healthy Endpoints',
+          value: Math.floor(Math.random() * 10) + 5,
+          status: 'success'
         },
-        { 
-          label: 'Warning Endpoints', 
-          value: Math.floor(Math.random() * 3) + 1, 
-          status: 'warning' 
+        {
+          label: 'Warning Endpoints',
+          value: Math.floor(Math.random() * 3) + 1,
+          status: 'warning'
         },
-        { 
-          label: 'Failed Endpoints', 
-          value: Math.floor(Math.random() * 2), 
-          status: 'error' 
+        {
+          label: 'Failed Endpoints',
+          value: Math.floor(Math.random() * 2),
+          status: 'error'
         },
-        { 
-          label: 'Total Requests', 
-          value: Math.floor(Math.random() * 1000) + 1000, 
-          status: 'info' 
+        {
+          label: 'Total Requests',
+          value: Math.floor(Math.random() * 1000) + 1000,
+          status: 'info'
         }
       ],
       chartData: {
@@ -128,7 +128,7 @@ function getWebSocketService() {
 
 export function useWebSocket() {
   const service = getWebSocketService()
-  
+
   const isConnected = ref(false)
   const error = ref<Error | null>(null)
 
@@ -137,13 +137,13 @@ export function useWebSocket() {
       const success = service.connect(channel, messageHandler)
       isConnected.value = success
       error.value = null
-      
+
       // Set up error handler
       service.on('error', (err: Error) => {
         error.value = err
         isConnected.value = false
       })
-      
+
       return success
     } catch (err) {
       error.value = err as Error
