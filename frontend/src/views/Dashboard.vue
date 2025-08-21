@@ -155,6 +155,23 @@
       </div>
     </div>
 
+    <!-- Advanced Performance Analytics Section -->
+    <div v-if="endpointsStore.endpoints.length > 0 && performanceMetrics.length > 10" class="bg-white shadow rounded-lg p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-medium text-gray-900">Advanced Analytics</h2>
+        <p class="text-sm text-gray-500">Historical trends, anomaly detection, and performance insights</p>
+      </div>
+
+      <!-- Analytics Panel -->
+      <PerformanceAnalyticsPanel
+        :metrics="filteredMetrics"
+        :endpoint-id="selectedEndpointId || 'all'"
+        @export-analytics="handleAnalyticsExport"
+        @anomaly-selected="handleAnomalySelected"
+        @data-point-selected="handleDataPointSelected"
+      />
+    </div>
+
     <!-- Empty State -->
     <div
       v-if="dashboardStore.isEmpty"
@@ -180,6 +197,7 @@ import { WebSocketService, ConnectionState } from '@/services/websocket'
 import { WEBSOCKET_EVENTS } from '@/config/websocket'
 import HealthStatusCard from '@/components/HealthStatusCard.vue'
 import PerformanceChart from '@/components/PerformanceChart.vue'
+import PerformanceAnalyticsPanel from '@/components/PerformanceAnalyticsPanel.vue'
 import { PerformanceMonitor, type QueryMetric } from '@/services/performanceMonitor'
 
 // Store setup
@@ -344,4 +362,30 @@ onUnmounted(() => {
     webSocketService.value.disconnect()
   }
 })
+
+// Analytics event handlers
+const handleAnalyticsExport = (data: any) => {
+  console.log('Exporting analytics data:', data)
+
+  // Create and download JSON file
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `performance-analytics-${data.endpointId}-${new Date().toISOString().split('T')[0]}.json`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
+const handleAnomalySelected = (anomaly: any) => {
+  console.log('Anomaly selected:', anomaly)
+  // Could trigger a modal or detailed view
+}
+
+const handleDataPointSelected = (data: any) => {
+  console.log('Data point selected:', data)
+  // Could show detailed metrics for that time period
+}
 </script>
