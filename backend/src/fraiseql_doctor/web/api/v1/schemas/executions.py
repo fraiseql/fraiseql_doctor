@@ -1,7 +1,7 @@
 """Pydantic schemas for execution/query history API responses."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -11,6 +11,7 @@ from fraiseql_doctor.models.execution import Execution
 
 class ExecutionEndpointInfo(BaseModel):
     """Endpoint information for execution response."""
+
     id: UUID
     name: str
     url: str
@@ -18,45 +19,46 @@ class ExecutionEndpointInfo(BaseModel):
 
 class ExecutionQueryInfo(BaseModel):
     """Query information for execution response."""
+
     id: UUID
     name: str
     query_text: str
-    variables: Dict[str, Any] = Field(default_factory=dict)
-    tags: List[str] = Field(default_factory=list)
+    variables: dict[str, Any] = Field(default_factory=dict)
+    tags: list[str] = Field(default_factory=list)
     favorite: bool = False
 
 
 class ExecutionResponse(BaseModel):
-    """
-    Response schema for query execution history.
-    
+    """Response schema for query execution history.
+
     Maps to QueryHistoryEntry in frontend.
     """
+
     id: UUID = Field(..., description="Execution ID")
     query: ExecutionQueryInfo
     endpoint: ExecutionEndpointInfo
     timestamp: datetime = Field(..., description="Execution start time")
-    execution_time: Optional[int] = Field(None, description="Response time in milliseconds") 
+    execution_time: Optional[int] = Field(None, description="Response time in milliseconds")
     success: bool = Field(..., description="Whether execution was successful")
     status: str = Field(..., description="Execution status (success, error, timeout, etc.)")
     status_code: Optional[int] = Field(None, description="HTTP status code if available")
     error: Optional[str] = Field(None, description="Error message if failed")
-    result: Optional[Dict[str, Any]] = Field(None, description="Query result data")
-    variables: Dict[str, Any] = Field(default_factory=dict, description="Variables used")
-    tags: List[str] = Field(default_factory=list, description="Query tags")
+    result: Optional[dict[str, Any]] = Field(None, description="Query result data")
+    variables: dict[str, Any] = Field(default_factory=dict, description="Variables used")
+    tags: list[str] = Field(default_factory=list, description="Query tags")
     favorite: bool = Field(False, description="Whether query is favorited")
-    
+
     @classmethod
     def from_execution(cls, execution: Execution) -> "ExecutionResponse":
         """Create ExecutionResponse from Execution model."""
         # Extract favorite status from query metadata
         favorite = False
         if execution.query and execution.query.query_metadata:
-            favorite = execution.query.query_metadata.get('favorite', False)
-        
+            favorite = execution.query.query_metadata.get("favorite", False)
+
         # Map status to success boolean
-        success = execution.status == 'success'
-        
+        success = execution.status == "success"
+
         # Create query info
         query_info = ExecutionQueryInfo(
             id=execution.query.pk_query,
@@ -64,16 +66,16 @@ class ExecutionResponse(BaseModel):
             query_text=execution.query.query_text,
             variables=execution.query.variables or {},
             tags=execution.query.tags or [],
-            favorite=favorite
+            favorite=favorite,
         )
-        
+
         # Create endpoint info
         endpoint_info = ExecutionEndpointInfo(
             id=execution.endpoint.pk_endpoint,
             name=execution.endpoint.name,
-            url=execution.endpoint.url
+            url=execution.endpoint.url,
         )
-        
+
         return cls(
             id=execution.pk_execution,
             query=query_info,
@@ -87,13 +89,14 @@ class ExecutionResponse(BaseModel):
             result=execution.response_data,
             variables=execution.variables_used or {},
             tags=execution.query.tags or [],
-            favorite=favorite
+            favorite=favorite,
         )
 
 
 class ExecutionListResponse(BaseModel):
     """Response schema for paginated execution list."""
-    executions: List[ExecutionResponse]
+
+    executions: list[ExecutionResponse]
     total: int = Field(..., description="Total number of executions matching filters")
     limit: int = Field(..., description="Limit used for pagination")
     offset: int = Field(..., description="Offset used for pagination")
@@ -101,6 +104,7 @@ class ExecutionListResponse(BaseModel):
 
 class ExecutionStatsResponse(BaseModel):
     """Response schema for execution statistics."""
+
     total_queries: int = Field(..., description="Total number of queries executed")
     successful_queries: int = Field(..., description="Number of successful queries")
     failed_queries: int = Field(..., description="Number of failed queries")
@@ -109,6 +113,7 @@ class ExecutionStatsResponse(BaseModel):
 
 class QueryHistoryFilter(BaseModel):
     """Filter parameters for query history."""
+
     endpoint_id: Optional[str] = None
     success: Optional[bool] = None
     search_term: Optional[str] = None
@@ -119,6 +124,7 @@ class QueryHistoryFilter(BaseModel):
 
 class QueryHistoryExportOptions(BaseModel):
     """Export options for query history."""
+
     format: str = Field(..., description="Export format (json, csv, graphql)")
     include_results: bool = Field(True, description="Include query results in export")
     include_variables: bool = Field(True, description="Include variables in export")

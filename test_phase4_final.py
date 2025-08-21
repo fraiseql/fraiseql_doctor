@@ -7,36 +7,42 @@ without depending on complex database models.
 
 import sys
 import os
-sys.path.insert(0, '/home/lionel/code/fraiseql_doctor/src')
+
+sys.path.insert(0, "/home/lionel/code/fraiseql_doctor/src")
+
 
 def test_phase4_core_functionality():
     """Test the core Phase 4 functionality by checking the implemented classes and methods."""
     print("🧪 Testing Phase 4 Core Components...")
-    
+
     # Test 1: Query Collection Manager Classes
     try:
         print("📋 Testing Query Collection components...")
-        
+
         # Import core file and check classes exist
         import importlib.util
+
         spec = importlib.util.spec_from_file_location(
-            "query_collection", 
-            "/home/lionel/code/fraiseql_doctor/src/fraiseql_doctor/core/query_collection.py"
+            "query_collection",
+            "/home/lionel/code/fraiseql_doctor/src/fraiseql_doctor/core/query_collection.py",
         )
-        
+
         # Read the file to check for expected classes and methods
-        with open("/home/lionel/code/fraiseql_doctor/src/fraiseql_doctor/core/query_collection.py", 'r') as f:
+        with open(
+            "/home/lionel/code/fraiseql_doctor/src/fraiseql_doctor/core/query_collection.py",
+            "r",
+        ) as f:
             content = f.read()
-        
+
         # Check for key components
         required_classes = [
             "QueryStatus",
-            "QueryPriority", 
+            "QueryPriority",
             "QueryCollectionManager",
             "QuerySearchFilter",
-            "QueryCollectionMetrics"
+            "QueryCollectionMetrics",
         ]
-        
+
         required_methods = [
             "create_collection",
             "get_collection",
@@ -44,86 +50,92 @@ def test_phase4_core_functionality():
             "delete_collection",
             "add_query",
             "update_query",
-            "delete_query", 
+            "delete_query",
             "search_queries",
-            "bulk_update_query_status"
+            "bulk_update_query_status",
         ]
-        
+
         for cls in required_classes:
             if f"class {cls}" in content:
                 print(f"   ✅ {cls} class found")
             else:
                 print(f"   ❌ {cls} class missing")
                 return False
-        
+
         for method in required_methods:
             if f"def {method}" in content or f"async def {method}" in content:
                 print(f"   ✅ {method} method found")
             else:
                 print(f"   ❌ {method} method missing")
                 return False
-        
+
         print("✅ Query Collection Manager: All components present")
-        
+
     except Exception as e:
         print(f"❌ Query Collection Manager test failed: {e}")
         return False
-    
+
     # Test 2: Execution Manager Components
     try:
         print("📋 Testing Execution Manager components...")
-        
-        with open("/home/lionel/code/fraiseql_doctor/src/fraiseql_doctor/core/execution_manager.py", 'r') as f:
+
+        with open(
+            "/home/lionel/code/fraiseql_doctor/src/fraiseql_doctor/core/execution_manager.py",
+            "r",
+        ) as f:
             content = f.read()
-        
+
         required_classes = [
             "ExecutionStatus",
             "BatchMode",
             "ExecutionConfig",
             "ExecutionResult",
             "QueryExecutionManager",
-            "ScheduledExecution"
+            "ScheduledExecution",
         ]
-        
+
         required_methods = [
             "execute_query",
-            "execute_batch", 
+            "execute_batch",
             "schedule_query",
             "unschedule_query",
             "get_execution_metrics",
             "_execute_parallel",
             "_execute_sequential",
             "_execute_by_priority",
-            "_execute_adaptive"
+            "_execute_adaptive",
         ]
-        
+
         for cls in required_classes:
             if f"class {cls}" in content:
                 print(f"   ✅ {cls} class found")
             else:
                 print(f"   ❌ {cls} class missing")
                 return False
-        
+
         for method in required_methods:
             if f"def {method}" in content or f"async def {method}" in content:
                 print(f"   ✅ {method} method found")
             else:
                 print(f"   ❌ {method} method missing")
                 return False
-        
+
         print("✅ Execution Manager: All components present")
-        
+
     except Exception as e:
         print(f"❌ Execution Manager test failed: {e}")
         return False
-    
+
     # Test 3: Result Storage Components
     try:
         print("📋 Testing Result Storage components...")
-        
-        with open("/home/lionel/code/fraiseql_doctor/src/fraiseql_doctor/core/result_storage.py", 'r') as f:
+
+        with open(
+            "/home/lionel/code/fraiseql_doctor/src/fraiseql_doctor/core/result_storage.py",
+            "r",
+        ) as f:
             content = f.read()
-        
+
         required_classes = [
             "StorageBackend",
             "CompressionType",
@@ -131,9 +143,9 @@ def test_phase4_core_functionality():
             "StorageConfig",
             "ResultStorageManager",
             "DatabaseStorageBackend",
-            "FileSystemStorageBackend"
+            "FileSystemStorageBackend",
         ]
-        
+
         required_methods = [
             "store_result",
             "retrieve_result",
@@ -143,103 +155,107 @@ def test_phase4_core_functionality():
             "_serialize_data",
             "_deserialize_data",
             "_compress_data",
-            "_decompress_data"
+            "_decompress_data",
         ]
-        
+
         for cls in required_classes:
             if f"class {cls}" in content:
                 print(f"   ✅ {cls} class found")
             else:
                 print(f"   ❌ {cls} class missing")
                 return False
-        
+
         for method in required_methods:
             if f"def {method}" in content or f"async def {method}" in content:
                 print(f"   ✅ {method} method found")
             else:
                 print(f"   ❌ {method} method missing")
                 return False
-        
+
         print("✅ Result Storage Manager: All components present")
-        
+
     except Exception as e:
         print(f"❌ Result Storage Manager test failed: {e}")
         return False
-    
+
     return True
+
 
 def test_code_quality():
     """Test code quality metrics."""
     print("🧪 Testing Code Quality...")
-    
+
     phase4_files = [
         "/home/lionel/code/fraiseql_doctor/src/fraiseql_doctor/core/query_collection.py",
-        "/home/lionel/code/fraiseql_doctor/src/fraiseql_doctor/core/execution_manager.py", 
-        "/home/lionel/code/fraiseql_doctor/src/fraiseql_doctor/core/result_storage.py"
+        "/home/lionel/code/fraiseql_doctor/src/fraiseql_doctor/core/execution_manager.py",
+        "/home/lionel/code/fraiseql_doctor/src/fraiseql_doctor/core/result_storage.py",
     ]
-    
+
     total_lines = 0
     total_classes = 0
     total_methods = 0
-    
+
     for file_path in phase4_files:
-        with open(file_path, 'r') as f:
+        with open(file_path, "r") as f:
             content = f.read()
-            lines = content.split('\n')
-            
+            lines = content.split("\n")
+
             file_lines = len(lines)
-            file_classes = content.count('class ')
-            file_methods = content.count('def ') + content.count('async def ')
-            
+            file_classes = content.count("class ")
+            file_methods = content.count("def ") + content.count("async def ")
+
             total_lines += file_lines
             total_classes += file_classes
             total_methods += file_methods
-            
-            print(f"   📄 {os.path.basename(file_path)}: {file_lines} lines, {file_classes} classes, {file_methods} methods")
-    
-    print(f"\n📊 Phase 4 Code Metrics:")
+
+            print(
+                f"   📄 {os.path.basename(file_path)}: {file_lines} lines, {file_classes} classes, {file_methods} methods"
+            )
+
+    print("\n📊 Phase 4 Code Metrics:")
     print(f"   📏 Total Lines: {total_lines}")
     print(f"   🏗️  Total Classes: {total_classes}")
     print(f"   ⚙️  Total Methods: {total_methods}")
     print(f"   📈 Avg Lines per File: {total_lines/len(phase4_files):.0f}")
-    
+
     # Quality checks
     if total_lines < 500:
         print("❌ Code base too small")
         return False
-    
+
     if total_classes < 15:
         print("❌ Not enough classes implemented")
         return False
-    
+
     if total_methods < 50:
         print("❌ Not enough methods implemented")
         return False
-    
+
     print("✅ Code quality metrics passed")
     return True
+
 
 def test_architecture_completeness():
     """Test that the architecture is complete."""
     print("🧪 Testing Architecture Completeness...")
-    
+
     # Check for key architectural patterns
     architectural_patterns = {
         "query_collection.py": [
             "CRUD operations",
-            "search_queries", 
+            "search_queries",
             "QueryCollectionManager",
             "bulk_update",
-            "validate_all_queries"
+            "validate_all_queries",
         ],
         "execution_manager.py": [
             "execute_query",
             "execute_batch",
-            "schedule_query", 
+            "schedule_query",
             "BatchMode",
             "cron",
             "parallel",
-            "sequential"
+            "sequential",
         ],
         "result_storage.py": [
             "store_result",
@@ -247,46 +263,49 @@ def test_architecture_completeness():
             "compression",
             "serialization",
             "StorageBackend",
-            "analytics"
-        ]
+            "analytics",
+        ],
     }
-    
+
     for filename, patterns in architectural_patterns.items():
-        file_path = f"/home/lionel/code/fraiseql_doctor/src/fraiseql_doctor/core/{filename}"
-        
-        with open(file_path, 'r') as f:
+        file_path = (
+            f"/home/lionel/code/fraiseql_doctor/src/fraiseql_doctor/core/{filename}"
+        )
+
+        with open(file_path, "r") as f:
             content = f.read().lower()
-        
+
         print(f"   📋 Checking {filename}...")
-        
+
         for pattern in patterns:
             if pattern.lower() in content:
                 print(f"      ✅ {pattern}")
             else:
                 print(f"      ❌ {pattern} missing")
                 return False
-    
+
     print("✅ Architecture completeness verified")
     return True
+
 
 def main():
     """Run all Phase 4 verification tests."""
     print("🚀 Phase 4 Query Management System - Final Verification")
     print("=" * 65)
-    
+
     tests = [
         ("Core Functionality", test_phase4_core_functionality),
         ("Code Quality", test_code_quality),
-        ("Architecture Completeness", test_architecture_completeness)
+        ("Architecture Completeness", test_architecture_completeness),
     ]
-    
+
     passed = 0
     failed = 0
-    
+
     for test_name, test_func in tests:
         print(f"\n🔍 {test_name} Verification:")
         print("-" * 50)
-        
+
         try:
             result = test_func()
             if result:
@@ -298,15 +317,15 @@ def main():
         except Exception as e:
             print(f"❌ {test_name}: FAILED WITH EXCEPTION: {e}")
             failed += 1
-        
+
         print()
-    
+
     print("=" * 65)
-    print(f"📊 Final Verification Results:")
+    print("📊 Final Verification Results:")
     print(f"✅ Passed: {passed}")
     print(f"❌ Failed: {failed}")
     print(f"📈 Success Rate: {passed/(passed+failed)*100:.1f}%")
-    
+
     if failed == 0:
         print("\n🎉 PHASE 4 VERIFICATION COMPLETE!")
         print("\n📦 Query Management Implementation Summary:")
@@ -318,7 +337,9 @@ def main():
         print()
         print("   ⚡ Query Execution Manager: ✅ COMPLETE")
         print("      • Single and batch query execution")
-        print("      • Multiple execution modes (parallel, sequential, priority, adaptive)")
+        print(
+            "      • Multiple execution modes (parallel, sequential, priority, adaptive)"
+        )
         print("      • Cron-based scheduling system")
         print("      • Comprehensive error handling and retry logic")
         print("      • Performance monitoring and metrics")
@@ -338,12 +359,13 @@ def main():
         print()
         print("🚀 Phase 4: Query Management Implementation is COMPLETE!")
         print("   Ready for production deployment and Phase 5 development.")
-        
+
     else:
         print(f"\n⚠️  {failed} verification(s) failed.")
         print("   Please review the implementation before proceeding.")
-    
+
     return failed == 0
+
 
 if __name__ == "__main__":
     success = main()

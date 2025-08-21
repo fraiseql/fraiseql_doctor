@@ -19,7 +19,7 @@ setup-backend:  ## Setup Python backend dependencies
 	@echo "$(BLUE)🔧 Setting up Python backend...$(RESET)"
 	cd backend && uv sync
 
-.PHONY: setup-frontend  
+.PHONY: setup-frontend
 setup-frontend:  ## Setup Vue.js frontend dependencies
 	@echo "$(BLUE)🔧 Setting up Vue.js frontend...$(RESET)"
 	cd frontend && npm install
@@ -45,7 +45,7 @@ dev-frontend:  ## Start only frontend development server
 	@echo "$(GREEN)🚀 Starting frontend server at http://localhost:5173$(RESET)"
 	cd frontend && npm run dev
 
-##@ Testing Commands  
+##@ Testing Commands
 .PHONY: test
 test: test-backend test-frontend  ## Run all tests (backend + frontend)
 
@@ -68,7 +68,7 @@ lint-backend:  ## Run backend linting (ruff + mypy)
 	@echo "$(BLUE)🔍 Linting backend code...$(RESET)"
 	cd backend && make lint
 
-.PHONY: lint-frontend  
+.PHONY: lint-frontend
 lint-frontend:  ## Run frontend linting (ESLint + TypeScript)
 	@echo "$(BLUE)🔍 Linting frontend code...$(RESET)"
 	cd frontend && npm run lint
@@ -91,7 +91,7 @@ format-frontend:  ## Format frontend code with prettier
 .PHONY: build
 build: build-backend build-frontend  ## Build both backend and frontend for production
 
-.PHONY: build-backend  
+.PHONY: build-backend
 build-backend:  ## Build backend Python package
 	@echo "$(BLUE)📦 Building backend package...$(RESET)"
 	cd backend && make build

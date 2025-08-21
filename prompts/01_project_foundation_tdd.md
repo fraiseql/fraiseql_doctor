@@ -52,7 +52,7 @@ async def db_session(test_engine) -> AsyncSession:
         class_=AsyncSession,
         expire_on_commit=False
     )
-    
+
     async with async_session() as session:
         transaction = await session.begin()
         yield session
@@ -69,11 +69,11 @@ from pathlib import Path
 def test_project_structure_exists():
     """Test that all required directories exist."""
     base_path = Path(__file__).parent.parent
-    
+
     required_dirs = [
         "src/fraiseql_doctor",
         "src/fraiseql_doctor/cli",
-        "src/fraiseql_doctor/core", 
+        "src/fraiseql_doctor/core",
         "src/fraiseql_doctor/models",
         "src/fraiseql_doctor/services",
         "src/fraiseql_doctor/utils",
@@ -84,23 +84,23 @@ def test_project_structure_exists():
         "scripts",
         "alembic"
     ]
-    
+
     for dir_path in required_dirs:
         assert (base_path / dir_path).exists(), f"Directory {dir_path} must exist"
 
 def test_configuration_files_exist():
     """Test that all configuration files exist."""
     base_path = Path(__file__).parent.parent
-    
+
     required_files = [
         "pyproject.toml",
-        "README.md", 
+        "README.md",
         "Makefile",
         ".env.example",
         ".gitignore",
         ".pre-commit-config.yaml"
     ]
-    
+
     for file_path in required_files:
         assert (base_path / file_path).exists(), f"File {file_path} must exist"
 
@@ -131,7 +131,7 @@ def test_cli_app_exists():
     """Test that CLI app can be imported and instantiated."""
     runner = CliRunner()
     result = runner.invoke(app, ["--help"])
-    
+
     assert result.exit_code == 0
     assert "fraiseql-doctor" in result.stdout.lower()
 
@@ -139,7 +139,7 @@ def test_version_command():
     """Test version command works."""
     runner = CliRunner()
     result = runner.invoke(app, ["--version"])
-    
+
     assert result.exit_code == 0
     assert "0.1.0" in result.stdout
 
@@ -147,7 +147,7 @@ def test_subcommands_exist():
     """Test that required subcommands exist."""
     runner = CliRunner()
     result = runner.invoke(app, ["--help"])
-    
+
     required_commands = ["query", "endpoint", "health", "config"]
     for command in required_commands:
         assert command in result.stdout
@@ -212,7 +212,7 @@ def main(
 
 # Placeholder subcommand groups
 query_app = typer.Typer(name="query", help="Manage queries")
-endpoint_app = typer.Typer(name="endpoint", help="Manage endpoints") 
+endpoint_app = typer.Typer(name="endpoint", help="Manage endpoints")
 health_app = typer.Typer(name="health", help="Health monitoring")
 config_app = typer.Typer(name="config", help="Configuration")
 
@@ -237,13 +237,13 @@ async def get_database_session() -> AsyncSession:
     """Get database session."""
     settings = get_settings()
     engine = create_async_engine(settings.database_url)
-    
+
     async_session = sessionmaker(
         engine,
         class_=AsyncSession,
         expire_on_commit=False
     )
-    
+
     async with async_session() as session:
         yield session
 ```
@@ -263,7 +263,7 @@ requires-python = ">=3.11"
 
 dependencies = [
     "typer[all]>=0.9.0",
-    "sqlalchemy>=2.0.0", 
+    "sqlalchemy>=2.0.0",
     "psycopg[binary]>=3.1.0",
     "pydantic>=2.0.0",
     "requests>=2.31.0",
@@ -306,7 +306,7 @@ addopts = [
 ]
 markers = [
     "integration: Integration tests",
-    "performance: Performance tests", 
+    "performance: Performance tests",
     "slow: Slow running tests"
 ]
 asyncio_mode = "auto"
@@ -366,7 +366,7 @@ test: test-unit test-integration
 test-unit:
 	uv run pytest tests/unit/ -v
 
-test-integration: 
+test-integration:
 	uv run pytest tests/integration/ -v
 
 test-performance:
@@ -381,7 +381,7 @@ test-watch:
 # TDD workflow helpers
 tdd-cycle:
 	@echo "🔴 RED: Write failing test"
-	@echo "🟢 GREEN: Make test pass"  
+	@echo "🟢 GREEN: Make test pass"
 	@echo "🔵 REFACTOR: Improve code"
 
 red:
@@ -462,13 +462,13 @@ async def test_engine():
         echo=False,
         pool_pre_ping=True
     )
-    
+
     # Create all tables for testing
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
+
     yield engine
-    
+
     # Cleanup
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
@@ -482,7 +482,7 @@ async def db_session(test_engine) -> AsyncSession:
         class_=AsyncSession,
         expire_on_commit=False
     )
-    
+
     async with async_session() as session:
         transaction = await session.begin()
         yield session
@@ -524,7 +524,7 @@ def temp_config_dir():
 With test-driven foundation complete, Phase 2 will continue TDD approach for database schema:
 
 1. **Tests First**: Write failing tests for database models
-2. **Schema Definition**: Implement models to pass tests  
+2. **Schema Definition**: Implement models to pass tests
 3. **Migration Tests**: Test Alembic migrations work correctly
 4. **Performance Tests**: Database operation benchmarks
 

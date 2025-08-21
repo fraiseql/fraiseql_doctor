@@ -1,16 +1,15 @@
-"""
-Simplified Integration tests for Query Management System (Phase 4)
+"""Simplified Integration tests for Query Management System (Phase 4)
 
 Tests core functionality without complex database dependencies.
 """
 
-import pytest
-import asyncio
-import json
-from datetime import datetime, timezone
-from uuid import uuid4
-from unittest.mock import AsyncMock, MagicMock
 from dataclasses import dataclass
+from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock
+from uuid import uuid4
+
+import pytest
+
 
 # Simple test models to avoid dependency issues
 @dataclass
@@ -21,13 +20,15 @@ class MockEndpoint:
     auth_type: str
     auth_config: dict
 
-@dataclass 
+
+@dataclass
 class MockQueryMetadata:
     complexity_score: float = 0.0
     estimated_cost: float = 0.0
     field_count: int = 0
     depth: int = 0
     last_validated: datetime = None
+
 
 @dataclass
 class MockQuery:
@@ -38,25 +39,32 @@ class MockQuery:
     expected_complexity_score: float = 0.0
     metadata: MockQueryMetadata = None
 
-@pytest.fixture
+
+@pytest.fixture()
 def mock_db_session():
     """Real test database session - more reliable than complex mocks."""
     from tests.fixtures.real_services import TestDatabaseSession
+
     return TestDatabaseSession()
 
-@pytest.fixture
+
+@pytest.fixture()
 def mock_complexity_analyzer():
     """Real test complexity analyzer - more reliable than mocks."""
     from tests.fixtures.real_services import TestComplexityAnalyzer
+
     return TestComplexityAnalyzer()
 
-@pytest.fixture 
+
+@pytest.fixture()
 def mock_fraiseql_client():
     """Real test GraphQL client - more predictable than complex mocks."""
     from tests.fixtures.real_services import TestGraphQLClient
+
     return TestGraphQLClient()
 
-@pytest.fixture
+
+@pytest.fixture()
 def sample_query():
     """Sample query for testing."""
     return MockQuery(
@@ -73,10 +81,11 @@ def sample_query():
         """,
         variables={"limit": 10},
         expected_complexity_score=5.0,
-        metadata=MockQueryMetadata(complexity_score=5.0)
+        metadata=MockQueryMetadata(complexity_score=5.0),
     )
 
-@pytest.fixture
+
+@pytest.fixture()
 def sample_endpoint():
     """Sample endpoint for testing."""
     return MockEndpoint(
@@ -84,125 +93,105 @@ def sample_endpoint():
         name="Test GraphQL Endpoint",
         url="https://api.example.com/graphql",
         auth_type="bearer",
-        auth_config={"token": "test-token"}
+        auth_config={"token": "test-token"},
     )
+
 
 class TestQueryExecutionCore:
     """Test core query execution functionality."""
-    
-    @pytest.mark.asyncio
+
+    @pytest.mark.asyncio()
     async def test_execute_single_query_success(
-        self,
-        mock_db_session,
-        mock_fraiseql_client,
-        sample_query,
-        sample_endpoint
+        self, mock_db_session, mock_fraiseql_client, sample_query, sample_endpoint
     ):
         """Test successful single query execution."""
         from fraiseql_doctor.core.execution_manager import (
-            QueryExecutionManager, ExecutionConfig, ExecutionStatus
+            ExecutionConfig,
+            ExecutionStatus,
+            QueryExecutionManager,
         )
-        from fraiseql_doctor.core.query_collection import QueryCollectionManager
-        
+
         # Create mock collection manager
         collection_manager = MagicMock()
         collection_manager.get_query = AsyncMock(return_value=sample_query)
-        
+
         # Create client factory
         def client_factory(endpoint):
             return mock_fraiseql_client
-        
+
         # Create execution manager
         config = ExecutionConfig(timeout_seconds=30, max_concurrent=5)
         execution_manager = QueryExecutionManager(
-            mock_db_session,
-            client_factory,
-            collection_manager,
-            config
+            mock_db_session, client_factory, collection_manager, config
         )
-        
+
         # TestDatabaseSession will automatically return appropriate test data for .get() calls
         # No additional configuration needed
-        
+
         # Execute query
-        result = await execution_manager.execute_query(
-            sample_query.id,
-            sample_endpoint.id
-        )
-        
-        # Verify results  
+        result = await execution_manager.execute_query(sample_query.id, sample_endpoint.id)
+
+        # Verify results
         assert result.success is True
         assert result.status == ExecutionStatus.COMPLETED
         assert result.query_id == sample_query.id
         # TestGraphQLClient returns users data for queries containing "users"
         assert "users" in result.result_data["data"]
         assert result.execution_time > 0
-        
+
         # Verify client was called (TestGraphQLClient tracks call count)
         assert mock_fraiseql_client.call_count == 1
-    
-    @pytest.mark.asyncio
+
+    @pytest.mark.asyncio()
     async def test_execute_query_with_error(
-        self,
-        mock_db_session,
-        mock_fraiseql_client,
-        sample_query,
-        sample_endpoint
+        self, mock_db_session, mock_fraiseql_client, sample_query, sample_endpoint
     ):
         """Test query execution with GraphQL errors."""
         from fraiseql_doctor.core.execution_manager import (
-            QueryExecutionManager, ExecutionConfig, ExecutionStatus
+            ExecutionConfig,
+            ExecutionStatus,
+            QueryExecutionManager,
         )
-        
+
         # Create mock collection manager
         collection_manager = MagicMock()
         collection_manager.get_query = AsyncMock(return_value=sample_query)
-        
+
         # Configure client to return GraphQL errors using real test client patterns
-        mock_fraiseql_client.set_custom_response({
-            "data": None,
-            "errors": [
-                {"message": "Field 'invalidField' not found"}
-            ]
-        })
-        
+        mock_fraiseql_client.set_custom_response(
+            {"data": None, "errors": [{"message": "Field 'invalidField' not found"}]}
+        )
+
         def client_factory(endpoint):
             return mock_fraiseql_client
-        
+
         config = ExecutionConfig(timeout_seconds=30)
         execution_manager = QueryExecutionManager(
-            mock_db_session,
-            client_factory,
-            collection_manager,
-            config
+            mock_db_session, client_factory, collection_manager, config
         )
-        
+
         # TestDatabaseSession handles .get() calls automatically
-        
+
         # Execute query
-        result = await execution_manager.execute_query(
-            sample_query.id,
-            sample_endpoint.id
-        )
-        
+        result = await execution_manager.execute_query(sample_query.id, sample_endpoint.id)
+
         # Verify error handling
         assert result.success is False
         assert result.status == ExecutionStatus.FAILED
         assert "Field 'invalidField' not found" in result.error_message
         assert result.error_code == "GRAPHQL_ERROR"
-    
-    @pytest.mark.asyncio
+
+    @pytest.mark.asyncio()
     async def test_batch_execution_parallel(
-        self,
-        mock_db_session,
-        mock_fraiseql_client,
-        sample_endpoint
+        self, mock_db_session, mock_fraiseql_client, sample_endpoint
     ):
         """Test parallel batch execution."""
         from fraiseql_doctor.core.execution_manager import (
-            QueryExecutionManager, ExecutionConfig, BatchMode
+            BatchMode,
+            ExecutionConfig,
+            QueryExecutionManager,
         )
-        
+
         # Create multiple test queries
         queries = []
         query_ids = []
@@ -212,41 +201,38 @@ class TestQueryExecutionCore:
                 name=f"Test Query {i+1}",
                 query_text=f"query TestQuery{i+1} {{ test{i+1} }}",
                 variables={},
-                expected_complexity_score=float(i+1),
-                metadata=MockQueryMetadata(complexity_score=float(i+1))
+                expected_complexity_score=float(i + 1),
+                metadata=MockQueryMetadata(complexity_score=float(i + 1)),
             )
             queries.append(query)
             query_ids.append(query.id)
-        
+
         # Create collection manager that returns different queries
         collection_manager = MagicMock()
+
         async def get_query_side_effect(query_id):
             for query in queries:
                 if query.id == query_id:
                     return query
             return None
+
         collection_manager.get_query.side_effect = get_query_side_effect
-        
+
         def client_factory(endpoint):
             return mock_fraiseql_client
-        
+
         config = ExecutionConfig(max_concurrent=10)
         execution_manager = QueryExecutionManager(
-            mock_db_session,
-            client_factory,
-            collection_manager,
-            config
+            mock_db_session, client_factory, collection_manager, config
         )
-        
+
         # TestDatabaseSession handles .get() calls automatically
-        
+
         # Execute batch
         batch_result = await execution_manager.execute_batch(
-            query_ids,
-            sample_endpoint.id,
-            mode=BatchMode.PARALLEL
+            query_ids, sample_endpoint.id, mode=BatchMode.PARALLEL
         )
-        
+
         # Verify batch results
         assert batch_result.total_queries == 3
         assert batch_result.successful == 3
@@ -257,23 +243,26 @@ class TestQueryExecutionCore:
 
 class TestResultStorageCore:
     """Test core result storage functionality."""
-    
-    @pytest.mark.asyncio
+
+    @pytest.mark.asyncio()
     async def test_store_and_retrieve_result(self, mock_db_session, tmp_path):
         """Test basic result storage and retrieval."""
         from fraiseql_doctor.core.result_storage import (
-            ResultStorageManager, StorageConfig, StorageBackend, CompressionType
+            CompressionType,
+            ResultStorageManager,
+            StorageBackend,
+            StorageConfig,
         )
-        
+
         # Configure for file system storage
         config = StorageConfig(
             backend=StorageBackend.FILE_SYSTEM,
             file_base_path=tmp_path / "results",
-            compression=CompressionType.GZIP
+            compression=CompressionType.GZIP,
         )
-        
+
         storage_manager = ResultStorageManager(mock_db_session, config)
-        
+
         # Test data
         execution_id = uuid4()
         query_id = uuid4()
@@ -281,68 +270,60 @@ class TestResultStorageCore:
             "data": {
                 "users": [
                     {"id": "1", "name": "John", "email": "john@example.com"},
-                    {"id": "2", "name": "Jane", "email": "jane@example.com"}
+                    {"id": "2", "name": "Jane", "email": "jane@example.com"},
                 ]
             }
         }
-        
+
         # Store result
-        storage_key = await storage_manager.store_result(
-            execution_id,
-            query_id,
-            result_data
-        )
-        
+        storage_key = await storage_manager.store_result(execution_id, query_id, result_data)
+
         # Verify storage key format
         assert storage_key.startswith("result:")
         assert str(execution_id) in storage_key
-        
+
         # Retrieve result
         retrieved_data = await storage_manager.retrieve_result(storage_key)
-        
+
         # Verify data integrity
         assert retrieved_data == result_data
-    
-    @pytest.mark.asyncio
+
+    @pytest.mark.asyncio()
     async def test_compression_effectiveness(self, mock_db_session, tmp_path):
         """Test that compression reduces storage size."""
         from fraiseql_doctor.core.result_storage import (
-            ResultStorageManager, StorageConfig, StorageBackend, CompressionType
+            CompressionType,
+            ResultStorageManager,
+            StorageBackend,
+            StorageConfig,
         )
-        
+
         config = StorageConfig(
             backend=StorageBackend.FILE_SYSTEM,
             file_base_path=tmp_path / "results",
-            compression=CompressionType.GZIP
+            compression=CompressionType.GZIP,
         )
-        
+
         storage_manager = ResultStorageManager(mock_db_session, config)
-        
+
         # Create large, repetitive data that should compress well
         large_data = {
             "data": {
-                "items": [
-                    {"id": i, "description": "This is a test item " * 50}
-                    for i in range(100)
-                ]
+                "items": [{"id": i, "description": "This is a test item " * 50} for i in range(100)]
             }
         }
-        
+
         execution_id = uuid4()
         query_id = uuid4()
-        
+
         # Store and retrieve
-        storage_key = await storage_manager.store_result(
-            execution_id,
-            query_id,
-            large_data
-        )
-        
+        storage_key = await storage_manager.store_result(execution_id, query_id, large_data)
+
         retrieved_data = await storage_manager.retrieve_result(storage_key)
-        
+
         # Verify data integrity despite compression
         assert retrieved_data == large_data
-        
+
         # Check that files were created
         storage_path = tmp_path / "results"
         assert storage_path.exists()
@@ -351,93 +332,80 @@ class TestResultStorageCore:
 
 class TestIntegrationWorkflow:
     """Test integrated workflows."""
-    
-    @pytest.mark.asyncio
+
+    @pytest.mark.asyncio()
     async def test_query_execution_to_storage_workflow(
-        self,
-        mock_db_session,
-        mock_fraiseql_client,
-        sample_query,
-        sample_endpoint,
-        tmp_path
+        self, mock_db_session, mock_fraiseql_client, sample_query, sample_endpoint, tmp_path
     ):
         """Test complete workflow from query execution to result storage."""
-        from fraiseql_doctor.core.execution_manager import (
-            QueryExecutionManager, ExecutionConfig
-        )
+        from fraiseql_doctor.core.execution_manager import ExecutionConfig, QueryExecutionManager
         from fraiseql_doctor.core.result_storage import (
-            ResultStorageManager, StorageConfig, StorageBackend
+            ResultStorageManager,
+            StorageBackend,
+            StorageConfig,
         )
-        
+
         # Setup execution manager
         collection_manager = MagicMock()
         collection_manager.get_query = AsyncMock(return_value=sample_query)
-        
+
         def client_factory(endpoint):
             return mock_fraiseql_client
-        
+
         exec_config = ExecutionConfig(timeout_seconds=30)
         execution_manager = QueryExecutionManager(
-            mock_db_session,
-            client_factory,
-            collection_manager,
-            exec_config
+            mock_db_session, client_factory, collection_manager, exec_config
         )
-        
+
         # Setup storage manager
         storage_config = StorageConfig(
-            backend=StorageBackend.FILE_SYSTEM,
-            file_base_path=tmp_path / "results"
+            backend=StorageBackend.FILE_SYSTEM, file_base_path=tmp_path / "results"
         )
         storage_manager = ResultStorageManager(mock_db_session, storage_config)
-        
+
         # Mock endpoint retrieval
         # TestDatabaseSession handles .get() calls automatically
-        
+
         # Step 1: Execute query
         execution_result = await execution_manager.execute_query(
-            sample_query.id,
-            sample_endpoint.id
+            sample_query.id, sample_endpoint.id
         )
-        
+
         assert execution_result.success is True
-        
+
         # Step 2: Store result
         storage_key = await storage_manager.store_result(
-            execution_result.execution_id,
-            sample_query.id,
-            execution_result.result_data
+            execution_result.execution_id, sample_query.id, execution_result.result_data
         )
-        
+
         # Step 3: Retrieve stored result
         stored_result = await storage_manager.retrieve_result(storage_key)
-        
+
         # Verify end-to-end data integrity
         assert stored_result == execution_result.result_data
         # TestGraphQLClient returns users data for queries containing "users"
         assert "users" in stored_result["data"]
-    
-    @pytest.mark.asyncio 
+
+    @pytest.mark.asyncio()
     async def test_error_handling_workflow(
-        self,
-        mock_db_session,
-        mock_fraiseql_client,
-        sample_query,
-        sample_endpoint,
-        tmp_path
+        self, mock_db_session, mock_fraiseql_client, sample_query, sample_endpoint, tmp_path
     ):
         """Test error handling across the integrated workflow."""
         from fraiseql_doctor.core.execution_manager import (
-            QueryExecutionManager, ExecutionConfig, ExecutionStatus
+            ExecutionConfig,
+            ExecutionStatus,
+            QueryExecutionManager,
         )
         from fraiseql_doctor.core.result_storage import (
-            ResultStorageManager, StorageConfig, StorageBackend
+            ResultStorageManager,
+            StorageBackend,
+            StorageConfig,
         )
-        
+
         # Setup managers
         collection_manager = MagicMock()
         collection_manager.get_query = AsyncMock(return_value=sample_query)
-        
+
         # Configure client to raise an exception using real test client patterns
         # Use a query containing "fail" to trigger TestGraphQLClient failure mode
         failing_query = MockQuery(
@@ -446,49 +414,45 @@ class TestIntegrationWorkflow:
             query_text="query { fail_test }",  # Contains "fail" - will trigger failure
             variables={},
             expected_complexity_score=1.0,
-            metadata=MockQueryMetadata(complexity_score=1.0)
+            metadata=MockQueryMetadata(complexity_score=1.0),
         )
         collection_manager.get_query = AsyncMock(return_value=failing_query)
         mock_fraiseql_client.set_failure_mode(True)
-        
+
         def client_factory(endpoint):
             return mock_fraiseql_client
-        
+
         execution_manager = QueryExecutionManager(
-            mock_db_session,
-            client_factory,
-            collection_manager,
-            ExecutionConfig()
+            mock_db_session, client_factory, collection_manager, ExecutionConfig()
         )
-        
+
         storage_manager = ResultStorageManager(
             mock_db_session,
-            StorageConfig(
-                backend=StorageBackend.FILE_SYSTEM,
-                file_base_path=tmp_path / "results"
-            )
+            StorageConfig(backend=StorageBackend.FILE_SYSTEM, file_base_path=tmp_path / "results"),
         )
-        
+
         # TestDatabaseSession handles .get() calls automatically
-        
+
         # Execute query that will fail
         execution_result = await execution_manager.execute_query(
-            failing_query.id,
-            sample_endpoint.id
+            failing_query.id, sample_endpoint.id
         )
-        
-        # Verify error was handled properly  
+
+        # Verify error was handled properly
         assert execution_result.success is False
         assert execution_result.status == ExecutionStatus.FAILED
         # TestGraphQLClient raises GraphQLExecutionError for queries containing "fail"
-        assert "Test GraphQL error" in execution_result.error_message or "GraphQL" in execution_result.error_message
-        
+        assert (
+            "Test GraphQL error" in execution_result.error_message
+            or "GraphQL" in execution_result.error_message
+        )
+
         # Verify that we don't try to store failed results
         # (This would be handled by calling code)
         if not execution_result.success:
             # Don't store failed results
             pass
-        
+
         # Test storage error handling
         nonexistent_result = await storage_manager.retrieve_result("nonexistent-key")
         assert nonexistent_result is None

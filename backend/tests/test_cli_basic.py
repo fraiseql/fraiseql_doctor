@@ -1,8 +1,7 @@
 """Test basic CLI functionality."""
 
-from typer.testing import CliRunner
-
 from fraiseql_doctor.cli.main import app
+from typer.testing import CliRunner
 
 
 def test_cli_app_exists():

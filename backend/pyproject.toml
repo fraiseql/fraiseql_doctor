@@ -100,7 +100,7 @@ addopts = [
 ]
 markers = [
     "integration: Integration tests",
-    "performance: Performance tests", 
+    "performance: Performance tests",
     "slow: Slow running tests"
 ]
 asyncio_mode = "auto"

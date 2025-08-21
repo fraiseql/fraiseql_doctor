@@ -64,7 +64,7 @@ describe('HealthStatusCard', () => {
   it('should format last checked time correctly', () => {
     const now = new Date()
     const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000)
-    
+
     const endpoint: GraphQLEndpoint = {
       ...baseEndpoint,
       lastChecked: fiveMinutesAgo

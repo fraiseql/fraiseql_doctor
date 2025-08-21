@@ -6,7 +6,7 @@
 ### ✅ **What to Adopt from PrintOptim:**
 - **Nuxt 3** → Switch to **Vite + Vue 3** (lighter, more control)
 - **TailwindCSS** → Keep for rapid styling
-- **Pinia** → Keep for state management  
+- **Pinia** → Keep for state management
 - **Vue Apollo** → Keep for GraphQL integration
 - **Component architecture** → Adopt pattern with local components
 - **TypeScript** → Essential for large apps
@@ -28,7 +28,7 @@
 
 ## 🎯 Phase 2.5: TDD Implementation Plan
 
-**Timeline:** 5-7 days  
+**Timeline:** 5-7 days
 **Approach:** Feature → Failing Tests → Code → Passing Tests → Next Feature
 
 ---
@@ -45,7 +45,7 @@ describe('Project Setup', () => {
   it('should have Vite dev server running', () => {
     expect(process.env.NODE_ENV).toBeDefined()
   })
-  
+
   it('should compile TypeScript without errors', () => {
     // This will fail until TS is properly configured
     expect(true).toBe(true)
@@ -78,7 +78,7 @@ npm install @auth0/auth0-vue@^2.4.0  # Pluggable auth system
 frontend/
 ├── src/
 │   ├── components/          # Reusable components
-│   │   ├── ui/             # Base UI components  
+│   │   ├── ui/             # Base UI components
 │   │   ├── dashboard/      # Dashboard-specific
 │   │   ├── endpoints/      # Endpoint management
 │   │   ├── queries/        # Query management
@@ -174,14 +174,14 @@ describe('Authentication System', () => {
     const { provider, isAuthenticated } = useAuth()
     expect(provider.type).toBe(AuthProviderType.AUTH0)
   })
-  
+
   it('should be swappable to different provider', () => {
     const { switchProvider } = useAuth()
     switchProvider(AuthProviderType.MOCK)
     // This will fail until provider switching is implemented
     expect(useAuth().provider.type).toBe(AuthProviderType.MOCK)
   })
-  
+
   it('should handle login flow', async () => {
     const { login, isAuthenticated } = useAuth()
     await login()
@@ -215,7 +215,7 @@ export interface AuthProvider {
   user: Ref<User | null>
   loading: Ref<boolean>
   error: Ref<string | null>
-  
+
   login(): Promise<void>
   logout(): Promise<void>
   checkAuth(): Promise<boolean>
@@ -234,7 +234,7 @@ export abstract class BaseAuthProvider {
   abstract user: Ref<User | null>
   abstract loading: Ref<boolean>
   abstract error: Ref<string | null>
-  
+
   abstract login(): Promise<void>
   abstract logout(): Promise<void>
   abstract checkAuth(): Promise<boolean>
@@ -255,7 +255,7 @@ export class Auth0Provider extends BaseAuthProvider {
   user = ref(null)
   loading = ref(false)
   error = ref(null)
-  
+
   private auth0: any
 
   constructor(config: {
@@ -278,7 +278,7 @@ export class Auth0Provider extends BaseAuthProvider {
   async login(): Promise<void> {
     this.loading.value = true
     this.error.value = null
-    
+
     try {
       await this.auth0.loginWithRedirect()
     } catch (err: any) {
@@ -300,16 +300,16 @@ export class Auth0Provider extends BaseAuthProvider {
 
   async checkAuth(): Promise<boolean> {
     this.loading.value = true
-    
+
     try {
       // Handle redirect callback
       if (window.location.search.includes('code=')) {
         await this.auth0.handleRedirectCallback()
       }
-      
+
       const authenticated = await this.auth0.isAuthenticated()
       this.isAuthenticated.value = authenticated
-      
+
       if (authenticated) {
         const auth0User = await this.auth0.getUser()
         this.user.value = {
@@ -320,7 +320,7 @@ export class Auth0Provider extends BaseAuthProvider {
           roles: auth0User['https://fraiseql-doctor.dev/roles'] || ['user']
         }
       }
-      
+
       return authenticated
     } catch (err: any) {
       this.error.value = err.message
@@ -332,7 +332,7 @@ export class Auth0Provider extends BaseAuthProvider {
 
   async getToken(): Promise<string | null> {
     if (!this.isAuthenticated.value) return null
-    
+
     try {
       return await this.auth0.getAccessTokenSilently()
     } catch (err) {
@@ -358,10 +358,10 @@ export class MockAuthProvider extends BaseAuthProvider {
 
   async login(): Promise<void> {
     this.loading.value = true
-    
+
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     this.isAuthenticated.value = true
     this.user.value = {
       id: 'mock-user-123',
@@ -407,7 +407,7 @@ const config = {
 // Initialize default provider based on environment
 const initializeProvider = () => {
   const providerType = import.meta.env.VITE_AUTH_PROVIDER || AuthProviderType.AUTH0
-  
+
   switch (providerType) {
     case AuthProviderType.AUTH0:
       return new Auth0Provider(config.auth0)
@@ -500,14 +500,14 @@ describe('DashboardLayout', () => {
     const wrapper = mount(DashboardLayout)
     expect(wrapper.find('[data-testid="sidebar"]')).toBeTruthy()
   })
-  
+
   it('should toggle sidebar on mobile', async () => {
     const wrapper = mount(DashboardLayout)
     const toggleBtn = wrapper.find('[data-testid="sidebar-toggle"]')
     await toggleBtn.trigger('click')
     expect(wrapper.vm.sidebarOpen).toBe(false)
   })
-  
+
   it('should highlight active navigation item', () => {
     const wrapper = mount(DashboardLayout)
     // This will fail until navigation is implemented
@@ -522,7 +522,7 @@ describe('DashboardLayout', () => {
 <template>
   <div class="min-h-screen bg-gray-50 flex">
     <!-- Sidebar -->
-    <aside 
+    <aside
       data-testid="sidebar"
       :class="[
         'bg-white shadow-lg transition-transform duration-300',
@@ -533,7 +533,7 @@ describe('DashboardLayout', () => {
         <h1 class="text-xl font-bold text-gray-800">FraiseQL Doctor</h1>
         <UserMenu v-if="user" :user="user" />
       </div>
-      
+
       <nav class="mt-8">
         <router-link
           v-for="item in navItems"
@@ -559,7 +559,7 @@ describe('DashboardLayout', () => {
       >
         <MenuIcon class="w-6 h-6" />
       </button>
-      
+
       <router-view />
     </main>
   </div>
@@ -570,12 +570,12 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuth } from '@/services/auth'
 import UserMenu from '@/components/auth/UserMenu.vue'
-import { 
-  HomeIcon, 
-  ServerIcon, 
-  DocumentTextIcon, 
+import {
+  HomeIcon,
+  ServerIcon,
+  DocumentTextIcon,
   ChartBarIcon,
-  MenuIcon 
+  MenuIcon
 } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
@@ -718,7 +718,7 @@ describe('Dashboard', () => {
     })
     expect(wrapper.findAll('[data-testid="status-card"]')).toHaveLength(4)
   })
-  
+
   it('should show correct health metrics', async () => {
     const wrapper = mount(Dashboard, {
       global: { plugins: [createTestingPinia()] }
@@ -726,7 +726,7 @@ describe('Dashboard', () => {
     // This will fail until store is implemented
     expect(wrapper.text()).toContain('Healthy Endpoints: 0')
   })
-  
+
   it('should update in real-time', async () => {
     // WebSocket test - will fail until implemented
     const wrapper = mount(Dashboard, {
@@ -788,7 +788,7 @@ describe('Dashboard', () => {
         <h2 class="text-lg font-semibold mb-4">Health Trends (24h)</h2>
         <HealthTrendChart :data="healthTrendData" />
       </div>
-      
+
       <!-- Recent Activity -->
       <div class="bg-white p-6 rounded-lg shadow">
         <h2 class="text-lg font-semibold mb-4">Recent Activity</h2>
@@ -865,7 +865,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
       // API calls to load dashboard data
       const response = await fetch('/api/dashboard/overview')
       const data = await response.json()
-      
+
       stats.value = data.stats
       healthTrend.value = data.healthTrend
       recentActivities.value = data.recentActivities
@@ -915,7 +915,7 @@ describe('EndpointsView', () => {
     const wrapper = mount(EndpointsView)
     expect(wrapper.find('[data-testid="endpoints-table"]')).toBeTruthy()
   })
-  
+
   it('should filter endpoints by status', async () => {
     const wrapper = mount(EndpointsView)
     const filterSelect = wrapper.find('[data-testid="status-filter"]')
@@ -923,7 +923,7 @@ describe('EndpointsView', () => {
     // This will fail until filtering is implemented
     expect(wrapper.findAll('.endpoint-row')).toHaveLength(3)
   })
-  
+
   it('should navigate to endpoint detail on click', async () => {
     const wrapper = mount(EndpointsView)
     const firstEndpoint = wrapper.find('.endpoint-row')
@@ -1079,18 +1079,18 @@ const showAddEndpointDialog = ref(false)
 
 const filteredEndpoints = computed(() => {
   let endpoints = endpointsStore.endpoints
-  
+
   if (statusFilter.value) {
     endpoints = endpoints.filter(e => e.status === statusFilter.value)
   }
-  
+
   if (searchTerm.value) {
-    endpoints = endpoints.filter(e => 
+    endpoints = endpoints.filter(e =>
       e.name.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
       e.url.toLowerCase().includes(searchTerm.value.toLowerCase())
     )
   }
-  
+
   return endpoints
 })
 
@@ -1141,11 +1141,11 @@ describe('WebSocket Connection', () => {
     // This will fail until WebSocket is implemented
     expect(isConnected.value).toBe(true)
   })
-  
+
   it('should receive endpoint status updates', async () => {
     const { connect, disconnect } = useWebSocketConnection()
     const mockCallback = vi.fn()
-    
+
     connect('endpoints', mockCallback)
     // Simulate WebSocket message
     // This will fail until message handling is implemented
@@ -1247,7 +1247,7 @@ describe('QueriesView', () => {
     const wrapper = mount(QueriesView)
     expect(wrapper.find('[data-testid="queries-list"]')).toBeTruthy()
   })
-  
+
   it('should open query editor on create', async () => {
     const wrapper = mount(QueriesView)
     const createBtn = wrapper.find('[data-testid="create-query-btn"]')
@@ -1436,7 +1436,7 @@ const endpointSchema = ref(null)
 
 const executeQuery = async () => {
   if (!selectedEndpoint.value || !queryText.value) return
-  
+
   executing.value = true
   try {
     // Execute GraphQL query
@@ -1449,7 +1449,7 @@ const executeQuery = async () => {
         variables: {}
       })
     })
-    
+
     queryResult.value = await response.json()
   } catch (error) {
     queryResult.value = { error: error.message }
@@ -1492,12 +1492,12 @@ describe('HealthChart', () => {
     })
     expect(wrapper.find('canvas')).toBeTruthy()
   })
-  
+
   it('should update chart data reactively', async () => {
     const wrapper = mount(HealthChart, {
       props: { data: [] }
     })
-    
+
     await wrapper.setProps({ data: mockChartData })
     // This will fail until chart updates are implemented
     expect(wrapper.vm.chart.data.datasets[0].data).toEqual([1, 2, 3])
@@ -1725,7 +1725,7 @@ describe('Bundle Optimization', () => {
     const bundleStats = getBundleStats()
     expect(bundleStats.main.size).toBeLessThan(200 * 1024)
   })
-  
+
   it('should lazy load chart components', () => {
     const chunkStats = getBundleStats()
     expect(chunkStats.charts).toBeDefined()
@@ -1829,27 +1829,27 @@ tests/
 describe('Dashboard Integration Flow', () => {
   it('should complete full dashboard workflow', async () => {
     // Mount app with router
-    const wrapper = mount(App, { 
-      global: { plugins: [router, pinia] } 
+    const wrapper = mount(App, {
+      global: { plugins: [router, pinia] }
     })
-    
+
     // Navigate to dashboard
     await router.push('/')
     await nextTick()
-    
+
     // Verify dashboard loads
     expect(wrapper.find('[data-testid="dashboard"]')).toBeTruthy()
-    
+
     // Check status cards
     const statusCards = wrapper.findAll('[data-testid="status-card"]')
     expect(statusCards).toHaveLength(4)
-    
+
     // Simulate WebSocket update
     await simulateWebSocketMessage({
       type: 'health_update',
       data: { healthy: 10, total: 12 }
     })
-    
+
     // Verify UI updates
     expect(wrapper.text()).toContain('Healthy: 10')
   })
@@ -1945,30 +1945,30 @@ describe('Complete Production Workflow', () => {
     // 1. Dashboard loads
     await page.goto('/')
     await expect(page.locator('[data-testid="dashboard"]')).toBeVisible()
-    
+
     // 2. Add endpoint
     await page.click('[data-testid="nav-endpoints"]')
     await page.click('[data-testid="add-endpoint"]')
     await page.fill('[data-testid="endpoint-name"]', 'Test Endpoint')
     await page.fill('[data-testid="endpoint-url"]', 'https://api.example.com/graphql')
     await page.click('[data-testid="save-endpoint"]')
-    
+
     // 3. Create query
     await page.click('[data-testid="nav-queries"]')
     await page.click('[data-testid="create-query"]')
     await page.fill('[data-testid="query-name"]', 'Test Query')
     await page.fill('[data-testid="query-text"]', 'query { users { id name } }')
     await page.click('[data-testid="save-query"]')
-    
+
     // 4. Execute query
     await page.click('[data-testid="nav-playground"]')
     await page.selectOption('[data-testid="endpoint-select"]', 'Test Endpoint')
     await page.click('[data-testid="execute-query"]')
-    
+
     // 5. View monitoring
     await page.click('[data-testid="nav-monitoring"]')
     await expect(page.locator('[data-testid="health-chart"]')).toBeVisible()
-    
+
     // 6. Verify real-time updates
     // Simulate WebSocket message
     await page.evaluate(() => {
@@ -1976,7 +1976,7 @@ describe('Complete Production Workflow', () => {
         detail: { type: 'health_update', data: { status: 'healthy' } }
       }))
     })
-    
+
     await expect(page.locator('[data-testid="status-healthy"]')).toBeVisible()
   })
 })

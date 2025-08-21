@@ -1,9 +1,9 @@
 """Endpoint configuration model."""
-from typing import Any, Dict
-from uuid import UUID, uuid4
 from datetime import datetime
+from typing import Any
+from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, Integer, String, DateTime
+from sqlalchemy import Boolean, DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, TimestampMixin
@@ -11,6 +11,7 @@ from .base import Base, TimestampMixin
 
 class Endpoint(Base, TimestampMixin):
     """GraphQL endpoint configuration model."""
+
     __tablename__ = "tb_endpoint"
 
     pk_endpoint: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
@@ -27,11 +28,13 @@ class Endpoint(Base, TimestampMixin):
 
     # Relationships (using string references to avoid circular imports)
     executions = relationship("Execution", back_populates="endpoint", cascade="all, delete-orphan")
-    health_checks = relationship("HealthCheck", back_populates="endpoint", cascade="all, delete-orphan")
+    health_checks = relationship(
+        "HealthCheck", back_populates="endpoint", cascade="all, delete-orphan"
+    )
     schedules = relationship("Schedule", back_populates="endpoint", cascade="all, delete-orphan")
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Endpoint":
+    def from_dict(cls, data: dict[str, Any]) -> "Endpoint":
         """Create Endpoint instance from dictionary."""
         return cls(
             pk_endpoint=data.get("pk_endpoint"),
@@ -46,10 +49,10 @@ class Endpoint(Base, TimestampMixin):
             is_active=data.get("is_active", True),
             last_health_check=data.get("last_health_check"),
             created_at=data.get("created_at"),
-            updated_at=data.get("updated_at")
+            updated_at=data.get("updated_at"),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert Endpoint to dictionary."""
         return {
             "pk_endpoint": self.pk_endpoint,
@@ -64,5 +67,5 @@ class Endpoint(Base, TimestampMixin):
             "is_active": self.is_active,
             "last_health_check": self.last_health_check,
             "created_at": self.created_at,
-            "updated_at": self.updated_at
+            "updated_at": self.updated_at,
         }

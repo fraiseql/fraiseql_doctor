@@ -2,7 +2,8 @@
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
+
 from fraiseql_doctor.core.config import get_settings
 
 
@@ -22,13 +23,13 @@ async def get_database_session() -> AsyncSession:
 def get_db_session() -> Session:
     """Get synchronous database session for CLI operations."""
     settings = get_settings()
-    
+
     # Convert async URL to sync URL
     sync_url = settings.database_url.replace("+asyncpg", "")
     if "+asyncpg" not in settings.database_url:
         # If it was already sync, just use it
         sync_url = settings.database_url
-    
+
     engine = create_engine(sync_url)
     SessionLocal = sessionmaker(bind=engine)
     return SessionLocal()
@@ -37,9 +38,15 @@ def get_db_session() -> Session:
 # Database configuration class for config management
 class DatabaseConfig:
     """Database configuration helper."""
-    
-    def __init__(self, url: str, pool_size: int = 10, max_overflow: int = 20, 
-                 pool_timeout: int = 30, pool_recycle: int = 3600):
+
+    def __init__(
+        self,
+        url: str,
+        pool_size: int = 10,
+        max_overflow: int = 20,
+        pool_timeout: int = 30,
+        pool_recycle: int = 3600,
+    ):
         self.url = url
         self.pool_size = pool_size
         self.max_overflow = max_overflow
@@ -57,10 +64,10 @@ def init_database():
 def get_config():
     """Get configuration object."""
     settings = get_settings()
-    
+
     # Create a configuration object that matches what the CLI expects
     class Config:
         def __init__(self):
             self.database = DatabaseConfig(url=settings.database_url)
-    
+
     return Config()

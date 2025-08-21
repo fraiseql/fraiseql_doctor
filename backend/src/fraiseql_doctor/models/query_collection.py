@@ -1,16 +1,17 @@
 """Query collection and metadata models."""
-from typing import Any, Dict
-from uuid import UUID, uuid4
 from datetime import datetime
+from typing import Any
+from uuid import UUID, uuid4
 
-from sqlalchemy import String, Text, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String, Text
+from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base, TimestampMixin
 
 
 class QueryCollection(Base, TimestampMixin):
     """Query collection model for organizing related queries."""
+
     __tablename__ = "tb_query_collection"
 
     pk_query_collection: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
@@ -25,7 +26,7 @@ class QueryCollection(Base, TimestampMixin):
     # queries = relationship("Query", back_populates="collection")
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "QueryCollection":
+    def from_dict(cls, data: dict[str, Any]) -> "QueryCollection":
         """Create QueryCollection instance from dictionary."""
         return cls(
             pk_query_collection=data.get("pk_query_collection"),
@@ -36,10 +37,10 @@ class QueryCollection(Base, TimestampMixin):
             collection_metadata=data.get("collection_metadata", {}),
             is_active=data.get("is_active", True),
             created_at=data.get("created_at"),
-            updated_at=data.get("updated_at")
+            updated_at=data.get("updated_at"),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert QueryCollection to dictionary."""
         return {
             "pk_query_collection": self.pk_query_collection,
@@ -50,12 +51,13 @@ class QueryCollection(Base, TimestampMixin):
             "collection_metadata": self.collection_metadata,
             "is_active": self.is_active,
             "created_at": self.created_at,
-            "updated_at": self.updated_at
+            "updated_at": self.updated_at,
         }
 
 
 class QueryMetadata(Base, TimestampMixin):
     """Query metadata for tracking execution history and performance."""
+
     __tablename__ = "tb_query_metadata"
 
     pk_query_metadata: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
@@ -69,7 +71,7 @@ class QueryMetadata(Base, TimestampMixin):
     query_metadata: Mapped[dict[str, Any]] = mapped_column(default=dict)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "QueryMetadata":
+    def from_dict(cls, data: dict[str, Any]) -> "QueryMetadata":
         """Create QueryMetadata instance from dictionary."""
         return cls(
             pk_query_metadata=data.get("pk_query_metadata"),
@@ -82,10 +84,10 @@ class QueryMetadata(Base, TimestampMixin):
             performance_notes=data.get("performance_notes"),
             query_metadata=data.get("query_metadata", {}),
             created_at=data.get("created_at"),
-            updated_at=data.get("updated_at")
+            updated_at=data.get("updated_at"),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert QueryMetadata to dictionary."""
         return {
             "pk_query_metadata": self.pk_query_metadata,
@@ -98,5 +100,5 @@ class QueryMetadata(Base, TimestampMixin):
             "performance_notes": self.performance_notes,
             "query_metadata": self.query_metadata,
             "created_at": self.created_at,
-            "updated_at": self.updated_at
+            "updated_at": self.updated_at,
         }

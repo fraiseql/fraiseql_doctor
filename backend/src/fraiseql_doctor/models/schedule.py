@@ -1,9 +1,9 @@
 """Query scheduling model."""
-from typing import Any, Dict
-from uuid import UUID, uuid4
 from datetime import datetime
+from typing import Any
+from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Boolean, DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, TimestampMixin
@@ -11,11 +11,14 @@ from .base import Base, TimestampMixin
 
 class Schedule(Base, TimestampMixin):
     """Query scheduling model."""
+
     __tablename__ = "tb_schedule"
 
     pk_schedule: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     fk_query: Mapped[UUID] = mapped_column(ForeignKey("tb_query.pk_query", ondelete="CASCADE"))
-    fk_endpoint: Mapped[UUID] = mapped_column(ForeignKey("tb_endpoint.pk_endpoint", ondelete="CASCADE"))
+    fk_endpoint: Mapped[UUID] = mapped_column(
+        ForeignKey("tb_endpoint.pk_endpoint", ondelete="CASCADE")
+    )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     cron_expression: Mapped[str] = mapped_column(String(100), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -28,7 +31,7 @@ class Schedule(Base, TimestampMixin):
     endpoint = relationship("Endpoint", back_populates="schedules")
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Schedule":
+    def from_dict(cls, data: dict[str, Any]) -> "Schedule":
         """Create Schedule instance from dictionary."""
         return cls(
             pk_schedule=data.get("pk_schedule"),
@@ -41,10 +44,10 @@ class Schedule(Base, TimestampMixin):
             last_run=data.get("last_run"),
             variables_override=data.get("variables_override", {}),
             created_at=data.get("created_at"),
-            updated_at=data.get("updated_at")
+            updated_at=data.get("updated_at"),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert Schedule to dictionary."""
         return {
             "pk_schedule": self.pk_schedule,
@@ -57,5 +60,5 @@ class Schedule(Base, TimestampMixin):
             "last_run": self.last_run,
             "variables_override": self.variables_override,
             "created_at": self.created_at,
-            "updated_at": self.updated_at
+            "updated_at": self.updated_at,
         }

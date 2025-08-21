@@ -1,13 +1,12 @@
 """FastAPI application entry point."""
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .api.v1.router import api_router
-from .core.database import get_database_session
 from .core.websocket_manager import WebSocketManager
 
 
@@ -16,12 +15,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan manager."""
     # Startup
     print("🚀 Starting FraiseQL Doctor API...")
-    
+
     # Initialize WebSocket manager
     app.state.websocket_manager = WebSocketManager()
-    
+
     yield
-    
+
     # Shutdown
     print("🛑 Shutting down FraiseQL Doctor API...")
 
@@ -33,7 +32,7 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Configure CORS for frontend integration
@@ -56,7 +55,7 @@ async def root() -> dict[str, str]:
         "message": "FraiseQL Doctor API",
         "status": "healthy",
         "version": "1.0.0",
-        "docs": "/docs"
+        "docs": "/docs",
     }
 
 
@@ -69,13 +68,13 @@ async def health_check() -> dict[str, str]:
 def main() -> None:
     """Main entry point for running the API server."""
     import uvicorn
-    
+
     uvicorn.run(
         "fraiseql_doctor.web.main:app",
         host="0.0.0.0",
         port=8001,  # Use different port to avoid conflicts
         reload=True,
-        log_level="info"
+        log_level="info",
     )
 
 

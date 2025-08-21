@@ -2,19 +2,19 @@
 
 # Re-export everything from the services module
 from ..services.fraiseql_client import (
-    FraiseQLClient,
-    GraphQLExecutionError,
-    NetworkError,
     AuthenticationError,
+    FraiseQLClient,
     GraphQLClientError,
-    GraphQLResponse
+    GraphQLExecutionError,
+    GraphQLResponse,
+    NetworkError,
 )
 
 __all__ = [
     "FraiseQLClient",
-    "GraphQLExecutionError", 
+    "GraphQLExecutionError",
     "NetworkError",
     "AuthenticationError",
     "GraphQLClientError",
-    "GraphQLResponse"
+    "GraphQLResponse",
 ]

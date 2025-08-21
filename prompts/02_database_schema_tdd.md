@@ -25,10 +25,10 @@ async def test_query_model_structure(test_engine):
     """Test Query model has required fields and constraints."""
     async with test_engine.connect() as conn:
         inspector = inspect(conn.sync_engine)
-        
+
         # Table should exist
         assert 'tb_query' in inspector.get_table_names()
-        
+
         # Required columns should exist
         columns = {col['name'] for col in inspector.get_columns('tb_query')}
         required_columns = {
@@ -37,15 +37,15 @@ async def test_query_model_structure(test_engine):
             'updated_at', 'created_by', 'metadata'
         }
         assert required_columns.issubset(columns)
-        
+
         # Primary key constraint
         pk_constraint = inspector.get_pk_constraint('tb_query')
         assert pk_constraint['constrained_columns'] == ['pk_query']
-        
+
         # Unique constraints
         unique_constraints = inspector.get_unique_constraints('tb_query')
         name_unique = any(
-            constraint['column_names'] == ['name'] 
+            constraint['column_names'] == ['name']
             for constraint in unique_constraints
         )
         assert name_unique, "Query name should be unique"
@@ -54,9 +54,9 @@ async def test_endpoint_model_structure(test_engine):
     """Test Endpoint model has required fields and constraints."""
     async with test_engine.connect() as conn:
         inspector = inspect(conn.sync_engine)
-        
+
         assert 'tb_endpoint' in inspector.get_table_names()
-        
+
         columns = {col['name'] for col in inspector.get_columns('tb_endpoint')}
         required_columns = {
             'pk_endpoint', 'name', 'url', 'auth_type', 'auth_config',
@@ -69,14 +69,14 @@ async def test_execution_model_relationships(test_engine):
     """Test Execution model has proper foreign key relationships."""
     async with test_engine.connect() as conn:
         inspector = inspect(conn.sync_engine)
-        
+
         fk_constraints = inspector.get_foreign_keys('tb_execution')
-        
+
         # Should have foreign keys to query and endpoint
         fk_tables = {fk['referred_table'] for fk in fk_constraints}
         assert 'tb_query' in fk_tables
         assert 'tb_endpoint' in fk_tables
-        
+
         # Check cascade behavior
         for fk in fk_constraints:
             if fk['referred_table'] == 'tb_query':
@@ -102,7 +102,7 @@ async def test_query_name_uniqueness(db_session):
     )
     db_session.add(query1)
     await db_session.commit()
-    
+
     # Attempt to create duplicate name should fail
     query2 = Query(
         name="test-query",  # Same name
@@ -110,7 +110,7 @@ async def test_query_name_uniqueness(db_session):
         created_by="test"
     )
     db_session.add(query2)
-    
+
     with pytest.raises(Exception):  # Should raise integrity error
         await db_session.commit()
 
@@ -124,7 +124,7 @@ async def test_endpoint_url_validation(db_session):
     )
     db_session.add(endpoint)
     await db_session.commit()
-    
+
     # Verify it was saved
     result = await db_session.execute(
         select(Endpoint).where(Endpoint.name == "test-endpoint")
@@ -142,7 +142,7 @@ async def test_query_variables_jsonb_storage(db_session):
         "pagination": {"limit": 50, "offset": 0},
         "includeDeleted": False
     }
-    
+
     query = Query(
         name="complex-query",
         query_text="query($filters: FilterInput!) { items(filters: $filters) { id } }",
@@ -151,7 +151,7 @@ async def test_query_variables_jsonb_storage(db_session):
     )
     db_session.add(query)
     await db_session.commit()
-    
+
     # Reload and verify JSONB integrity
     result = await db_session.execute(
         select(Query).where(Query.name == "complex-query")
@@ -184,10 +184,10 @@ async def test_query_list_performance(db_session):
             created_by="perf-test"
         )
         queries.append(query)
-    
+
     db_session.add_all(queries)
     await db_session.commit()
-    
+
     # Test query performance
     start_time = time.time()
     result = await db_session.execute(
@@ -198,7 +198,7 @@ async def test_query_list_performance(db_session):
     )
     queries_result = result.scalars().all()
     query_time = time.time() - start_time
-    
+
     assert len(queries_result) == 20
     assert query_time < 0.1  # Should complete in < 100ms
 
@@ -207,7 +207,7 @@ async def test_execution_history_query_performance(db_session):
     """Test execution history queries meet performance requirements."""
     # This test defines the performance requirement
     # Implementation will need proper indexing to pass
-    
+
     # Setup will be implemented after models exist
     pass
 
@@ -224,10 +224,10 @@ async def test_jsonb_query_performance(db_session):
             created_by="jsonb-test"
         )
         queries.append(query)
-    
+
     db_session.add_all(queries)
     await db_session.commit()
-    
+
     # Test tag-based search performance
     start_time = time.time()
     result = await db_session.execute(
@@ -235,7 +235,7 @@ async def test_jsonb_query_performance(db_session):
     )
     tagged_queries = result.scalars().all()
     search_time = time.time() - start_time
-    
+
     assert len(tagged_queries) == 50
     assert search_time < 0.05  # Should be very fast with GIN index
 ```
@@ -404,29 +404,29 @@ async def test_migration_up_and_down(test_engine):
     """Test that migrations can be applied and rolled back."""
     # Get Alembic config
     alembic_cfg = Config("alembic.ini")
-    
+
     # Test migration up
     command.upgrade(alembic_cfg, "head")
-    
+
     # Verify tables exist
     async with test_engine.connect() as conn:
         result = await conn.execute(text("""
-            SELECT table_name FROM information_schema.tables 
+            SELECT table_name FROM information_schema.tables
             WHERE table_schema = 'public' AND table_name LIKE 'tb_%'
         """))
         tables = [row[0] for row in result]
-        
+
         expected_tables = ['tb_query', 'tb_endpoint', 'tb_execution', 'tb_health_check']
         for table in expected_tables:
             assert table in tables, f"Table {table} should exist after migration"
-    
+
     # Test migration down
     command.downgrade(alembic_cfg, "base")
-    
+
     # Verify tables are gone
     async with test_engine.connect() as conn:
         result = await conn.execute(text("""
-            SELECT table_name FROM information_schema.tables 
+            SELECT table_name FROM information_schema.tables
             WHERE table_schema = 'public' AND table_name LIKE 'tb_%'
         """))
         tables = [row[0] for row in result]
@@ -435,11 +435,11 @@ async def test_migration_up_and_down(test_engine):
 async def test_migration_idempotency(test_engine):
     """Test that running migrations multiple times is safe."""
     alembic_cfg = Config("alembic.ini")
-    
+
     # Run migration twice
     command.upgrade(alembic_cfg, "head")
     command.upgrade(alembic_cfg, "head")  # Should not fail
-    
+
     # Verify state is still correct
     async with test_engine.connect() as conn:
         result = await conn.execute(text("SELECT COUNT(*) FROM alembic_version"))
@@ -473,17 +473,17 @@ def upgrade() -> None:
     # Query table indexes
     op.create_index('idx_query_name', 'tb_query', ['name'])
     op.create_index('idx_query_tags_gin', 'tb_query', ['tags'], postgresql_using='gin')
-    op.create_index('idx_query_active', 'tb_query', ['is_active'], 
+    op.create_index('idx_query_active', 'tb_query', ['is_active'],
                    postgresql_where=sa.text('is_active = true'))
     op.create_index('idx_query_created_by', 'tb_query', ['created_by'])
     op.create_index('idx_query_metadata_gin', 'tb_query', ['metadata'], postgresql_using='gin')
-    
+
     # Endpoint table indexes
     op.create_index('idx_endpoint_name', 'tb_endpoint', ['name'])
     op.create_index('idx_endpoint_active', 'tb_endpoint', ['is_active'],
                    postgresql_where=sa.text('is_active = true'))
     op.create_index('idx_endpoint_health_check', 'tb_endpoint', ['last_health_check'])
-    
+
     # Execution table indexes (for performance queries)
     op.create_index('idx_execution_query', 'tb_execution', ['fk_query'])
     op.create_index('idx_execution_endpoint', 'tb_execution', ['fk_endpoint'])
@@ -491,7 +491,7 @@ def upgrade() -> None:
     op.create_index('idx_execution_time', 'tb_execution', ['execution_start'])
     op.create_index('idx_execution_performance', 'tb_execution', ['response_time_ms'],
                    postgresql_where=sa.text("status = 'success'"))
-    
+
     # Composite indexes for common queries
     op.create_index('idx_execution_query_status', 'tb_execution', ['fk_query', 'status'])
     op.create_index('idx_execution_endpoint_time', 'tb_execution', ['fk_endpoint', 'execution_start'])
@@ -533,14 +533,14 @@ async def test_execution_partitioning_setup(test_engine):
         # Check if partitioning is supported
         result = await conn.execute(text("""
             SELECT EXISTS (
-                SELECT 1 FROM information_schema.tables 
+                SELECT 1 FROM information_schema.tables
                 WHERE table_name = 'tb_execution_y2024m01'
             )
         """))
-        
+
         # First month partition should exist or be creatable
         partition_exists = result.scalar()
-        
+
         if not partition_exists:
             # Test partition creation (will be implemented in migration)
             pytest.skip("Partitioning not yet implemented")
@@ -573,7 +573,7 @@ def test_query_creation_validation():
         created_by="test-user"
     )
     assert valid_query.name == "valid-query"
-    
+
     # Invalid query should fail validation
     with pytest.raises(ValidationError):
         QueryCreate(
@@ -581,7 +581,7 @@ def test_query_creation_validation():
             query_text="query { user { id name } }",
             created_by="test-user"
         )
-    
+
     with pytest.raises(ValidationError):
         QueryCreate(
             name="valid-name",
@@ -600,7 +600,7 @@ def test_endpoint_creation_validation():
         timeout_seconds=30
     )
     assert valid_endpoint.name == "test-api"
-    
+
     # Invalid URL should fail
     with pytest.raises(ValidationError):
         EndpointCreate(
@@ -608,11 +608,11 @@ def test_endpoint_creation_validation():
             url="not-a-url",  # Invalid URL
             auth_type="none"
         )
-    
+
     # Invalid auth type should fail
     with pytest.raises(ValidationError):
         EndpointCreate(
-            name="test-api", 
+            name="test-api",
             url="https://api.example.com/graphql",
             auth_type="invalid-auth-type"  # Not in allowed list
         )

@@ -8,7 +8,7 @@ Create comprehensive documentation for end users and developers, establish relea
 
 ### Target Audiences
 1. **End Users** - DevOps engineers, QA teams, GraphQL developers
-2. **Contributors** - Developers wanting to contribute to the project  
+2. **Contributors** - Developers wanting to contribute to the project
 3. **Integrators** - Teams integrating FraiseQL Doctor into CI/CD pipelines
 4. **Administrators** - System administrators deploying and maintaining the tool
 
@@ -26,7 +26,7 @@ Create comprehensive documentation for end users and developers, establish relea
 ## What is FraiseQL Doctor?
 - Clear project description with value proposition
 - Key features and benefits
-- Use cases and target audience  
+- Use cases and target audience
 - Architecture overview diagram
 
 ## Quick Start (5-minute setup)
@@ -37,7 +37,7 @@ Create comprehensive documentation for end users and developers, establish relea
 
 ## Installation Guide
 - Detailed installation for each method
-- Database setup (PostgreSQL)  
+- Database setup (PostgreSQL)
 - Configuration file examples
 - Environment variable reference
 - Troubleshooting common installation issues
@@ -64,7 +64,7 @@ Create comprehensive documentation for end users and developers, establish relea
 - Documentation and tutorials
 ```
 
-#### 2. Installation Guide  
+#### 2. Installation Guide
 **File:** `docs/installation.md`
 
 **Comprehensive installation documentation:**
@@ -84,7 +84,7 @@ Create comprehensive documentation for end users and developers, establish relea
 # Using pipx (isolated environment)
 pipx install fraiseql-doctor
 
-# Using pip (system/venv installation)  
+# Using pip (system/venv installation)
 pip install fraiseql-doctor
 ```
 
@@ -126,7 +126,7 @@ docker run -d -p 8080:8080 fraiseql-doctor:latest
 **File:** `docs/user-guide.md`
 
 **Complete workflow documentation:**
-```markdown  
+```markdown
 # User Guide
 
 ## Getting Started Tutorial
@@ -162,7 +162,7 @@ docker run -d -p 8080:8080 fraiseql-doctor:latest
 
 ### Batch Operations
 - Bulk query import/export
-- Scheduled execution patterns  
+- Scheduled execution patterns
 - Result aggregation and reporting
 - Performance optimization for large batches
 
@@ -213,7 +213,7 @@ Required Arguments:
 
 Options:
   --file, -f PATH        GraphQL query file (.graphql, .gql)
-  --stdin               Read query from standard input  
+  --stdin               Read query from standard input
   --description TEXT     Query description
   --tag TEXT            Query tags (multiple allowed)
   --priority CHOICE     Query priority: low, normal, high [default: normal]
@@ -237,7 +237,7 @@ Examples:
 
 ## Exit Codes
 - 0: Success
-- 1: General error  
+- 1: General error
 - 2: Configuration error
 - 3: Database connection error
 - 4: Authentication error
@@ -257,7 +257,7 @@ Examples:
 ### fraiseql_doctor.core.query_collection
 Query collection management and execution.
 
-### fraiseql_doctor.core.execution_manager  
+### fraiseql_doctor.core.execution_manager
 Query execution engine with parallel processing.
 
 ### fraiseql_doctor.core.result_storage
@@ -268,7 +268,7 @@ GraphQL client with authentication and retry logic.
 
 ## Configuration Classes
 ### ExecutionConfig
-### StorageConfig  
+### StorageConfig
 ### RetryConfig
 ### CircuitBreakerConfig
 
@@ -518,7 +518,7 @@ jobs:
         run: |
           uv run bandit -r src/
           uv run ruff check --select S .
-          
+
   test-suite:
     runs-on: ubuntu-latest
     services:
@@ -535,7 +535,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Run Tests
         run: make test
-        
+
   build-and-publish:
     needs: [security-audit, test-suite]
     runs-on: ubuntu-latest
@@ -569,7 +569,7 @@ fraiseql-doctor endpoint test --name test
 
 **Documentation validation:**
 - **Link checking** - ensure all internal/external links work
-- **Example validation** - verify all code examples execute correctly  
+- **Example validation** - verify all code examples execute correctly
 - **Screenshot updates** - ensure UI screenshots are current
 - **Accessibility testing** - documentation site accessibility
 
@@ -581,7 +581,7 @@ fraiseql-doctor endpoint test --name test
 - [ ] Write complete user guide with tutorials and workflows
 - [ ] Add troubleshooting section with common issues
 
-### Day 2-3: Technical Documentation  
+### Day 2-3: Technical Documentation
 - [ ] Complete CLI reference with all commands and examples
 - [ ] Create API documentation (auto-generated)
 - [ ] Write architecture overview with diagrams
@@ -620,7 +620,7 @@ fraiseql-doctor endpoint test --name test
 
 **Ready for production release when:**
 - **Zero security vulnerabilities** (Phase 1 complete)
-- **Complete CLI functionality** (Phase 2 complete)  
+- **Complete CLI functionality** (Phase 2 complete)
 - **Comprehensive documentation** (Phase 3 complete)
 - **100% test success rate maintained** throughout all phases
 - **Performance benchmarks met** - no regressions from baseline

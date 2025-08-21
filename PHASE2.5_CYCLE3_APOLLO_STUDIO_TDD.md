@@ -1,8 +1,8 @@
 # Phase 2.5 Cycle 3: TDD Implementation Plan - Apollo GraphQL Studio Integration
 
-**Timeline:** Day 6-8 of Phase 2.5 implementation  
-**Goal:** Integrate Apollo GraphQL Studio for professional GraphQL playground experience  
-**Approach:** Strategic integration with Apollo Studio following strict TDD methodology  
+**Timeline:** Day 6-8 of Phase 2.5 implementation
+**Goal:** Integrate Apollo GraphQL Studio for professional GraphQL playground experience
+**Approach:** Strategic integration with Apollo Studio following strict TDD methodology
 
 ---
 
@@ -68,7 +68,7 @@ interface ApolloStudioConfig {
 interface AuthBridge {
   // Convert our auth configs to Apollo format
   convertAuth: (endpoint: Endpoint) => ApolloAuthConfig
-  
+
   // Handle different auth types
   handleBearerToken: (token: string) => Headers
   handleApiKey: (key: string, name: string) => Headers
@@ -81,10 +81,10 @@ interface AuthBridge {
 interface StudioDataSync {
   // Capture queries executed in Studio
   onQueryExecuted: (query: string, variables: any, result: any) => void
-  
+
   // Save to our query history system
   saveQueryHistory: (execution: QueryExecution) => Promise<void>
-  
+
   // Sync performance metrics
   syncMetrics: (metrics: QueryMetrics) => void
 }
@@ -112,7 +112,7 @@ describe('Apollo Studio Integration', () => {
   beforeEach(() => {
     const pinia = createPinia()
     endpointStore = useEndpointStore(pinia)
-    
+
     // Mock endpoint
     endpointStore.addEndpoint({
       name: 'Test API',
@@ -177,7 +177,7 @@ describe('Apollo Studio Integration', () => {
 
   it('should show loading state during Studio initialization', () => {
     wrapper.vm.isStudioLoading = true
-    
+
     expect(wrapper.find('[data-testid="studio-loading"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('Loading Apollo Studio')
   })
@@ -218,9 +218,9 @@ describe('Apollo Studio Configuration Service', () => {
 
   it('should create basic Studio configuration', () => {
     const { createStudioConfig } = useApolloStudioConfig()
-    
+
     const config = createStudioConfig(mockEndpoint)
-    
+
     expect(config.endpoint).toBe('https://api.test.com/graphql')
     expect(config.headers['Authorization']).toBe('Bearer test-token')
     expect(config.headers['Custom-Header']).toBe('custom-value')
@@ -228,46 +228,46 @@ describe('Apollo Studio Configuration Service', () => {
 
   it('should handle Bearer token authentication', () => {
     const { buildAuthHeaders } = useApolloStudioConfig()
-    
+
     const headers = buildAuthHeaders({
       authType: 'bearer',
       authConfig: { token: 'my-token' }
     })
-    
+
     expect(headers['Authorization']).toBe('Bearer my-token')
   })
 
   it('should handle API Key authentication', () => {
     const { buildAuthHeaders } = useApolloStudioConfig()
-    
+
     const headers = buildAuthHeaders({
       authType: 'api-key',
-      authConfig: { 
+      authConfig: {
         apiKey: 'my-api-key',
-        keyName: 'X-API-Key' 
+        keyName: 'X-API-Key'
       }
     })
-    
+
     expect(headers['X-API-Key']).toBe('my-api-key')
   })
 
   it('should handle Basic authentication', () => {
     const { buildAuthHeaders } = useApolloStudioConfig()
-    
+
     const headers = buildAuthHeaders({
       authType: 'basic',
-      authConfig: { 
+      authConfig: {
         username: 'user',
         password: 'pass'
       }
     })
-    
+
     expect(headers['Authorization']).toBe('Basic dXNlcjpwYXNz') // base64 encoded "user:pass"
   })
 
   it('should merge custom headers with auth headers', () => {
     const { createStudioConfig } = useApolloStudioConfig()
-    
+
     const endpoint: Partial<Endpoint> = {
       url: 'https://api.test.com/graphql',
       authType: 'bearer',
@@ -277,9 +277,9 @@ describe('Apollo Studio Configuration Service', () => {
         'User-Agent': 'FraiseQL-Doctor'
       }
     }
-    
+
     const config = createStudioConfig(endpoint)
-    
+
     expect(config.headers).toEqual({
       'Authorization': 'Bearer token123',
       'X-Custom': 'custom-value',
@@ -289,7 +289,7 @@ describe('Apollo Studio Configuration Service', () => {
 
   it('should validate endpoint URL format', () => {
     const { validateEndpointUrl } = useApolloStudioConfig()
-    
+
     expect(validateEndpointUrl('https://api.test.com/graphql')).toBe(true)
     expect(validateEndpointUrl('http://localhost:4000/graphql')).toBe(true)
     expect(validateEndpointUrl('invalid-url')).toBe(false)
@@ -298,10 +298,10 @@ describe('Apollo Studio Configuration Service', () => {
 
   it('should create Studio theme configuration', () => {
     const { createThemeConfig } = useApolloStudioConfig()
-    
+
     const lightTheme = createThemeConfig('light')
     expect(lightTheme.colorScheme).toBe('light')
-    
+
     const darkTheme = createThemeConfig('dark')
     expect(darkTheme.colorScheme).toBe('dark')
   })
@@ -326,7 +326,7 @@ describe('Query History Sync Service', () => {
 
   it('should capture executed queries from Apollo Studio', async () => {
     const { captureQueryExecution } = useQueryHistorySync()
-    
+
     const queryExecution = {
       query: 'query GetUsers { users { id name } }',
       variables: {},
@@ -348,7 +348,7 @@ describe('Query History Sync Service', () => {
 
   it('should handle query execution errors', async () => {
     const { captureQueryExecution } = useQueryHistorySync()
-    
+
     const failedExecution = {
       query: 'query InvalidQuery { invalidField }',
       variables: {},
@@ -370,7 +370,7 @@ describe('Query History Sync Service', () => {
 
   it('should sync performance metrics', () => {
     const { syncPerformanceMetrics } = useQueryHistorySync()
-    
+
     const metrics = {
       endpointId: 'endpoint-1',
       averageResponseTime: 200,
@@ -393,7 +393,7 @@ describe('Query History Sync Service', () => {
 
   it('should export queries in various formats', async () => {
     const { exportQueries } = useQueryHistorySync()
-    
+
     // Add some queries to history
     queryHistoryStore.addQuery({
       id: '1',
@@ -412,7 +412,7 @@ describe('Query History Sync Service', () => {
 
   it('should filter query history by endpoint', () => {
     const { getQueriesByEndpoint } = useQueryHistorySync()
-    
+
     // Add queries for different endpoints
     queryHistoryStore.addQuery({
       id: '1',
@@ -450,7 +450,7 @@ describe('GraphQL Playground View', () => {
   beforeEach(() => {
     const pinia = createPinia()
     endpointStore = useEndpointStore(pinia)
-    
+
     router = createRouter({
       history: createWebHistory(),
       routes: [
@@ -466,7 +466,7 @@ describe('GraphQL Playground View', () => {
       authConfig: { token: 'prod-token' }
     })
     endpointStore.addEndpoint({
-      name: 'Staging API', 
+      name: 'Staging API',
       url: 'https://api.staging.com/graphql',
       authType: 'api-key',
       authConfig: { apiKey: 'staging-key', keyName: 'X-API-Key' }
@@ -486,7 +486,7 @@ describe('GraphQL Playground View', () => {
 
   it('should show endpoint selector', () => {
     expect(wrapper.find('[data-testid="endpoint-selector"]').exists()).toBe(true)
-    
+
     const options = wrapper.findAll('[data-testid="endpoint-option"]')
     expect(options).toHaveLength(2)
     expect(options[0].text()).toContain('Production API')
@@ -536,7 +536,7 @@ describe('GraphQL Playground View', () => {
 
   it('should handle Studio loading states', () => {
     wrapper.vm.isStudioLoading = true
-    
+
     expect(wrapper.find('[data-testid="studio-loading-overlay"]').exists()).toBe(true)
   })
 
@@ -560,9 +560,9 @@ import { useStudioTheme } from '@/services/studioTheme'
 describe('Studio Theme Integration', () => {
   it('should generate theme configuration for light mode', () => {
     const { generateThemeConfig } = useStudioTheme()
-    
+
     const lightTheme = generateThemeConfig('light')
-    
+
     expect(lightTheme).toEqual(expect.objectContaining({
       colorScheme: 'light',
       colors: expect.objectContaining({
@@ -575,16 +575,16 @@ describe('Studio Theme Integration', () => {
 
   it('should generate theme configuration for dark mode', () => {
     const { generateThemeConfig } = useStudioTheme()
-    
+
     const darkTheme = generateThemeConfig('dark')
-    
+
     expect(darkTheme.colorScheme).toBe('dark')
     expect(darkTheme.colors.background).toMatch(/^#[0-9a-f]{6}$/i) // Dark color
   })
 
   it('should match dashboard theme colors', () => {
     const { matchDashboardTheme } = useStudioTheme()
-    
+
     const dashboardColors = {
       primary: '#3b82f6',
       secondary: '#6b7280',
@@ -592,27 +592,27 @@ describe('Studio Theme Integration', () => {
     }
 
     const studioTheme = matchDashboardTheme(dashboardColors)
-    
+
     expect(studioTheme.colors.primary).toBe('#3b82f6')
     expect(studioTheme.colors.secondary).toBe('#6b7280')
   })
 
   it('should handle theme switching', () => {
     const { switchTheme, currentTheme } = useStudioTheme()
-    
+
     switchTheme('dark')
     expect(currentTheme.value).toBe('dark')
-    
+
     switchTheme('light')
     expect(currentTheme.value).toBe('light')
   })
 
   it('should persist theme preference', () => {
     const { saveThemePreference, loadThemePreference } = useStudioTheme()
-    
+
     saveThemePreference('dark')
     const loaded = loadThemePreference()
-    
+
     expect(loaded).toBe('dark')
   })
 })
@@ -626,12 +626,12 @@ describe('Studio Theme Integration', () => {
 ```vue
 <!-- src/components/ApolloStudioIntegration.vue -->
 <template>
-  <div 
-    data-testid="apollo-studio-container" 
+  <div
+    data-testid="apollo-studio-container"
     class="w-full h-full relative"
   >
     <!-- Loading Overlay -->
-    <div 
+    <div
       v-if="isStudioLoading"
       data-testid="studio-loading"
       class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10"
@@ -648,7 +648,7 @@ describe('Studio Theme Integration', () => {
     <!-- Error State -->
     <div
       v-if="studioError"
-      data-testid="studio-error" 
+      data-testid="studio-error"
       class="absolute inset-0 flex items-center justify-center"
     >
       <div class="text-center max-w-md">
@@ -667,21 +667,21 @@ describe('Studio Theme Integration', () => {
     </div>
 
     <!-- Endpoint Health Indicator -->
-    <div 
+    <div
       v-if="activeEndpoint && !isStudioLoading"
       data-testid="endpoint-health-indicator"
       class="absolute top-4 right-4 z-20"
     >
-      <div 
+      <div
         :data-testid="`health-status-${activeEndpoint.lastHealthCheck?.status}`"
         class="flex items-center space-x-2 bg-white rounded-lg shadow-sm px-3 py-2 border"
       >
-        <div 
+        <div
           :class="[
             'w-2 h-2 rounded-full',
             {
               'bg-green-500': activeEndpoint.lastHealthCheck?.status === 'healthy',
-              'bg-yellow-500': activeEndpoint.lastHealthCheck?.status === 'degraded', 
+              'bg-yellow-500': activeEndpoint.lastHealthCheck?.status === 'degraded',
               'bg-red-500': activeEndpoint.lastHealthCheck?.status === 'unhealthy',
               'bg-gray-400': !activeEndpoint.lastHealthCheck?.status
             }
@@ -731,7 +731,7 @@ const studioError = ref<Error | null>(null)
 const studioIframe = ref<HTMLIFrameElement>()
 
 // Computed
-const activeEndpoint = computed(() => 
+const activeEndpoint = computed(() =>
   props.endpoints.find(e => e.id === props.activeEndpointId)
 )
 
@@ -742,13 +742,13 @@ const studioConfig = computed(() => {
 
 const studioUrl = computed(() => {
   if (!studioConfig.value) return ''
-  
+
   const params = new URLSearchParams({
     endpoint: studioConfig.value.endpoint,
     headers: JSON.stringify(studioConfig.value.headers),
     theme: studioConfig.value.theme || 'light'
   })
-  
+
   return `https://studio.apollographql.com/sandbox?${params.toString()}`
 })
 
@@ -756,7 +756,7 @@ const studioUrl = computed(() => {
 const onStudioLoaded = () => {
   isStudioLoading.value = false
   studioError.value = null
-  
+
   // Set up message listener for Studio communication
   setupStudioMessageListener()
 }
@@ -774,7 +774,7 @@ const handleStudioError = (error: Error) => {
 const retryStudioLoad = () => {
   studioError.value = null
   isStudioLoading.value = true
-  
+
   if (studioIframe.value) {
     studioIframe.value.src = studioUrl.value
   }
@@ -794,9 +794,9 @@ const setupStudioMessageListener = () => {
       })
     }
   }
-  
+
   window.addEventListener('message', handleMessage)
-  
+
   // Cleanup on unmount
   onBeforeUnmount(() => {
     window.removeEventListener('message', handleMessage)
@@ -870,13 +870,13 @@ export function useApolloStudioConfig() {
           headers['Authorization'] = `Bearer ${endpoint.authConfig.token}`
         }
         break
-        
+
       case 'api-key':
         if (endpoint.authConfig?.apiKey && endpoint.authConfig?.keyName) {
           headers[endpoint.authConfig.keyName] = endpoint.authConfig.apiKey
         }
         break
-        
+
       case 'basic':
         if (endpoint.authConfig?.username && endpoint.authConfig?.password) {
           const credentials = btoa(
@@ -892,7 +892,7 @@ export function useApolloStudioConfig() {
 
   const validateEndpointUrl = (url: string): boolean => {
     if (!url) return false
-    
+
     try {
       const parsedUrl = new URL(url)
       return ['http:', 'https:'].includes(parsedUrl.protocol)
@@ -982,19 +982,19 @@ export function useQueryHistorySync() {
     switch (format) {
       case 'json':
         return JSON.stringify(queries, null, 2)
-        
+
       case 'csv':
         const headers = 'Query,Endpoint,Execution Time,Timestamp,Has Errors\n'
-        const rows = queries.map(q => 
+        const rows = queries.map(q =>
           `"${q.query}","${q.endpointId}",${q.executionTime},"${q.timestamp}",${q.hasErrors}`
         ).join('\n')
         return headers + rows
-        
+
       case 'curl':
-        return queries.map(q => 
+        return queries.map(q =>
           `curl -X POST ${q.endpointId} \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify({ query: q.query, variables: q.variables })}'`
         ).join('\n\n')
-        
+
       default:
         throw new Error(`Unsupported export format: ${format}`)
     }
@@ -1045,7 +1045,7 @@ export const useQueryHistoryStore = defineStore('queryHistory', () => {
   const endpointMetrics = ref<Map<string, EndpointMetrics>>(new Map())
 
   // Getters
-  const recentQueries = computed(() => 
+  const recentQueries = computed(() =>
     queries.value
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
       .slice(0, 50)
@@ -1058,7 +1058,7 @@ export const useQueryHistoryStore = defineStore('queryHistory', () => {
   // Actions
   const addQuery = (query: QueryRecord) => {
     queries.value.push(query)
-    
+
     // Keep only last 1000 queries
     if (queries.value.length > 1000) {
       queries.value = queries.value.slice(-1000)
@@ -1067,7 +1067,7 @@ export const useQueryHistoryStore = defineStore('queryHistory', () => {
 
   const updateEndpointMetrics = (endpointId: string, metrics: Partial<EndpointMetrics>) => {
     const existing = endpointMetrics.value.get(endpointId)
-    
+
     endpointMetrics.value.set(endpointId, {
       endpointId,
       averageResponseTime: metrics.averageResponseTime ?? existing?.averageResponseTime ?? 0,
@@ -1097,11 +1097,11 @@ export const useQueryHistoryStore = defineStore('queryHistory', () => {
     // State
     queries,
     endpointMetrics,
-    
+
     // Getters
     recentQueries,
     queriesWithErrors,
-    
+
     // Actions
     addQuery,
     updateEndpointMetrics,
@@ -1139,7 +1139,7 @@ export const useQueryHistoryStore = defineStore('queryHistory', () => {
               class="border border-gray-300 rounded-md px-3 py-2 bg-white text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             >
               <option value="" disabled>Select an endpoint</option>
-              <option 
+              <option
                 v-for="endpoint in availableEndpoints"
                 :key="endpoint.id"
                 :value="endpoint.id"
@@ -1164,7 +1164,7 @@ export const useQueryHistoryStore = defineStore('queryHistory', () => {
     </div>
 
     <!-- No Endpoints Message -->
-    <div 
+    <div
       v-if="availableEndpoints.length === 0"
       data-testid="no-endpoints-message"
       class="flex-1 flex items-center justify-center"
@@ -1189,7 +1189,7 @@ export const useQueryHistoryStore = defineStore('queryHistory', () => {
     <!-- Main Playground Area -->
     <div v-else class="flex-1 flex">
       <!-- Query History Sidebar -->
-      <div 
+      <div
         data-testid="query-history-panel"
         class="w-80 bg-gray-50 border-r border-gray-200 flex flex-col"
       >
@@ -1204,7 +1204,7 @@ export const useQueryHistoryStore = defineStore('queryHistory', () => {
       <!-- Apollo Studio Integration -->
       <div class="flex-1 relative">
         <!-- Endpoint Health Status -->
-        <div 
+        <div
           v-if="currentEndpoint?.lastHealthCheck"
           data-testid="endpoint-health"
           :class="[
@@ -1216,12 +1216,12 @@ export const useQueryHistoryStore = defineStore('queryHistory', () => {
             }
           ]"
         >
-          {{ currentEndpoint.lastHealthCheck.status?.toUpperCase() }} 
+          {{ currentEndpoint.lastHealthCheck.status?.toUpperCase() }}
           ({{ currentEndpoint.lastHealthCheck.responseTime }}ms)
         </div>
 
         <!-- Loading Overlay -->
-        <div 
+        <div
           v-if="isStudioLoading"
           data-testid="studio-loading-overlay"
           class="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center z-20"
@@ -1260,7 +1260,7 @@ const activeEndpointId = ref<string>('')
 const isStudioLoading = ref(false)
 
 // Computed
-const availableEndpoints = computed(() => 
+const availableEndpoints = computed(() =>
   endpointStore.activeEndpoints
 )
 
@@ -1270,7 +1270,7 @@ const currentEndpoint = computed(() =>
 
 const currentEndpointConfig = computed(() => {
   if (!currentEndpoint.value) return null
-  
+
   return {
     url: currentEndpoint.value.url,
     authType: currentEndpoint.value.authType,
@@ -1349,7 +1349,7 @@ npm run test tests/ -t "studio.*integration" -- --run
 
 ### **Functional Requirements**: ✅
 - **Apollo Studio Integration**: Professional GraphQL playground embedded
-- **Endpoint Management**: Seamless switching between managed endpoints  
+- **Endpoint Management**: Seamless switching between managed endpoints
 - **Query History**: Capture and store all executed queries
 - **Authentication Bridge**: Pass all auth types to Studio correctly
 - **Theme Integration**: Studio appearance matches our dashboard
@@ -1410,7 +1410,7 @@ interface StudioInboundMessage {
   payload: any
 }
 
-// Messages from Studio to our app  
+// Messages from Studio to our app
 interface StudioOutboundMessage {
   type: 'query-executed' | 'error-occurred' | 'schema-loaded'
   payload: any

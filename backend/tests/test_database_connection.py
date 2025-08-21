@@ -1,7 +1,6 @@
 """Test database connectivity and basic operations."""
 
 from sqlalchemy import text
-from fraiseql_doctor.core.database import get_database_session
 
 
 async def test_database_connection(test_engine):

@@ -1,9 +1,9 @@
 """Result storage models."""
-from typing import Any, Dict
-from uuid import UUID, uuid4
 from datetime import datetime
+from typing import Any
+from uuid import UUID, uuid4
 
-from sqlalchemy import String, Text, Integer, Float
+from sqlalchemy import Float, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base, TimestampMixin
@@ -11,6 +11,7 @@ from .base import Base, TimestampMixin
 
 class QueryResult(Base, TimestampMixin):
     """Query result storage model."""
+
     __tablename__ = "tb_query_result"
 
     pk_query_result: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
@@ -27,7 +28,7 @@ class QueryResult(Base, TimestampMixin):
     search_metadata: Mapped[dict[str, Any]] = mapped_column(default=dict)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "QueryResult":
+    def from_dict(cls, data: dict[str, Any]) -> "QueryResult":
         """Create QueryResult instance from dictionary."""
         return cls(
             pk_query_result=data.get("pk_query_result") or data.get("id"),
@@ -43,10 +44,10 @@ class QueryResult(Base, TimestampMixin):
             ttl_expires_at=data.get("ttl_expires_at"),
             search_metadata=data.get("search_metadata") or data.get("metadata", {}),
             created_at=data.get("created_at"),
-            updated_at=data.get("updated_at")
+            updated_at=data.get("updated_at"),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert QueryResult to dictionary."""
         return {
             "pk_query_result": self.pk_query_result,
@@ -62,12 +63,13 @@ class QueryResult(Base, TimestampMixin):
             "ttl_expires_at": self.ttl_expires_at,
             "search_metadata": self.search_metadata,
             "created_at": self.created_at,
-            "updated_at": self.updated_at
+            "updated_at": self.updated_at,
         }
 
 
 class ResultMetadata(Base, TimestampMixin):
     """Result metadata for analytics and search."""
+
     __tablename__ = "tb_result_metadata"
 
     pk_result_metadata: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
@@ -82,7 +84,7 @@ class ResultMetadata(Base, TimestampMixin):
     analytics_data: Mapped[dict[str, Any]] = mapped_column(default=dict)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "ResultMetadata":
+    def from_dict(cls, data: dict[str, Any]) -> "ResultMetadata":
         """Create ResultMetadata instance from dictionary."""
         return cls(
             pk_result_metadata=data.get("pk_result_metadata"),
@@ -96,10 +98,10 @@ class ResultMetadata(Base, TimestampMixin):
             performance_notes=data.get("performance_notes"),
             analytics_data=data.get("analytics_data", {}),
             created_at=data.get("created_at"),
-            updated_at=data.get("updated_at")
+            updated_at=data.get("updated_at"),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert ResultMetadata to dictionary."""
         return {
             "pk_result_metadata": self.pk_result_metadata,
@@ -113,5 +115,5 @@ class ResultMetadata(Base, TimestampMixin):
             "performance_notes": self.performance_notes,
             "analytics_data": self.analytics_data,
             "created_at": self.created_at,
-            "updated_at": self.updated_at
+            "updated_at": self.updated_at,
         }

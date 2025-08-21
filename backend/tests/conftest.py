@@ -3,16 +3,6 @@
 import pytest
 
 # Import all database fixtures
-from tests.fixtures.database import (
-    test_engine,
-    db_session, 
-    fresh_db_session,
-    empty_db_session,
-    seeded_db_session,
-    performance_db_session,
-    setup_test_database
-)
-
 
 # Configure pytest-asyncio to use function scope for event loops
 pytestmark = pytest.mark.asyncio

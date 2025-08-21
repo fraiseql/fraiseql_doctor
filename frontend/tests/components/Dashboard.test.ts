@@ -288,7 +288,7 @@ describe('Dashboard Grid Layout', () => {
   it('should handle empty state gracefully when no endpoints exist', async () => {
     // No endpoints in store
     endpointsStore.endpoints = []
-    
+
     // Configure dashboard store for empty state
     dashboardStore.stats = []
     dashboardStore.isLoading = false

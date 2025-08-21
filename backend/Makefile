@@ -13,7 +13,7 @@ test: test-unit test-integration
 test-unit:
 	uv run pytest tests/unit/ -v
 
-test-integration: 
+test-integration:
 	uv run pytest tests/integration/ -v
 
 test-performance:
@@ -79,7 +79,7 @@ db-migration:
 # TDD workflow helpers
 tdd-cycle:
 	@echo "🔴 RED: Write failing test"
-	@echo "🟢 GREEN: Make test pass"  
+	@echo "🟢 GREEN: Make test pass"
 	@echo "🔵 REFACTOR: Improve code"
 
 red:

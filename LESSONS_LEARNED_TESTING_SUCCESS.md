@@ -15,11 +15,11 @@ This document captures the key lessons learned from transforming a test suite fr
 - Replaced with lightweight `TestDatabaseSession`, `TestGraphQLClient`, `TestComplexityAnalyzer`
 - Result: 100% test success and discovery of actual production bugs
 
-**Pattern**: 
+**Pattern**:
 ```python
 # ❌ Complex mock that breaks easily
 mock_db = AsyncMock()
-mock_db.execute.return_value = [...] 
+mock_db.execute.return_value = [...]
 mock_db.get.side_effect = complex_side_effect
 
 # ✅ Simple real implementation
@@ -78,10 +78,10 @@ class TestDatabaseSession:
     def __init__(self):
         self.results = []
         self.should_fail = False
-    
-    def set_results(self, results): 
+
+    def set_results(self, results):
         self.results = results
-    
+
     async def execute(self, query):
         if self.should_fail:
             raise Exception("Database error")
@@ -90,7 +90,7 @@ class TestDatabaseSession:
 
 **Benefits**:
 - Predictable behavior
-- Easy to configure for different test scenarios  
+- Easy to configure for different test scenarios
 - Matches real interface contracts
 - No complex mock setup required
 
@@ -137,7 +137,7 @@ mock.side_effect = [
 
 ### 2. Testing Mock Internals
 ```python
-# ❌ Don't do this  
+# ❌ Don't do this
 assert mock.call_count == 3
 assert mock.call_args_list[1][0] == "specific argument"
 ```
@@ -148,7 +148,7 @@ assert mock.call_args_list[1][0] == "specific argument"
 ```python
 # ❌ Don't do this
 @patch('module.dependency')
-@patch('module.other_dependency') 
+@patch('module.other_dependency')
 @patch('module.third_dependency')
 def test_everything_mocked():
     # Test becomes meaningless
@@ -193,7 +193,7 @@ def test_everything_mocked():
 1. **Identify failing tests** - Focus on systematic analysis
 2. **Question the mocks** - Ask "Is this mock realistic?"
 3. **Create real test doubles** - Build simple, focused implementations
-4. **Replace incrementally** - Don't change everything at once  
+4. **Replace incrementally** - Don't change everything at once
 5. **Validate behavior** - Ensure tests check actual outcomes
 6. **Iterate and improve** - Each success informs the next
 

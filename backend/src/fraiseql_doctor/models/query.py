@@ -1,8 +1,8 @@
 """Query storage model."""
-from typing import Any, Dict
+from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, TimestampMixin
@@ -10,6 +10,7 @@ from .base import Base, TimestampMixin
 
 class Query(Base, TimestampMixin):
     """Stored GraphQL/FraiseQL query model."""
+
     __tablename__ = "tb_query"
 
     pk_query: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
@@ -28,12 +29,12 @@ class Query(Base, TimestampMixin):
     schedules = relationship("Schedule", back_populates="query", cascade="all, delete-orphan")
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Query":
+    def from_dict(cls, data: dict[str, Any]) -> "Query":
         """Create Query instance from dictionary."""
         # Handle both database field names and test field names
         query_text = data.get("query_text") or data.get("content", "")
         pk_query = data.get("pk_query") or data.get("id")
-        
+
         return cls(
             pk_query=pk_query,
             name=data["name"],
@@ -46,10 +47,10 @@ class Query(Base, TimestampMixin):
             created_by=data.get("created_by"),
             query_metadata=data.get("query_metadata", data.get("metadata", {})),
             created_at=data.get("created_at"),
-            updated_at=data.get("updated_at")
+            updated_at=data.get("updated_at"),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert Query to dictionary."""
         return {
             "pk_query": self.pk_query,
@@ -63,5 +64,5 @@ class Query(Base, TimestampMixin):
             "created_by": self.created_by,
             "query_metadata": self.query_metadata,
             "created_at": self.created_at,
-            "updated_at": self.updated_at
+            "updated_at": self.updated_at,
         }

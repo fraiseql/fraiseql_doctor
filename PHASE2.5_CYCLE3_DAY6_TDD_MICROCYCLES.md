@@ -6,8 +6,8 @@
 
 ## 📋 **Day 6 Overview**
 
-**Target**: Basic Apollo Studio integration with authentication bridge  
-**Duration**: 6 hours (8 micro-cycles)  
+**Target**: Basic Apollo Studio integration with authentication bridge
+**Duration**: 6 hours (8 micro-cycles)
 **Success Criteria**: Working Apollo Studio iframe with all auth types functional
 
 ---
@@ -49,27 +49,27 @@ describe('Apollo Studio Integration - Cycle 1', () => {
 
   it('should render Apollo Studio container', () => {
     const wrapper = mount(ApolloStudioIntegration)
-    
+
     expect(wrapper.find('[data-testid="apollo-studio-container"]').exists()).toBe(true)
   })
 
   it('should have correct CSS classes for layout', () => {
     const wrapper = mount(ApolloStudioIntegration)
     const container = wrapper.find('[data-testid="apollo-studio-container"]')
-    
+
     expect(container.classes()).toContain('w-full')
     expect(container.classes()).toContain('h-full')
   })
 
   it('should render component title', () => {
     const wrapper = mount(ApolloStudioIntegration)
-    
+
     expect(wrapper.find('[data-testid="studio-title"]').text()).toBe('GraphQL Playground')
   })
 })
 ```
 
-**Run Tests**: `npm test -- src/components/__tests__/ApolloStudioIntegration.test.ts`  
+**Run Tests**: `npm test -- src/components/__tests__/ApolloStudioIntegration.test.ts`
 **Expected**: ❌ **3 tests fail** (component doesn't exist)
 
 ## ✅ **GREEN Phase** (15 minutes)
@@ -79,7 +79,7 @@ describe('Apollo Studio Integration - Cycle 1', () => {
 ```vue
 <!-- src/components/ApolloStudioIntegration.vue -->
 <template>
-  <div 
+  <div
     data-testid="apollo-studio-container"
     class="w-full h-full relative bg-white"
   >
@@ -94,7 +94,7 @@ describe('Apollo Studio Integration - Cycle 1', () => {
 </script>
 ```
 
-**Run Tests**: `npm test -- src/components/__tests__/ApolloStudioIntegration.test.ts`  
+**Run Tests**: `npm test -- src/components/__tests__/ApolloStudioIntegration.test.ts`
 **Expected**: ✅ **3 tests pass**
 
 ## 🔧 **REFACTOR Phase** (5 minutes)
@@ -103,7 +103,7 @@ describe('Apollo Studio Integration - Cycle 1', () => {
 
 ```vue
 <template>
-  <div 
+  <div
     data-testid="apollo-studio-container"
     class="apollo-studio-integration"
   >
@@ -153,7 +153,7 @@ describe('Apollo Studio Integration - Cycle 2', () => {
         endpointUrl: 'https://api.example.com/graphql'
       }
     })
-    
+
     expect(wrapper.find('[data-testid="apollo-studio-iframe"]').exists()).toBe(true)
   })
 
@@ -163,7 +163,7 @@ describe('Apollo Studio Integration - Cycle 2', () => {
         endpointUrl: 'https://api.example.com/graphql'
       }
     })
-    
+
     const iframe = wrapper.find('[data-testid="apollo-studio-iframe"]')
     expect(iframe.attributes('src')).toContain('studio.apollographql.com')
   })
@@ -174,7 +174,7 @@ describe('Apollo Studio Integration - Cycle 2', () => {
         endpointUrl: 'https://api.example.com/graphql'
       }
     })
-    
+
     expect(wrapper.find('[data-testid="studio-loading"]').exists()).toBe(true)
   })
 
@@ -184,17 +184,17 @@ describe('Apollo Studio Integration - Cycle 2', () => {
         endpointUrl: 'https://api.example.com/graphql'
       }
     })
-    
+
     // Simulate iframe load
     const iframe = wrapper.find('[data-testid="apollo-studio-iframe"]')
     await iframe.trigger('load')
-    
+
     expect(wrapper.find('[data-testid="studio-loading"]').exists()).toBe(false)
   })
 })
 ```
 
-**Run Tests**: `npm test`  
+**Run Tests**: `npm test`
 **Expected**: ❌ **4 tests fail** (iframe not implemented)
 
 ## ✅ **GREEN Phase** (25 minutes)
@@ -203,7 +203,7 @@ describe('Apollo Studio Integration - Cycle 2', () => {
 
 ```vue
 <template>
-  <div 
+  <div
     data-testid="apollo-studio-container"
     class="apollo-studio-integration"
   >
@@ -214,7 +214,7 @@ describe('Apollo Studio Integration - Cycle 2', () => {
     </header>
 
     <!-- Loading State -->
-    <div 
+    <div
       v-if="isLoading"
       data-testid="studio-loading"
       class="studio-loading"
@@ -250,11 +250,11 @@ const isLoading = ref(true)
 // Computed
 const studioUrl = computed(() => {
   if (!props.endpointUrl) return ''
-  
+
   const params = new URLSearchParams({
     endpoint: props.endpointUrl
   })
-  
+
   return `https://studio.apollographql.com/sandbox/explorer?${params.toString()}`
 })
 
@@ -284,7 +284,7 @@ function handleIframeLoad() {
 </style>
 ```
 
-**Run Tests**: `npm test`  
+**Run Tests**: `npm test`
 **Expected**: ✅ **7 tests pass**
 
 ## 🔧 **REFACTOR Phase** (5 minutes)
@@ -297,7 +297,7 @@ export function buildApolloStudioUrl(endpointUrl: string): string {
   const params = new URLSearchParams({
     endpoint: endpointUrl
   })
-  
+
   return `https://studio.apollographql.com/sandbox/explorer?${params.toString()}`
 }
 ```
@@ -358,21 +358,21 @@ describe('Apollo Studio Configuration Service', () => {
 
   it('should create basic Studio configuration', () => {
     const { createStudioConfig } = useApolloStudioConfig()
-    
+
     const config = createStudioConfig(mockEndpoint)
-    
+
     expect(config.endpoint).toBe('https://api.example.com/graphql')
     expect(config.headers).toEqual(mockEndpoint.headers)
   })
 
   it('should build Auth0 style configuration', () => {
     const { buildAuthHeaders } = useApolloStudioConfig()
-    
+
     const headers = buildAuthHeaders({
       Authorization: 'Bearer token123',
       'Content-Type': 'application/json'
     })
-    
+
     expect(headers.Authorization).toBe('Bearer token123')
     expect(headers['Content-Type']).toBe('application/json')
   })
@@ -380,42 +380,42 @@ describe('Apollo Studio Configuration Service', () => {
   it('should handle missing headers gracefully', () => {
     const endpointWithoutHeaders = { ...mockEndpoint, headers: undefined }
     const { createStudioConfig } = useApolloStudioConfig()
-    
+
     const config = createStudioConfig(endpointWithoutHeaders)
-    
+
     expect(config.headers).toEqual({})
   })
 
   it('should generate Studio URL with auth parameters', () => {
     const { generateStudioUrl } = useApolloStudioConfig()
-    
+
     const url = generateStudioUrl(mockEndpoint)
-    
+
     expect(url).toContain('studio.apollographql.com')
     expect(url).toContain('endpoint=' + encodeURIComponent(mockEndpoint.url))
   })
 
   it('should validate endpoint configuration', () => {
     const { validateEndpointConfig } = useApolloStudioConfig()
-    
+
     const isValid = validateEndpointConfig(mockEndpoint)
     const isInvalid = validateEndpointConfig({
       ...mockEndpoint,
       url: 'invalid-url'
     })
-    
+
     expect(isValid).toBe(true)
     expect(isInvalid).toBe(false)
   })
 
   it('should merge default and custom headers', () => {
     const { mergeHeaders } = useApolloStudioConfig()
-    
+
     const defaultHeaders = { 'Content-Type': 'application/json' }
     const customHeaders = { 'Authorization': 'Bearer token' }
-    
+
     const merged = mergeHeaders(defaultHeaders, customHeaders)
-    
+
     expect(merged).toEqual({
       'Content-Type': 'application/json',
       'Authorization': 'Bearer token'
@@ -424,7 +424,7 @@ describe('Apollo Studio Configuration Service', () => {
 })
 ```
 
-**Run Tests**: `npm test -- src/services/__tests__/apolloStudioConfig.test.ts`  
+**Run Tests**: `npm test -- src/services/__tests__/apolloStudioConfig.test.ts`
 **Expected**: ❌ **6 tests fail** (service doesn't exist)
 
 ## ✅ **GREEN Phase** (25 minutes)
@@ -457,7 +457,7 @@ export function useApolloStudioConfig() {
     const params = new URLSearchParams({
       endpoint: endpoint.url
     })
-    
+
     return `https://studio.apollographql.com/sandbox/explorer?${params.toString()}`
   }
 
@@ -490,7 +490,7 @@ export function useApolloStudioConfig() {
 }
 ```
 
-**Run Tests**: `npm test -- src/services/__tests__/apolloStudioConfig.test.ts`  
+**Run Tests**: `npm test -- src/services/__tests__/apolloStudioConfig.test.ts`
 **Expected**: ✅ **6 tests pass**
 
 ## 🔧 **REFACTOR Phase** (5 minutes)
@@ -517,7 +517,7 @@ function generateStudioUrl(endpoint: GraphQLEndpoint): string {
     endpoint: endpoint.url,
     ...(endpoint.introspectionEnabled && { introspection: 'true' })
   })
-  
+
   return `${baseUrl}?${params.toString()}`
 }
 ```
@@ -546,24 +546,24 @@ function generateStudioUrl(endpoint: GraphQLEndpoint): string {
 describe('Bearer Token Authentication', () => {
   it('should handle Bearer token format correctly', () => {
     const { formatBearerToken } = useApolloStudioConfig()
-    
+
     const token = formatBearerToken('my-secret-token')
-    
+
     expect(token).toBe('Bearer my-secret-token')
   })
 
   it('should not double-prefix Bearer tokens', () => {
     const { formatBearerToken } = useApolloStudioConfig()
-    
+
     const alreadyPrefixed = formatBearerToken('Bearer existing-token')
-    
+
     expect(alreadyPrefixed).toBe('Bearer existing-token')
     expect(alreadyPrefixed).not.toBe('Bearer Bearer existing-token')
   })
 
   it('should create config with Bearer authentication', () => {
     const { createConfigWithAuth } = useApolloStudioConfig()
-    
+
     const endpoint: GraphQLEndpoint = {
       id: '1',
       name: 'Auth API',
@@ -577,23 +577,23 @@ describe('Bearer Token Authentication', () => {
       createdAt: new Date(),
       updatedAt: new Date()
     }
-    
+
     const config = createConfigWithAuth(endpoint, 'bearer')
-    
+
     expect(config.headers.Authorization).toBe('Bearer my-token-123')
   })
 
   it('should extract token from Bearer header', () => {
     const { extractBearerToken } = useApolloStudioConfig()
-    
+
     const token = extractBearerToken('Bearer secret-token-value')
-    
+
     expect(token).toBe('secret-token-value')
   })
 })
 ```
 
-**Run Tests**: `npm test`  
+**Run Tests**: `npm test`
 **Expected**: ❌ **4 tests fail** (Bearer functions not implemented)
 
 ## ✅ **GREEN Phase** (25 minutes)
@@ -619,15 +619,15 @@ export function useApolloStudioConfig() {
   }
 
   function createConfigWithAuth(
-    endpoint: GraphQLEndpoint, 
+    endpoint: GraphQLEndpoint,
     authType: AuthType
   ): StudioConfig {
     const config = createStudioConfig(endpoint)
-    
+
     if (authType === 'bearer' && config.headers.Authorization) {
       config.headers.Authorization = formatBearerToken(config.headers.Authorization)
     }
-    
+
     return config
   }
 
@@ -640,7 +640,7 @@ export function useApolloStudioConfig() {
 }
 ```
 
-**Run Tests**: `npm test`  
+**Run Tests**: `npm test`
 **Expected**: ✅ **10 tests pass**
 
 ## 🔧 **REFACTOR Phase** (5 minutes)
@@ -744,4 +744,3 @@ With Day 6 foundation complete, Day 7 will focus on:
 3. **Performance Optimization** (TDD Cycles 16-17)
 
 The micro-cycle approach ensures steady progress with clear checkpoints and maintains the high-quality TDD methodology established in previous cycles.
-

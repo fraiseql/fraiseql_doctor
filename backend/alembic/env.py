@@ -1,7 +1,6 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 
@@ -24,11 +23,6 @@ src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
 from fraiseql_doctor.models.base import Base
-from fraiseql_doctor.models.query import Query
-from fraiseql_doctor.models.endpoint import Endpoint
-from fraiseql_doctor.models.execution import Execution
-from fraiseql_doctor.models.health_check import HealthCheck
-from fraiseql_doctor.models.schedule import Schedule
 
 target_metadata = Base.metadata
 
@@ -76,9 +70,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

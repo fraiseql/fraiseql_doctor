@@ -1,23 +1,23 @@
 """Database models re-exported for backwards compatibility with tests."""
 
 # Re-export all models from the models module
+from ...models.base import Base
 from ...models.endpoint import Endpoint
-from ...models.query import Query
-from ...models.query_collection import QueryCollection
 from ...models.execution import Execution
 from ...models.health_check import HealthCheck
-from ...models.schedule import Schedule
+from ...models.query import Query
+from ...models.query_collection import QueryCollection
 from ...models.result import QueryResult, ResultMetadata
-from ...models.base import Base
+from ...models.schedule import Schedule
 
 __all__ = [
     "Endpoint",
-    "Query", 
+    "Query",
     "QueryCollection",
     "Execution",
     "HealthCheck",
     "Schedule",
     "QueryResult",
     "ResultMetadata",
-    "Base"
+    "Base",
 ]

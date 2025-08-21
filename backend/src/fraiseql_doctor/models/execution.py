@@ -1,16 +1,17 @@
 """Query execution tracking model."""
+from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
-from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
 
 
 class Execution(Base):
     """Query execution history model."""
+
     __tablename__ = "query_executions"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
@@ -18,7 +19,9 @@ class Execution(Base):
     endpoint_id: Mapped[UUID] = mapped_column(ForeignKey("endpoints.id", ondelete="CASCADE"))
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    status: Mapped[str] = mapped_column(String(20), nullable=False)  # pending, success, error, timeout
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False
+    )  # pending, success, error, timeout
     response_time_ms: Mapped[int | None] = mapped_column(Integer)
     complexity_score: Mapped[int | None] = mapped_column(Integer)
     error_message: Mapped[str | None] = mapped_column(Text)
@@ -61,5 +64,5 @@ class Execution(Base):
             span_id=data.get("span_id"),
             triggered_by=data.get("triggered_by"),
             created_at=data.get("created_at"),
-            updated_at=data.get("updated_at")
+            updated_at=data.get("updated_at"),
         )

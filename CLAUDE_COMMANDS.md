@@ -166,7 +166,7 @@ When you see a command like `@claude save idea:`, Claude should:
 ✅ Idea saved to roadmap!
 
 📍 **Location**: ROADMAP.md > User Experience & Collaboration > Brainstorming Section
-🏷️ **Auto-categorized**: User Experience, Collaboration Tools  
+🏷️ **Auto-categorized**: User Experience, Collaboration Tools
 ⏰ **Added**: 2025-01-21 14:30
 🎯 **Suggested Priority**: Medium (collaboration features score well for team adoption)
 📝 **Summary**: Real-time collaborative GraphQL query editing
@@ -198,7 +198,7 @@ The idea has been added to the "Brainstorming Section" since it's innovative but
 ### **Batch Commands**
 ```bash
 @claude save idea: Dark mode toggle for better user experience
-@claude save idea: Export health metrics as PDF reports for stakeholders  
+@claude save idea: Export health metrics as PDF reports for stakeholders
 @claude save idea: Mobile push notifications for critical alerts
 @claude research question: What's the optimal alert threshold to avoid false positives?
 ```

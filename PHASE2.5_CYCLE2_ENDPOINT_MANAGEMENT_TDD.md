@@ -1,14 +1,14 @@
 # Phase 2.5 Cycle 2: TDD Implementation Plan - Endpoint Management Features
 
-**Timeline:** Day 3-5 of Phase 2.5 implementation  
-**Goal:** Complete endpoint management system with real-time monitoring following strict TDD methodology  
+**Timeline:** Day 3-5 of Phase 2.5 implementation
+**Goal:** Complete endpoint management system with real-time monitoring following strict TDD methodology
 **Approach:** RED → GREEN → REFACTOR cycle for each feature
 
 ---
 
 ## 📋 **Cycle 2 Features to Implement**
 
-### **Day 3 Morning - Endpoint Data Layer** 
+### **Day 3 Morning - Endpoint Data Layer**
 - ✅ Endpoint types and interfaces
 - ✅ Pinia store for endpoint management
 - ✅ Mock endpoint service for testing
@@ -97,7 +97,7 @@ interface HealthCheck {
 **Features:**
 - ✅ **Real-time Health Status**: Live monitoring of endpoint availability
 - ✅ **Response Time Tracking**: Monitor GraphQL query performance
-- ✅ **Schema Introspection**: Detect schema changes automatically  
+- ✅ **Schema Introspection**: Detect schema changes automatically
 - ✅ **Uptime Percentage**: Calculate and display uptime stats
 - ✅ **Health History**: Track health status over time
 - ✅ **Alerting Thresholds**: Configure when to mark as unhealthy
@@ -138,7 +138,7 @@ interface EndpointTest {
 **Metrics & Visualizations:**
 - ✅ **Response Time Charts**: Historical performance graphs
 - ✅ **Uptime Statistics**: Percentage uptime over time periods
-- ✅ **Error Rate Tracking**: Track and visualize error patterns  
+- ✅ **Error Rate Tracking**: Track and visualize error patterns
 - ✅ **Schema Change Detection**: Alert on schema modifications
 - ✅ **Request Volume**: Track query frequency per endpoint
 - ✅ **Geographic Distribution**: If endpoints are distributed
@@ -176,7 +176,7 @@ describe('Endpoint Store', () => {
       authConfig: { token: 'test-token' },
       isActive: true
     }
-    
+
     store.addEndpoint(newEndpoint)
     expect(store.endpoints).toHaveLength(1)
     expect(store.endpoints[0].name).toBe('Test API')
@@ -186,13 +186,13 @@ describe('Endpoint Store', () => {
   it('should update endpoint status in real-time', () => {
     const store = useEndpointStore()
     const endpoint = store.addEndpoint({ name: 'Test', url: 'http://test.com' })
-    
+
     store.updateEndpointHealth(endpoint.id, {
       status: 'healthy',
       responseTime: 150,
       timestamp: new Date()
     })
-    
+
     expect(store.endpoints[0].lastHealthCheck?.status).toBe('healthy')
     expect(store.endpoints[0].lastHealthCheck?.responseTime).toBe(150)
   })
@@ -201,10 +201,10 @@ describe('Endpoint Store', () => {
     const store = useEndpointStore()
     store.addEndpoint({ name: 'Healthy', url: 'http://healthy.com' })
     store.addEndpoint({ name: 'Unhealthy', url: 'http://unhealthy.com' })
-    
+
     store.updateEndpointHealth(store.endpoints[0].id, { status: 'healthy' })
     store.updateEndpointHealth(store.endpoints[1].id, { status: 'unhealthy' })
-    
+
     const healthyEndpoints = store.getEndpointsByStatus('healthy')
     expect(healthyEndpoints).toHaveLength(1)
     expect(healthyEndpoints[0].name).toBe('Healthy')
@@ -212,21 +212,21 @@ describe('Endpoint Store', () => {
 
   it('should search endpoints by name and tags', () => {
     const store = useEndpointStore()
-    store.addEndpoint({ 
-      name: 'Production API', 
+    store.addEndpoint({
+      name: 'Production API',
       url: 'http://prod.com',
-      tags: ['production', 'v2'] 
+      tags: ['production', 'v2']
     })
-    store.addEndpoint({ 
-      name: 'Staging API', 
+    store.addEndpoint({
+      name: 'Staging API',
       url: 'http://staging.com',
-      tags: ['staging', 'v1'] 
+      tags: ['staging', 'v1']
     })
-    
+
     const results = store.searchEndpoints('production')
     expect(results).toHaveLength(1)
     expect(results[0].name).toBe('Production API')
-    
+
     const tagResults = store.searchEndpoints('v2')
     expect(tagResults).toHaveLength(1)
   })
@@ -266,7 +266,7 @@ describe('Endpoint Form', () => {
   it('should validate required fields', async () => {
     const saveButton = wrapper.find('[data-testid="save-button"]')
     await saveButton.trigger('click')
-    
+
     expect(wrapper.find('[data-testid="name-error"]').text()).toContain('Name is required')
     expect(wrapper.find('[data-testid="url-error"]').text()).toContain('URL is required')
   })
@@ -274,31 +274,31 @@ describe('Endpoint Form', () => {
   it('should validate URL format', async () => {
     await wrapper.find('[data-testid="endpoint-url"]').setValue('invalid-url')
     await wrapper.find('[data-testid="save-button"]').trigger('click')
-    
+
     expect(wrapper.find('[data-testid="url-error"]').text()).toContain('Invalid URL format')
   })
 
   it('should show auth fields based on auth type', async () => {
     // Initially no auth fields visible
     expect(wrapper.find('[data-testid="auth-token"]').exists()).toBe(false)
-    
+
     // Select bearer auth
     await wrapper.find('[data-testid="auth-type-select"]').setValue('bearer')
-    
+
     expect(wrapper.find('[data-testid="auth-token"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="auth-token"]').attributes('placeholder')).toContain('Bearer Token')
   })
 
   it('should show API key field for api-key auth', async () => {
     await wrapper.find('[data-testid="auth-type-select"]').setValue('api-key')
-    
+
     expect(wrapper.find('[data-testid="auth-key"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="auth-key-name"]').exists()).toBe(true)
   })
 
   it('should show username/password for basic auth', async () => {
     await wrapper.find('[data-testid="auth-type-select"]').setValue('basic')
-    
+
     expect(wrapper.find('[data-testid="auth-username"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="auth-password"]').exists()).toBe(true)
   })
@@ -306,7 +306,7 @@ describe('Endpoint Form', () => {
   it('should manage custom headers', async () => {
     const addHeaderBtn = wrapper.find('[data-testid="add-header-button"]')
     await addHeaderBtn.trigger('click')
-    
+
     expect(wrapper.find('[data-testid="header-key-0"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="header-value-0"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="remove-header-0"]').exists()).toBe(true)
@@ -317,9 +317,9 @@ describe('Endpoint Form', () => {
     await wrapper.find('[data-testid="endpoint-url"]').setValue('https://api.test.com/graphql')
     await wrapper.find('[data-testid="auth-type-select"]').setValue('bearer')
     await wrapper.find('[data-testid="auth-token"]').setValue('test-token')
-    
+
     await wrapper.find('[data-testid="save-button"]').trigger('click')
-    
+
     expect(wrapper.emitted('save')).toBeTruthy()
     const emittedData = wrapper.emitted('save')[0][0]
     expect(emittedData.name).toBe('Test API')
@@ -331,9 +331,9 @@ describe('Endpoint Form', () => {
   it('should test endpoint connection', async () => {
     await wrapper.find('[data-testid="endpoint-url"]').setValue('https://api.test.com/graphql')
     const testBtn = wrapper.find('[data-testid="test-connection-button"]')
-    
+
     await testBtn.trigger('click')
-    
+
     expect(wrapper.find('[data-testid="connection-testing"]').exists()).toBe(true)
     // Will test actual connection logic once implemented
   })
@@ -365,7 +365,7 @@ const mockEndpoints = [
     }
   },
   {
-    id: '2', 
+    id: '2',
     name: 'Staging API',
     url: 'https://api.staging.com/graphql',
     status: 'unhealthy',
@@ -388,10 +388,10 @@ describe('Endpoint Table', () => {
   beforeEach(() => {
     const pinia = createPinia()
     store = useEndpointStore(pinia)
-    
+
     // Mock store with test data
     store.endpoints = mockEndpoints
-    
+
     wrapper = mount(EndpointTable, {
       global: {
         plugins: [pinia]
@@ -407,7 +407,7 @@ describe('Endpoint Table', () => {
   it('should display endpoint status indicators', () => {
     const healthyRow = wrapper.find('[data-testid="endpoint-row-1"]')
     const unhealthyRow = wrapper.find('[data-testid="endpoint-row-2"]')
-    
+
     expect(healthyRow.find('[data-testid="status-healthy"]').exists()).toBe(true)
     expect(unhealthyRow.find('[data-testid="status-unhealthy"]').exists()).toBe(true)
   })
@@ -420,7 +420,7 @@ describe('Endpoint Table', () => {
   it('should filter endpoints by search term', async () => {
     const searchInput = wrapper.find('[data-testid="search-input"]')
     await searchInput.setValue('Production')
-    
+
     expect(wrapper.findAll('[data-testid^="endpoint-row-"]')).toHaveLength(1)
     expect(wrapper.find('[data-testid="endpoint-row-1"]').exists()).toBe(true)
   })
@@ -428,14 +428,14 @@ describe('Endpoint Table', () => {
   it('should filter by status', async () => {
     const statusFilter = wrapper.find('[data-testid="status-filter"]')
     await statusFilter.setValue('healthy')
-    
+
     expect(wrapper.findAll('[data-testid^="endpoint-row-"]')).toHaveLength(1)
     expect(wrapper.find('[data-testid="endpoint-row-1"]').exists()).toBe(true)
   })
 
   it('should show action buttons for each endpoint', () => {
     const firstRow = wrapper.find('[data-testid="endpoint-row-1"]')
-    
+
     expect(firstRow.find('[data-testid="test-button"]').exists()).toBe(true)
     expect(firstRow.find('[data-testid="edit-button"]').exists()).toBe(true)
     expect(firstRow.find('[data-testid="delete-button"]').exists()).toBe(true)
@@ -445,7 +445,7 @@ describe('Endpoint Table', () => {
   it('should emit test event when test button clicked', async () => {
     const testBtn = wrapper.find('[data-testid="endpoint-row-1"] [data-testid="test-button"]')
     await testBtn.trigger('click')
-    
+
     expect(wrapper.emitted('test')).toBeTruthy()
     expect(wrapper.emitted('test')[0][0]).toBe('1')
   })
@@ -453,7 +453,7 @@ describe('Endpoint Table', () => {
   it('should emit edit event when edit button clicked', async () => {
     const editBtn = wrapper.find('[data-testid="endpoint-row-1"] [data-testid="edit-button"]')
     await editBtn.trigger('click')
-    
+
     expect(wrapper.emitted('edit')).toBeTruthy()
     expect(wrapper.emitted('edit')[0][0]).toBe('1')
   })
@@ -462,17 +462,17 @@ describe('Endpoint Table', () => {
     // Select multiple endpoints
     await wrapper.find('[data-testid="select-endpoint-1"]').setChecked(true)
     await wrapper.find('[data-testid="select-endpoint-2"]').setChecked(true)
-    
+
     const bulkDisable = wrapper.find('[data-testid="bulk-disable"]')
     await bulkDisable.trigger('click')
-    
+
     expect(wrapper.emitted('bulk-update')).toBeTruthy()
   })
 
   it('should sort by columns', async () => {
     const nameHeader = wrapper.find('[data-testid="sort-name"]')
     await nameHeader.trigger('click')
-    
+
     // Should sort endpoints by name
     expect(wrapper.vm.sortBy).toBe('name')
     expect(wrapper.vm.sortDirection).toBe('asc')
@@ -520,7 +520,7 @@ describe('Endpoint Management View', () => {
   it('should open add endpoint form', async () => {
     const addBtn = wrapper.find('[data-testid="add-endpoint-button"]')
     await addBtn.trigger('click')
-    
+
     expect(wrapper.find('[data-testid="endpoint-form"]').exists()).toBe(true)
   })
 
@@ -535,32 +535,32 @@ describe('Endpoint Management View', () => {
         timestamp: new Date().toISOString()
       }
     }
-    
+
     // Simulate WebSocket message
     wrapper.vm.handleWebSocketMessage(mockWebSocketUpdate)
-    
+
     // Should update endpoint status in store
     expect(wrapper.vm.endpointStore.endpoints[0]?.lastHealthCheck?.status).toBe('healthy')
   })
 
   it('should handle endpoint testing', async () => {
     const testSpy = vi.spyOn(wrapper.vm, 'testEndpoint')
-    
+
     // Simulate test action from table
     await wrapper.vm.testEndpoint('endpoint-id-123')
-    
+
     expect(testSpy).toHaveBeenCalledWith('endpoint-id-123')
   })
 
   it('should show loading state during operations', () => {
     wrapper.vm.isLoading = true
-    
+
     expect(wrapper.find('[data-testid="loading-spinner"]').exists()).toBe(true)
   })
 
   it('should show error messages', () => {
     wrapper.vm.error = 'Failed to load endpoints'
-    
+
     expect(wrapper.find('[data-testid="error-message"]').text()).toContain('Failed to load endpoints')
   })
 })
@@ -575,7 +575,7 @@ import { useEndpointTesting } from '@/services/endpointTesting'
 describe('Endpoint Testing Service', () => {
   it('should test basic connectivity', async () => {
     const { testConnection } = useEndpointTesting()
-    
+
     // Mock successful connection
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -583,12 +583,12 @@ describe('Endpoint Testing Service', () => {
       headers: new Map([['content-type', 'application/json']]),
       json: () => Promise.resolve({ data: null })
     })
-    
+
     const result = await testConnection({
       url: 'https://api.test.com/graphql',
       authType: 'none'
     })
-    
+
     expect(result.success).toBe(true)
     expect(result.responseTime).toBeGreaterThan(0)
     expect(result.status).toBe(200)
@@ -596,7 +596,7 @@ describe('Endpoint Testing Service', () => {
 
   it('should perform GraphQL introspection', async () => {
     const { introspectSchema } = useEndpointTesting()
-    
+
     const mockIntrospectionResponse = {
       data: {
         __schema: {
@@ -608,16 +608,16 @@ describe('Endpoint Testing Service', () => {
         }
       }
     }
-    
+
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(mockIntrospectionResponse)
     })
-    
+
     const result = await introspectSchema({
       url: 'https://api.test.com/graphql'
     })
-    
+
     expect(result.success).toBe(true)
     expect(result.schema).toBeDefined()
     expect(result.types).toContain('User')
@@ -626,7 +626,7 @@ describe('Endpoint Testing Service', () => {
 
   it('should execute test queries', async () => {
     const { executeQuery } = useEndpointTesting()
-    
+
     const mockQueryResponse = {
       data: {
         users: [
@@ -634,17 +634,17 @@ describe('Endpoint Testing Service', () => {
         ]
       }
     }
-    
+
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(mockQueryResponse)
     })
-    
+
     const result = await executeQuery({
       url: 'https://api.test.com/graphql',
       query: 'query { users { id name } }'
     })
-    
+
     expect(result.success).toBe(true)
     expect(result.data.users).toHaveLength(1)
     expect(result.data.users[0].name).toBe('John Doe')
@@ -652,19 +652,19 @@ describe('Endpoint Testing Service', () => {
 
   it('should handle authentication headers', async () => {
     const { testConnection } = useEndpointTesting()
-    
+
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
       json: () => Promise.resolve({ data: null })
     })
-    
+
     await testConnection({
       url: 'https://api.test.com/graphql',
       authType: 'bearer',
       authConfig: { token: 'test-token' }
     })
-    
+
     expect(fetch).toHaveBeenCalledWith(
       'https://api.test.com/graphql',
       expect.objectContaining({
@@ -677,13 +677,13 @@ describe('Endpoint Testing Service', () => {
 
   it('should handle connection errors gracefully', async () => {
     const { testConnection } = useEndpointTesting()
-    
+
     global.fetch = vi.fn().mockRejectedValue(new Error('Network error'))
-    
+
     const result = await testConnection({
       url: 'https://api.unreachable.com/graphql'
     })
-    
+
     expect(result.success).toBe(false)
     expect(result.error).toContain('Network error')
   })
@@ -778,7 +778,7 @@ export const useEndpointStore = defineStore('endpoint', () => {
       createdAt: new Date(),
       updatedAt: new Date()
     }
-    
+
     endpoints.value.push(endpoint)
     return endpoint
   }
@@ -845,7 +845,7 @@ export function useEndpointTesting() {
 
   const testConnection = async (endpoint: Partial<Endpoint>): Promise<EndpointTest> => {
     const startTime = performance.now()
-    
+
     try {
       const response = await fetch(endpoint.url!, {
         method: 'POST',
@@ -982,14 +982,14 @@ class Endpoint(Base):
     url: str
     # ... other fields
 
-class HealthCheck(Base): 
+class HealthCheck(Base):
     endpoint_id: UUID
     status: str
     response_time: float
     # ... other fields
 ```
 
-### **WebSocket Integration**  
+### **WebSocket Integration**
 ```typescript
 // Real-time endpoint status updates
 const { connect } = useWebSocket()
@@ -1009,14 +1009,14 @@ connect('endpoints', (data) => {
 - Response times displayed per endpoint
 - Filter/search to find specific endpoints
 
-### **2. Add New Endpoint**  
+### **2. Add New Endpoint**
 - Click "Add Endpoint" button
 - Form opens with URL, auth, and configuration options
 - Test connection before saving
 - Validation ensures URL is reachable
 
 ### **3. Test Endpoint**
-- Click test icon next to any endpoint  
+- Click test icon next to any endpoint
 - Quick introspection query runs
 - Results show success/failure with details
 - Schema information displayed if successful

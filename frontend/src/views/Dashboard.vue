@@ -99,14 +99,59 @@
       </div>
     </div>
 
-    <!-- Chart Section -->
-    <div v-if="dashboardStore.chartData && !dashboardStore.isEmpty" class="bg-white shadow rounded-lg p-6">
-      <h2 class="text-lg font-medium text-gray-900 mb-4">Performance Metrics</h2>
-      <div data-testid="health-chart" class="h-64 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg">
-        <div class="text-center">
-          <div class="text-gray-500">Chart.js integration</div>
-          <div class="text-sm text-gray-400 mt-1">{{ dashboardStore.chartData.datasets[0]?.data?.join(', ') }}ms avg response time</div>
+    <!-- Performance Charts Section -->
+    <div v-if="endpointsStore.endpoints.length > 0" class="bg-white shadow rounded-lg p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-medium text-gray-900">Performance Analytics</h2>
+
+        <!-- Chart Controls -->
+        <div class="flex items-center space-x-4">
+          <!-- Endpoint Filter -->
+          <select
+            v-model="selectedEndpointId"
+            class="block w-48 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+            data-testid="endpoint-filter"
+          >
+            <option value="">All Endpoints</option>
+            <option v-for="endpoint in endpointsStore.endpoints" :key="endpoint.id" :value="endpoint.id">
+              {{ endpoint.name }}
+            </option>
+          </select>
+
+          <!-- Chart Type Toggle -->
+          <div class="flex bg-gray-100 rounded-lg p-1" data-testid="chart-type-toggle">
+            <button
+              @click="chartType = 'responseTime'"
+              :class="[
+                'px-3 py-1 text-sm font-medium rounded-md transition-colors',
+                chartType === 'responseTime'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              ]"
+            >
+              Response Time
+            </button>
+            <button
+              @click="chartType = 'responseSize'"
+              :class="[
+                'px-3 py-1 text-sm font-medium rounded-md transition-colors',
+                chartType === 'responseSize'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              ]"
+            >
+              Response Size
+            </button>
+          </div>
         </div>
+      </div>
+
+      <!-- Performance Chart -->
+      <div data-testid="performance-chart-container" class="h-80">
+        <PerformanceChart
+          :metrics="filteredMetrics"
+          :chart-type="chartType"
+        />
       </div>
     </div>
 
@@ -134,6 +179,8 @@ import { useDashboard } from '@/stores/dashboard'
 import { WebSocketService, ConnectionState } from '@/services/websocket'
 import { WEBSOCKET_EVENTS } from '@/config/websocket'
 import HealthStatusCard from '@/components/HealthStatusCard.vue'
+import PerformanceChart from '@/components/PerformanceChart.vue'
+import { PerformanceMonitor, type QueryMetric } from '@/services/performanceMonitor'
 
 // Store setup
 const endpointsStore = useEndpointsStore()
@@ -144,7 +191,21 @@ const webSocketService = ref<WebSocketService | null>(null)
 const error = ref<string | null>(null)
 const connectionState = ref<ConnectionState>(ConnectionState.DISCONNECTED)
 
+// Performance monitoring setup
+const performanceMonitor = ref<PerformanceMonitor>(new PerformanceMonitor())
+const chartType = ref<'responseTime' | 'responseSize'>('responseTime')
+const selectedEndpointId = ref<string>('')
+const performanceMetrics = ref<QueryMetric[]>([])
+
 // Computed properties
+// Computed properties for metrics filtering
+const filteredMetrics = computed(() => {
+  if (!selectedEndpointId.value) {
+    return performanceMetrics.value
+  }
+  return performanceMetrics.value.filter(metric => metric.endpointId === selectedEndpointId.value)
+})
+
 const displayStats = computed(() => {
   const healthyCount = endpointsStore.healthyEndpointsCount
   const unhealthyCount = endpointsStore.unhealthyEndpointsCount
@@ -167,13 +228,33 @@ function calculateAverageResponseTime(): number {
 }
 
 // WebSocket handlers
-const handleHealthUpdate = (healthData: any) => {
+const handleHealthUpdate = async (healthData: any) => {
   endpointsStore.updateEndpointHealth(healthData.endpointId, {
     isHealthy: healthData.isHealthy,
     responseTime: healthData.responseTime,
     timestamp: healthData.timestamp,
     errorMessage: healthData.errorMessage
   })
+
+  // Track performance metrics
+  if (healthData.responseTime && healthData.isHealthy) {
+    await performanceMonitor.value.trackQuery(
+      healthData.endpointId,
+      'health_check',
+      {
+        executionTime: healthData.responseTime,
+        responseSize: 1024, // Estimated size for health check
+        timestamp: new Date(healthData.timestamp)
+      }
+    )
+
+    // Update local metrics for chart display - get all metrics for all endpoints
+    const allMetrics: QueryMetric[] = []
+    endpointsStore.endpoints.forEach(endpoint => {
+      allMetrics.push(...performanceMonitor.value.getMetrics(endpoint.id))
+    })
+    performanceMetrics.value = allMetrics
+  }
 }
 
 const handleConnectionStateChange = (data: { state: ConnectionState }) => {
@@ -192,6 +273,41 @@ const handleDisconnection = (data: { reason: string; code: number }) => {
   connectionState.value = ConnectionState.DISCONNECTED
   if (data.reason !== 'Manual disconnect') {
     error.value = `Connection lost: ${data.reason}`
+  }
+}
+
+const setupPerformanceMonitoring = () => {
+  // Listen for performance metric updates
+  performanceMonitor.value.addEventListener('metric-recorded', () => {
+    // Refresh metrics display when new metrics are recorded
+    const allMetrics: QueryMetric[] = []
+    endpointsStore.endpoints.forEach(endpoint => {
+      allMetrics.push(...performanceMonitor.value.getMetrics(endpoint.id))
+    })
+    performanceMetrics.value = allMetrics
+  })
+
+  // Generate some sample data for demonstration
+  generateSamplePerformanceData()
+}
+
+const generateSamplePerformanceData = async () => {
+  // Generate sample metrics for existing endpoints
+  const sampleQueries = ['health_check', 'introspection', 'user_query']
+
+  for (const endpoint of endpointsStore.endpoints) {
+    for (let i = 0; i < 10; i++) {
+      const baseTime = new Date(Date.now() - (i * 300000)) // 5 minutes apart
+      await performanceMonitor.value.trackQuery(
+        endpoint.id,
+        sampleQueries[i % sampleQueries.length],
+        {
+          executionTime: Math.random() * 200 + 50, // 50-250ms
+          responseSize: Math.random() * 5000 + 500, // 500-5500 bytes
+          timestamp: baseTime
+        }
+      )
+    }
   }
 }
 
@@ -215,6 +331,9 @@ const setupWebSocket = async () => {
 onMounted(async () => {
   // Load initial endpoints data
   await endpointsStore.loadEndpoints()
+
+  // Setup performance monitoring
+  setupPerformanceMonitoring()
 
   // Setup WebSocket for real-time updates
   await setupWebSocket()

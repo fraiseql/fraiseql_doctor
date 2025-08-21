@@ -4,7 +4,4 @@
 from .models import *
 from .schemas import *
 
-__all__ = [
-    "Base",
-    "TimestampMixin"
-]
+__all__ = ["Base", "TimestampMixin"]

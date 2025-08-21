@@ -10,7 +10,7 @@ Transform placeholder CLI stubs into a complete, functional command-line interfa
 ```
 src/fraiseql_doctor/cli/main.py - Basic Typer app with placeholder subcommands
 ├─ query_app    - Empty Typer group
-├─ endpoint_app - Empty Typer group  
+├─ endpoint_app - Empty Typer group
 ├─ health_app   - Empty Typer group
 └─ config_app   - Empty Typer group
 ```
@@ -28,7 +28,7 @@ src/fraiseql_doctor/cli/main.py - Basic Typer app with placeholder subcommands
 ```bash
 fraiseql-doctor query create --name "User Profile" --file query.graphql --endpoint api
 fraiseql-doctor query list --status active --endpoint api --format table
-fraiseql-doctor query show --name "User Profile" --format json  
+fraiseql-doctor query show --name "User Profile" --format json
 fraiseql-doctor query execute --name "User Profile" --variables vars.json
 fraiseql-doctor query update --name "User Profile" --file new_query.graphql
 fraiseql-doctor query delete --name "User Profile" --confirm
@@ -56,7 +56,7 @@ def create_query(
     # Implementation using core.query_collection module
     pass
 
-@query_app.command("list") 
+@query_app.command("list")
 def list_queries(
     endpoint: Optional[str] = typer.Option(None, "--endpoint", "-e", help="Filter by endpoint"),
     status: Optional[str] = typer.Option(None, "--status", help="Filter by status"),
@@ -78,7 +78,7 @@ def execute_query(
     pass
 ```
 
-#### 2. Endpoint Management Commands  
+#### 2. Endpoint Management Commands
 **File:** `src/fraiseql_doctor/cli/commands/endpoint.py`
 
 **Commands to implement:**
@@ -86,7 +86,7 @@ def execute_query(
 fraiseql-doctor endpoint add --name "Production API" --url https://api.example.com/graphql --auth bearer
 fraiseql-doctor endpoint list --format table
 fraiseql-doctor endpoint test --name "Production API" --verbose
-fraiseql-doctor endpoint update --name "Production API" --timeout 30  
+fraiseql-doctor endpoint update --name "Production API" --timeout 30
 fraiseql-doctor endpoint remove --name "Production API" --confirm
 ```
 
@@ -167,7 +167,7 @@ def health_dashboard(
 **Commands to implement:**
 ```bash
 fraiseql-doctor batch execute --collection "API Tests" --parallel 5 --output results/
-fraiseql-doctor batch import --file queries.yaml --endpoint "Production API" 
+fraiseql-doctor batch import --file queries.yaml --endpoint "Production API"
 fraiseql-doctor batch export --endpoint "Production API" --output backup.yaml
 fraiseql-doctor batch schedule --collection "Daily Checks" --cron "0 9 * * *"
 ```
@@ -178,7 +178,7 @@ fraiseql-doctor batch schedule --collection "Daily Checks" --cron "0 9 * * *"
 **Dependencies to add:**
 ```toml
 rich = ">=13.0.0"          # Already included
-click-spinner = ">=0.1.10"  # Progress indicators  
+click-spinner = ">=0.1.10"  # Progress indicators
 tabulate = ">=0.9.0"       # Table formatting alternatives
 ```
 
@@ -199,21 +199,21 @@ class GraphQLFileHandler:
     def parse_graphql_file(file_path: Path) -> str:
         """Parse .graphql/.gql files with validation."""
         pass
-    
+
     @staticmethod
     def validate_query_syntax(query: str) -> bool:
         """Validate GraphQL query syntax."""
         pass
 
 class VariableFileHandler:
-    @staticmethod  
+    @staticmethod
     def load_variables(file_path: Path) -> dict:
         """Load variables from JSON/YAML file."""
         pass
-    
+
     @staticmethod
     def validate_variables(variables: dict, query: str) -> bool:
-        """Validate variables match query requirements.""" 
+        """Validate variables match query requirements."""
         pass
 
 class ExportHandler:
@@ -221,7 +221,7 @@ class ExportHandler:
     def export_queries(queries: List[Query], format: str, output: Path):
         """Export queries to various formats."""
         pass
-    
+
     @staticmethod
     def export_results(results: List[Result], format: str, output: Path):
         """Export results to various formats."""
@@ -248,7 +248,7 @@ fraiseql-doctor config reset --confirm
 **Configuration features:**
 - **Interactive setup wizard** for first-time users
 - **Environment-specific configurations** (dev/staging/prod)
-- **Configuration file validation** with helpful error messages  
+- **Configuration file validation** with helpful error messages
 - **Automatic database migration** integration
 - **Backup and restore** configuration
 
@@ -262,7 +262,7 @@ fraiseql-doctor config reset --confirm
 tests/cli/
 ├── test_query_commands.py      # Query CRUD operations
 ├── test_endpoint_commands.py   # Endpoint management
-├── test_health_commands.py     # Health monitoring  
+├── test_health_commands.py     # Health monitoring
 ├── test_batch_commands.py      # Batch operations
 ├── test_config_commands.py     # Configuration management
 ├── test_file_handlers.py       # File parsing/export
@@ -287,7 +287,7 @@ def test_query_create_command(cli_runner, mock_database):
         '--file', 'test_query.graphql',
         '--endpoint', 'test-endpoint'
     ])
-    
+
     assert result.exit_code == 0
     assert "Query 'Test Query' created successfully" in result.output
     assert mock_database.create_query.called
@@ -301,7 +301,7 @@ def test_query_create_command(cli_runner, mock_database):
 - [ ] Add basic error handling and validation
 - [ ] Create file handler utilities for GraphQL/JSON/YAML
 
-### Day 3-4: Core Features  
+### Day 3-4: Core Features
 - [ ] Implement endpoint management commands (add, list, test, update, remove)
 - [ ] Add health monitoring commands (check, monitor, report)
 - [ ] Implement batch operations (execute, import, export, schedule)
@@ -334,7 +334,7 @@ def test_query_create_command(cli_runner, mock_database):
 **Deliverables for next phase:**
 - Complete, functional CLI with rich user experience
 - Comprehensive command test coverage
-- File import/export capabilities  
+- File import/export capabilities
 - Interactive help and error handling
 - Foundation for documentation and examples
 

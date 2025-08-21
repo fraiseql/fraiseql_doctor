@@ -17,7 +17,7 @@
 Implement Phase 1 security fixes for FraiseQL Doctor. The project currently has 100% test success but 45 security warnings that must be fixed before release. Focus on:
 
 1. Replace MD5 hashing with secure alternatives (Blake2b/SHA-256)
-2. Eliminate unsafe pickle deserialization  
+2. Eliminate unsafe pickle deserialization
 3. Use cryptographically secure random generation
 4. Fix silent exception handling with proper logging
 5. Implement production-grade logging infrastructure
@@ -33,7 +33,7 @@ Key files to modify:
 Success criteria: Zero security warnings from `ruff check --select S .`
 ```
 
-### Phase 2: CLI Implementation  
+### Phase 2: CLI Implementation
 **Target:** Complete functional CLI interface
 **Timeline:** 5-7 days
 **Agent Prompt:**
@@ -43,7 +43,7 @@ Implement complete CLI functionality for FraiseQL Doctor. The project has solid 
 Transform into a full-featured CLI tool with:
 
 1. Query management (create, list, execute, update, delete)
-2. Endpoint management (add, list, test, update, remove) 
+2. Endpoint management (add, list, test, update, remove)
 3. Health monitoring (check, monitor, report, dashboard)
 4. Batch operations (execute, import, export, schedule)
 5. Rich terminal UX (progress bars, colors, interactive prompts)
@@ -61,7 +61,7 @@ Success criteria: All CLI commands functional with rich UX
 
 ### Phase 3: Documentation & Release
 **Target:** Production-ready documentation and release process
-**Timeline:** 5-7 days  
+**Timeline:** 5-7 days
 **Agent Prompt:**
 ```
 Create comprehensive documentation and release preparation for FraiseQL Doctor v1.0.0. The project has solid technical foundation and complete CLI functionality - now needs user-facing documentation for production release.
@@ -70,7 +70,7 @@ Create complete documentation suite:
 
 1. Enhanced README with clear value proposition and quick start
 2. Installation guide for multiple methods (pip, pipx, Docker)
-3. Complete user guide with workflows and examples  
+3. Complete user guide with workflows and examples
 4. CLI reference documentation for all commands
 5. Developer documentation and contributing guide
 6. Release automation pipeline with quality gates
@@ -96,7 +96,7 @@ cd /home/lionel/code/fraiseql_doctor
 uv run pytest tests/ -v --tb=short  # Should show 168/168 passing
 uv run ruff check --select S .      # Shows security issues to fix
 
-# Development workflow  
+# Development workflow
 make test     # Full test suite
 make lint     # Code quality check
 make build    # Package building
@@ -116,7 +116,7 @@ uv run fraiseql-doctor --help  # CLI testing
 
 **Phase-specific implementation guides:**
 - `PHASE1_SECURITY.md` - Detailed security fix implementation
-- `PHASE2_CLI.md` - Complete CLI implementation plan  
+- `PHASE2_CLI.md` - Complete CLI implementation plan
 - `PHASE3_DOCUMENTATION.md` - Documentation and release preparation
 - `RELEASE_PLAN.md` - Overall 3-phase strategy overview
 
@@ -132,7 +132,7 @@ uv run fraiseql-doctor --help  # CLI testing
 ## 🎯 Success Indicators
 
 **Phase 1 Success:** `ruff check --select S .` shows zero warnings
-**Phase 2 Success:** `fraiseql-doctor query list` works (not placeholder)  
+**Phase 2 Success:** `fraiseql-doctor query list` works (not placeholder)
 **Phase 3 Success:** Fresh user can install and use tool from documentation
 
 ## ⚠️ Important Notes
@@ -151,7 +151,7 @@ cat PHASE1_SECURITY.md  # Review detailed implementation plan
 uv run ruff check --select S .  # See current security issues
 ```
 
-**For Phase 2:**  
+**For Phase 2:**
 ```bash
 cat PHASE2_CLI.md  # Review CLI implementation plan
 uv run fraiseql-doctor --help  # See current placeholder state
@@ -159,7 +159,7 @@ uv run fraiseql-doctor --help  # See current placeholder state
 
 **For Phase 3:**
 ```bash
-cat PHASE3_DOCUMENTATION.md  # Review documentation plan  
+cat PHASE3_DOCUMENTATION.md  # Review documentation plan
 ls docs/  # See current empty documentation directory
 ```
 

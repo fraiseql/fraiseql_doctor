@@ -20,7 +20,7 @@ This document outlines a comprehensive 3-phase plan to take FraiseQL Doctor from
 ```python
 # Current Issues to Address:
 - S324: MD5 hashing → SHA-256/Blake2b
-- S301: Unsafe pickle → JSON/MessagePack  
+- S301: Unsafe pickle → JSON/MessagePack
 - S311: random.random() → secrets.SystemRandom()
 - S110: Silent exception swallowing → Proper logging
 ```
@@ -29,15 +29,15 @@ This document outlines a comprehensive 3-phase plan to take FraiseQL Doctor from
 - [ ] **Replace MD5 with secure hashing**
   - `src/fraiseql_doctor/core/result_storage.py:231,236`
   - Use `hashlib.blake2b()` or `hashlib.sha256()`
-  
+
 - [ ] **Eliminate unsafe pickle deserialization**
   - `src/fraiseql_doctor/core/result_storage.py:540`
   - Default to JSON, add secure alternatives
-  
+
 - [ ] **Use cryptographically secure random**
   - `src/fraiseql_doctor/services/retry.py:258`
   - Replace with `secrets.SystemRandom()`
-  
+
 - [ ] **Add proper exception logging**
   - Replace all `except: pass` with logged exceptions
   - Implement structured logging throughout
@@ -47,7 +47,7 @@ This document outlines a comprehensive 3-phase plan to take FraiseQL Doctor from
   - Test secure hash consistency
   - Validate serialization security
   - Test cryptographic randomness
-  
+
 - [ ] **Security scanning integration**
   - Add `bandit` to dev dependencies
   - Integrate into CI/CD pipeline
@@ -60,7 +60,7 @@ This document outlines a comprehensive 3-phase plan to take FraiseQL Doctor from
   - Create `src/fraiseql_doctor/utils/logging.py`
   - JSON-formatted logs for production
   - Configurable log levels
-  
+
 - [ ] **Replace print statements**
   - All debug prints → proper logging
   - Add performance metrics logging
@@ -74,7 +74,7 @@ This document outlines a comprehensive 3-phase plan to take FraiseQL Doctor from
 
 ### 1.3 Testing & Validation (Day 5)
 - [ ] **Security regression tests**
-- [ ] **Performance impact validation**  
+- [ ] **Performance impact validation**
 - [ ] **Full test suite verification**
 - [ ] **Security audit report generation**
 
@@ -88,7 +88,7 @@ This document outlines a comprehensive 3-phase plan to take FraiseQL Doctor from
 
 ## 🖥️ Phase 2: CLI Implementation (Week 1-2)
 **Priority: HIGH - User Experience**
-**Timeline: 5-7 days**  
+**Timeline: 5-7 days**
 **Goal: Complete functional CLI interface**
 
 ### 2.1 Core CLI Commands (Days 1-3)
@@ -106,7 +106,7 @@ fraiseql-doctor query delete --name "User Profile"
 - [ ] **Query CRUD operations**
   - `fraiseql-doctor query create` - Create queries from files/stdin
   - `fraiseql-doctor query list` - List with filtering options
-  - `fraiseql-doctor query update` - Update existing queries  
+  - `fraiseql-doctor query update` - Update existing queries
   - `fraiseql-doctor query delete` - Safe deletion with confirmation
   - `fraiseql-doctor query execute` - Single query execution
 
@@ -316,7 +316,7 @@ Target:  v1.0.0 (Production-ready with full CLI and documentation)
 
 Intermediate Releases:
 ├─ v0.2.0: Security fixes + logging infrastructure
-├─ v0.3.0: Core CLI commands (query, endpoint management)  
+├─ v0.3.0: Core CLI commands (query, endpoint management)
 ├─ v0.4.0: Advanced CLI features (health monitoring, batch operations)
 ├─ v0.5.0: Documentation + user experience improvements
 └─ v1.0.0: Production release with full feature set
@@ -333,7 +333,7 @@ Each version must meet these quality gates:
 
 ### Success Metrics
 - **Technical Excellence**: Maintain 100% test success rate
-- **Security Posture**: Zero high/critical security issues  
+- **Security Posture**: Zero high/critical security issues
 - **User Experience**: Complete CLI functionality with rich UX
 - **Documentation Quality**: Comprehensive user and developer docs
 - **Release Quality**: Automated testing and release pipelines
@@ -347,7 +347,7 @@ Each version must meet these quality gates:
 - **Days 4-7**: Core CLI commands (query/endpoint management)
 - **Milestone**: v0.3.0 release with secure, functional CLI
 
-### Week 2: Advanced Features & UX  
+### Week 2: Advanced Features & UX
 - **Days 1-3**: Advanced CLI features and batch operations
 - **Days 4-7**: User experience enhancements and documentation start
 - **Milestone**: v0.4.0 release with complete CLI feature set
