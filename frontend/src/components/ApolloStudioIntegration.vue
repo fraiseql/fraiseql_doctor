@@ -187,7 +187,9 @@ const showNetworkError = computed(() => {
 })
 
 const showIframe = computed(() => {
-  return (props.endpointUrl || props.endpoint || props.studioConfig) && 
+  const hasValidUrl = finalStudioUrl.value && finalStudioUrl.value.length > 0
+  return hasValidUrl && 
+         (props.endpointUrl || props.endpoint || props.studioConfig) && 
          !showErrorState.value && 
          !showNetworkError.value
 })
@@ -223,8 +225,8 @@ const hasSecurityWarning = computed(() => {
 
 const finalStudioUrl = computed(() => {
   try {
+    // Priority 1: Studio config
     if (props.studioConfig) {
-      // Use pre-configured studio config
       const mockEndpoint = { 
         id: '1',
         name: 'Configured API',
@@ -235,54 +237,55 @@ const finalStudioUrl = computed(() => {
         createdAt: new Date(),
         updatedAt: new Date()
       } as GraphQLEndpoint
-      return generateStudioUrlWithParams(mockEndpoint, props.customParams).url
+      return generateStudioUrlWithParams(mockEndpoint, props.customParams || {})
     }
     
+    // Priority 2: Endpoint with auth type
     if (props.endpoint && props.authType) {
-      // Use endpoint with auth type
       const result = createConfigWithAuthSafely(props.endpoint, props.authType)
       if (result.success && result.config) {
-        return generateStudioUrlWithParams(props.endpoint, props.customParams).url
+        return generateStudioUrlWithParams(props.endpoint, props.customParams || {})
       }
     }
     
+    // Priority 3: Endpoint without auth type
     if (props.endpoint) {
-      // Use endpoint without specific auth type
-      return generateStudioUrlWithParams(props.endpoint, props.customParams).url
+      return generateStudioUrlWithParams(props.endpoint, props.customParams || {})
     }
     
+    // Priority 4: Simple endpoint URL
     if (props.endpointUrl) {
-      // Use simple endpoint URL with fallback to buildApolloStudioUrl
       const customParamsWithTheme = {
-        ...props.customParams,
-        ...(props.theme && { theme: props.theme })
+        ...(props.customParams || {}),
+        ...(props.theme !== 'light' ? { theme: props.theme } : {})
       }
       
-      // If we have custom params, use the advanced function, otherwise use the simple one
-      if (Object.keys(customParamsWithTheme).length > 0) {
-        const mockEndpoint = {
-          id: '1',
-          name: 'Simple API',
-          url: props.endpointUrl,
-          status: 'ACTIVE' as const,
-          introspectionEnabled: true,
-          isHealthy: true,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        } as GraphQLEndpoint
-        return generateStudioUrlWithParams(mockEndpoint, customParamsWithTheme).url
-      } else {
-        // Fall back to the simple function
-        return buildApolloStudioUrl(props.endpointUrl)
-      }
+      // Always use advanced function for consistency
+      const mockEndpoint = {
+        id: '1',
+        name: 'Simple API',
+        url: props.endpointUrl,
+        status: 'ACTIVE' as const,
+        introspectionEnabled: true,
+        isHealthy: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      } as GraphQLEndpoint
+      
+      return generateStudioUrlWithParams(mockEndpoint, customParamsWithTheme)
     }
     
     return ''
   } catch (error) {
     console.error('Error generating studio URL:', error)
-    // Fallback to simple URL generation
+    // Ultimate fallback
     if (props.endpointUrl) {
-      return buildApolloStudioUrl(props.endpointUrl)
+      try {
+        return buildApolloStudioUrl(props.endpointUrl)
+      } catch (fallbackError) {
+        console.error('Fallback URL generation failed:', fallbackError)
+        return `https://studio.apollographql.com/sandbox/explorer?endpoint=${encodeURIComponent(props.endpointUrl)}`
+      }
     }
     return ''
   }
@@ -320,7 +323,7 @@ function handleRetry() {
   
   retryCount.value++
   isLoading.value = true
-  networkError.value = false
+  // Keep networkError.value = true to show retry counter
   hasError.value = false
   
   // Force iframe reload by updating the src
@@ -331,6 +334,18 @@ function handleRetry() {
 }
 
 function validateConfiguration() {
+  // Reset errors first
+  hasError.value = false
+  errorMessage.value = ''
+  
+  // Check for security warnings first
+  if (hasSecurityWarning.value) {
+    hasError.value = true
+    errorMessage.value = 'Dangerous URL pattern detected'
+    return false
+  }
+  
+  // Validate endpoint if provided
   if (props.endpoint) {
     const validation = validateConfigurationSafely(props.endpoint)
     if (!validation.isValid) {
@@ -340,29 +355,41 @@ function validateConfiguration() {
     }
   }
   
-  if (hasSecurityWarning.value) {
-    hasError.value = true
-    errorMessage.value = 'Dangerous URL pattern detected'
-    return false
+  // Validate simple endpoint URL
+  if (props.endpointUrl && !props.endpoint) {
+    const mockEndpoint = {
+      id: '1',
+      name: 'Simple API',
+      url: props.endpointUrl,
+      status: 'ACTIVE' as const,
+      introspectionEnabled: true,
+      isHealthy: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    } as GraphQLEndpoint
+    
+    const validation = validateConfigurationSafely(mockEndpoint)
+    if (!validation.isValid) {
+      hasError.value = true
+      errorMessage.value = validation.errors.join(', ')
+      return false
+    }
   }
   
   return true
 }
 
 // Watchers
-watch([() => props.endpoint, () => props.authType], () => {
-  if (props.endpoint) {
-    const isValid = validateConfiguration()
-    if (!isValid) return
-    
-    if (props.authType) {
-      const result = createConfigWithAuthSafely(props.endpoint, props.authType)
-      if (result.success && result.config) {
-        emit('config-changed', result.config)
-      }
+watch([() => props.endpoint, () => props.authType, () => props.endpointUrl], () => {
+  validateConfiguration()
+  
+  if (props.endpoint && props.authType) {
+    const result = createConfigWithAuthSafely(props.endpoint, props.authType)
+    if (result.success && result.config) {
+      emit('config-changed', result.config)
     }
   }
-}, { deep: true })
+}, { deep: true, immediate: true })
 
 // Lifecycle
 onMounted(() => {
