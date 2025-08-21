@@ -85,3 +85,52 @@ describe('Apollo Studio Configuration Service', () => {
     })
   })
 })
+
+describe('Bearer Token Authentication', () => {
+  it('should handle Bearer token format correctly', () => {
+    const { formatBearerToken } = useApolloStudioConfig()
+    
+    const token = formatBearerToken('my-secret-token')
+    
+    expect(token).toBe('Bearer my-secret-token')
+  })
+
+  it('should not double-prefix Bearer tokens', () => {
+    const { formatBearerToken } = useApolloStudioConfig()
+    
+    const alreadyPrefixed = formatBearerToken('Bearer existing-token')
+    
+    expect(alreadyPrefixed).toBe('Bearer existing-token')
+    expect(alreadyPrefixed).not.toBe('Bearer Bearer existing-token')
+  })
+
+  it('should create config with Bearer authentication', () => {
+    const { createConfigWithAuth } = useApolloStudioConfig()
+    
+    const endpoint: GraphQLEndpoint = {
+      id: '1',
+      name: 'Auth API',
+      url: 'https://auth.api.com/graphql',
+      status: EndpointStatus.ACTIVE,
+      introspectionEnabled: true,
+      isHealthy: true,
+      headers: {
+        'Authorization': 'my-token-123'
+      },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    const config = createConfigWithAuth(endpoint, 'bearer')
+    
+    expect(config.headers.Authorization).toBe('Bearer my-token-123')
+  })
+
+  it('should extract token from Bearer header', () => {
+    const { extractBearerToken } = useApolloStudioConfig()
+    
+    const token = extractBearerToken('Bearer secret-token-value')
+    
+    expect(token).toBe('secret-token-value')
+  })
+})
