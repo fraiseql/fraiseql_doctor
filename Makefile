@@ -1,116 +1,108 @@
-.PHONY: install dev test test-unit test-integration test-performance lint format security-scan security-test security-full clean build tdd-cycle red green refactor
+# FraiseQL Doctor - Monorepo Makefile
+.DEFAULT_GOAL := help
+SHELL := /bin/bash
 
-install:
-	uv sync
+# Colors for terminal output
+GREEN := \033[32m
+YELLOW := \033[33m
+RED := \033[31m
+BLUE := \033[34m
+RESET := \033[0m
 
-dev:
-	uv sync --dev
+##@ Setup Commands
+.PHONY: setup
+setup: setup-backend setup-frontend  ## Setup both backend and frontend dependencies
+	@echo "$(GREEN)✅ Full project setup complete!$(RESET)"
 
-# Testing commands - Primary focus
-test: test-unit test-integration
-	@echo "All tests completed successfully!"
+.PHONY: setup-backend
+setup-backend:  ## Setup Python backend dependencies
+	@echo "$(BLUE)🔧 Setting up Python backend...$(RESET)"
+	cd backend && uv sync
 
-test-unit:
-	uv run pytest tests/unit/ -v
+.PHONY: setup-frontend  
+setup-frontend:  ## Setup Vue.js frontend dependencies
+	@echo "$(BLUE)🔧 Setting up Vue.js frontend...$(RESET)"
+	cd frontend && npm install
 
-test-integration: 
-	uv run pytest tests/integration/ -v
+##@ Development Commands
+.PHONY: dev
+dev:  ## Start both backend and frontend in development mode
+	@echo "$(GREEN)🚀 Starting development servers...$(RESET)"
+	@echo "$(YELLOW)Backend: http://localhost:8000$(RESET)"
+	@echo "$(YELLOW)Frontend: http://localhost:5173$(RESET)"
+	# Run both services concurrently (requires 'concurrently' package)
+	npx concurrently -n "backend,frontend" -c "blue,green" \
+		"cd backend && uv run uvicorn src.fraiseql_doctor.main:app --reload --port 8000" \
+		"cd frontend && npm run dev"
 
-test-performance:
-	uv run pytest tests/ -m performance -v
+.PHONY: dev-backend
+dev-backend:  ## Start only backend development server
+	@echo "$(GREEN)🚀 Starting backend server at http://localhost:8000$(RESET)"
+	cd backend && uv run uvicorn src.fraiseql_doctor.main:app --reload --port 8000
 
-test-coverage:
-	uv run pytest --cov=src --cov-report=html --cov-report=term
+.PHONY: dev-frontend
+dev-frontend:  ## Start only frontend development server
+	@echo "$(GREEN)🚀 Starting frontend server at http://localhost:5173$(RESET)"
+	cd frontend && npm run dev
 
-test-watch:
-	uv run pytest-watch -- tests/
+##@ Testing Commands  
+.PHONY: test
+test: test-backend test-frontend  ## Run all tests (backend + frontend)
 
-lint:
-	uv run ruff check .
-	uv run mypy src
+.PHONY: test-backend
+test-backend:  ## Run backend tests
+	@echo "$(BLUE)🧪 Running backend tests...$(RESET)"
+	cd backend && make test
 
-format:
-	uv run ruff format .
-	uv run ruff check --fix .
+.PHONY: test-frontend
+test-frontend:  ## Run frontend tests
+	@echo "$(BLUE)🧪 Running frontend tests...$(RESET)"
+	cd frontend && npm test
 
-# Security scanning commands
-security-scan:
-	@echo "🔒 Running security scans..."
-	uv run bandit -r src/
-	uv run safety check
-	uv run ruff check --select S .
+##@ Code Quality
+.PHONY: lint
+lint: lint-backend lint-frontend  ## Run linting on both backend and frontend
 
-security-test:
-	@echo "🔒 Running security tests..."
-	uv run pytest tests/security/ -v
+.PHONY: lint-backend
+lint-backend:  ## Run backend linting (ruff + mypy)
+	@echo "$(BLUE)🔍 Linting backend code...$(RESET)"
+	cd backend && make lint
 
-security-full:
-	@echo "🔒 Running complete security audit..."
-	uv run bandit -r src/ -f json -o bandit-report.json
-	uv run safety check --json --output safety-report.json || true
-	uv run ruff check --select S . --format json --output-file ruff-security-report.json || true
-	uv run pytest tests/security/ -v --junitxml=security-tests.xml
-	@echo "Security reports generated: bandit-report.json, safety-report.json, ruff-security-report.json, security-tests.xml"
+.PHONY: lint-frontend  
+lint-frontend:  ## Run frontend linting (ESLint + TypeScript)
+	@echo "$(BLUE)🔍 Linting frontend code...$(RESET)"
+	cd frontend && npm run lint
+	cd frontend && npm run type-check
 
-clean:
-	rm -rf dist/
-	rm -rf build/
-	rm -rf *.egg-info/
-	rm -rf .coverage
-	rm -rf htmlcov/
-	find . -type d -name __pycache__ -delete
-	find . -type f -name "*.pyc" -delete
+.PHONY: format
+format: format-backend format-frontend  ## Format code in both projects
 
-build:
-	uv build
+.PHONY: format-backend
+format-backend:  ## Format backend code with ruff
+	@echo "$(BLUE)✨ Formatting backend code...$(RESET)"
+	cd backend && make format
 
-run:
-	uv run fraiseql-doctor
+.PHONY: format-frontend
+format-frontend:  ## Format frontend code with prettier
+	@echo "$(BLUE)✨ Formatting frontend code...$(RESET)"
+	cd frontend && npm run format
 
-db-upgrade:
-	uv run alembic upgrade head
+##@ Build Commands
+.PHONY: build
+build: build-backend build-frontend  ## Build both backend and frontend for production
 
-db-downgrade:
-	uv run alembic downgrade -1
+.PHONY: build-backend  
+build-backend:  ## Build backend Python package
+	@echo "$(BLUE)📦 Building backend package...$(RESET)"
+	cd backend && make build
 
-db-migration:
-	uv run alembic revision --autogenerate -m "$(message)"
+.PHONY: build-frontend
+build-frontend:  ## Build frontend Vue.js application
+	@echo "$(BLUE)📦 Building frontend application...$(RESET)"
+	cd frontend && npm run build
 
-# TDD workflow helpers
-tdd-cycle:
-	@echo "🔴 RED: Write failing test"
-	@echo "🟢 GREEN: Make test pass"  
-	@echo "🔵 REFACTOR: Improve code"
-
-red:
-	@echo "🔴 RED Phase: Write a failing test first!"
-	uv run pytest tests/ -x -v
-
-green:
-	@echo "🟢 GREEN Phase: Make the test pass!"
-	uv run pytest tests/ -x -v
-
-refactor:
-	@echo "🔵 REFACTOR Phase: Improve code while keeping tests green!"
-	uv run pytest tests/ -v
-	make lint
-	make format
-
-# Database operations
-db-test-start:
-	@echo "Starting test database container..."
-	docker-compose -f docker-compose.test.yml up -d
-	@echo "Waiting for database to be ready..."
-	sleep 5
-
-db-test-stop:
-	@echo "Stopping test database container..."
-	docker-compose -f docker-compose.test.yml down
-
-db-test-setup: db-test-start
-	@echo "Setting up test database..."
-	sleep 2
-	# Database is created automatically by container
-
-db-test-reset: db-test-stop db-test-start
-	@echo "Test database reset complete"
+##@ Help
+.PHONY: help
+help:  ## Display this help message
+	@awk 'BEGIN {FS = ":.*##"; printf "\n$(GREEN)FraiseQL Doctor - Monorepo Commands$(RESET)\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  $(BLUE)%-20s$(RESET) %s\n", $$1, $$2 } /^##@/ { printf "\n$(YELLOW)%s$(RESET)\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+	@echo ""

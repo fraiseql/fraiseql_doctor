@@ -1,12 +1,31 @@
-# FraiseQL Doctor - TDD Implementation
+# FraiseQL Doctor
 
-A test-driven health monitoring and query execution tool for FraiseQL/GraphQL endpoints.
+A comprehensive health monitoring and testing tool for FraiseQL endpoints with a modern Vue.js dashboard.
 
-## 🎯 Project Status: FRESH TDD START
+## 📁 Project Structure (Monorepo)
 
-**Starting Date:** August 16, 2025  
-**Approach:** Comprehensive Test-Driven Development  
-**Previous Implementation:** Archived in `archive/20250816_first_try_without_tdd`
+This is a monorepo containing both backend and frontend applications:
+
+```
+fraiseql_doctor/
+├── backend/           # Python backend (FastAPI + SQLAlchemy)
+│   ├── src/          # Source code
+│   ├── tests/        # Test suite (100% TDD coverage)
+│   ├── alembic/      # Database migrations
+│   └── pyproject.toml
+├── frontend/         # Vue.js dashboard (Vue 3 + TypeScript)
+│   ├── src/          # Vue components and services
+│   ├── tests/        # Frontend tests
+│   └── package.json
+├── docs/             # Shared documentation
+├── scripts/          # Build and deployment scripts
+└── docker-compose.yml # Multi-service orchestration
+```
+
+## 🎯 Current Implementation Status
+
+**Backend Status:** ✅ **COMPLETE** - TDD Implementation Phase 1-4  
+**Frontend Status:** 🚧 **IN PROGRESS** - Phase 2.5 Vue.js Dashboard Implementation
 
 ## 🔄 TDD Development Phases
 
