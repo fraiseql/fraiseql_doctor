@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 
 // These imports will fail until we implement them
-import { useAuth } from '@/services/auth/useAuth'
+import { useAuth, resetAuthForTesting } from '@/services/auth/useAuth'
 import { AuthProviderType } from '@/types/auth'
 
 // Mock components for testing
@@ -19,6 +19,8 @@ describe('Authentication System', () => {
   beforeEach(() => {
     // Reset Pinia for each test
     setActivePinia(createPinia())
+    // Reset authentication state for each test
+    resetAuthForTesting()
   })
 
   it('should initialize with Mock provider by default in test environment', () => {

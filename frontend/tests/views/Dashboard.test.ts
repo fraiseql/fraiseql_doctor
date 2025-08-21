@@ -13,7 +13,8 @@ const mockWebSocket = {
   connect: vi.fn(),
   disconnect: vi.fn(),
   emit: vi.fn(),
-  on: vi.fn()
+  on: vi.fn(),
+  error: { value: null }
 }
 
 vi.mock('@/services/websocket/useWebSocket', () => ({
@@ -46,6 +47,8 @@ describe('Dashboard Overview', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    // Reset WebSocket error state
+    mockWebSocket.error.value = null
   })
 
   it('should display status cards', () => {
@@ -103,18 +106,16 @@ describe('Dashboard Overview', () => {
   })
 
   it('should handle WebSocket connection errors', async () => {
+    // Set up error before mounting
+    mockWebSocket.error.value = new Error('Connection failed')
+    
     wrapper = mount(DashboardView, {
       global: {
         plugins: [createPinia()]
       }
     })
     
-    // Simulate connection error
-    const errorHandler = mockWebSocket.on.mock.calls.find(call => call[0] === 'error')?.[1]
-    if (errorHandler) {
-      errorHandler(new Error('Connection failed'))
-      await nextTick()
-    }
+    await nextTick()
     
     // Should show error state
     expect(wrapper.find('[data-testid="error-message"]').exists()).toBeTruthy()

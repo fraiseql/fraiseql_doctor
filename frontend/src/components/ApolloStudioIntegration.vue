@@ -7,14 +7,37 @@
     :style="containerStyles"
   >
     <header class="studio-header">
-      <h2 data-testid="studio-title" class="text-xl font-semibold">
-        GraphQL Playground
-      </h2>
-      
-      <!-- Configuration Summary -->
-      <div v-if="configMode === 'advanced'" data-testid="config-summary" class="text-sm text-gray-600 mt-2">
-        <span v-if="authSummary">{{ authSummary }}</span>
-        <span v-if="endpoint?.introspectionEnabled"> • Introspection enabled</span>
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 data-testid="studio-title" class="text-xl font-semibold">
+            GraphQL Playground
+          </h2>
+          
+          <!-- Configuration Summary -->
+          <div v-if="configMode === 'advanced'" data-testid="config-summary" class="text-sm text-gray-600 mt-2">
+            <span v-if="authSummary">{{ authSummary }}</span>
+            <span v-if="endpoint?.introspectionEnabled"> • Introspection enabled</span>
+          </div>
+        </div>
+
+        <!-- Query History Toggle -->
+        <div class="flex items-center space-x-2">
+          <button
+            @click="showQueryHistory = !showQueryHistory"
+            :class="[
+              'px-3 py-2 text-sm rounded transition-colors',
+              showQueryHistory 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            ]"
+            title="Toggle Query History"
+          >
+            <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            History
+          </button>
+        </div>
       </div>
     </header>
 
@@ -82,18 +105,36 @@
       <p class="mt-2 text-gray-600">Loading Apollo Studio...</p>
     </div>
 
-    <!-- Apollo Studio Iframe -->
-    <iframe
-      v-if="showIframe"
-      data-testid="apollo-studio-iframe"
-      :src="finalStudioUrl"
-      :title="iframeTitle"
-      :aria-label="iframeAriaLabel"
-      :style="iframeStyles"
-      class="studio-iframe"
-      @load="handleIframeLoad"
-      @error="handleIframeError"
-    />
+    <!-- Main Content Area -->
+    <div class="studio-content flex-1 flex" v-if="!showErrorState && !showNetworkError">
+      <!-- Apollo Studio Iframe -->
+      <div class="studio-main flex-1">
+        <iframe
+          v-if="showIframe"
+          data-testid="apollo-studio-iframe"
+          :src="finalStudioUrl"
+          :title="iframeTitle"
+          :aria-label="iframeAriaLabel"
+          :style="iframeStyles"
+          class="studio-iframe"
+          @load="handleIframeLoad"
+          @error="handleIframeError"
+        />
+      </div>
+
+      <!-- Query History Sidebar -->
+      <div 
+        v-if="showQueryHistory"
+        class="studio-history w-96 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+      >
+        <QueryHistory
+          :endpoints="availableEndpoints"
+          :current-endpoint="endpoint"
+          @replay-query="handleReplayQuery"
+          @save-template="handleSaveTemplate"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -101,12 +142,16 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { buildApolloStudioUrl } from '../utils/apolloStudioUrl'
 import { useApolloStudioConfig } from '../services/apolloStudioConfig'
+import { useQueryHistory } from '../services/queryHistory'
+import QueryHistory from './QueryHistory.vue'
 import type { GraphQLEndpoint, AuthType, StudioConfig, UrlParams } from '../services/apolloStudioConfig'
+import type { QueryHistoryEntry } from '../types/queryHistory'
 
 // Props
 interface Props {
   endpointUrl?: string
   endpoint?: GraphQLEndpoint
+  availableEndpoints?: GraphQLEndpoint[]
   authType?: AuthType
   customParams?: UrlParams
   studioConfig?: StudioConfig
@@ -119,6 +164,7 @@ interface Props {
   debugMode?: boolean
   enableRetry?: boolean
   maxRetries?: number
+  enableQueryHistory?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -129,7 +175,9 @@ const props = withDefaults(defineProps<Props>(), {
   showErrorBoundary: false,
   debugMode: false,
   enableRetry: true,
-  maxRetries: 3
+  maxRetries: 3,
+  enableQueryHistory: true,
+  availableEndpoints: () => []
 })
 
 // Emits
@@ -137,6 +185,8 @@ const emit = defineEmits<{
   'studio-loaded': [payload: { url: string; timestamp: Date }]
   'studio-error': [error: Error]
   'config-changed': [config: StudioConfig]
+  'query-replayed': [entry: QueryHistoryEntry]
+  'template-requested': [entry: QueryHistoryEntry]
 }>()
 
 // Composables
@@ -147,12 +197,15 @@ const {
   detectAuthType
 } = useApolloStudioConfig()
 
+const queryHistoryService = useQueryHistory()
+
 // State
 const isLoading = ref(true)
 const hasError = ref(false)
 const retryCount = ref(0)
 const errorMessage = ref('')
 const networkError = ref(false)
+const showQueryHistory = ref(false)
 
 // Computed Properties
 const containerClasses = computed(() => {
@@ -379,6 +432,30 @@ function validateConfiguration() {
   return true
 }
 
+// Query History Methods
+function handleReplayQuery(entry: QueryHistoryEntry) {
+  emit('query-replayed', entry)
+}
+
+function handleSaveTemplate(entry: QueryHistoryEntry) {
+  emit('template-requested', entry)
+}
+
+// Method to manually add a query to history (for iframe integration)
+function addQueryToHistory(query: string, variables?: Record<string, any>, result?: any, success: boolean = true, executionTime: number = 0) {
+  if (!props.endpoint || !props.enableQueryHistory) return
+
+  queryHistoryService.addQuery({
+    endpointId: props.endpoint.id,
+    query,
+    variables,
+    executionTime,
+    success,
+    result,
+    statusCode: success ? 200 : 500
+  })
+}
+
 // Watchers
 watch([() => props.endpoint, () => props.authType, () => props.endpointUrl], () => {
   validateConfiguration()
@@ -398,6 +475,11 @@ onMounted(() => {
 
 onUnmounted(() => {
   // Cleanup any pending timers or event listeners
+})
+
+// Expose methods for external access (e.g., from parent components)
+defineExpose({
+  addQueryToHistory
 })
 </script>
 
@@ -432,7 +514,20 @@ onUnmounted(() => {
 
 .studio-iframe {
   @apply w-full border-0;
+  height: 100%;
+}
+
+.studio-content {
   height: calc(100% - 73px); /* Account for header */
+}
+
+.studio-main {
+  min-width: 0; /* Allows iframe to shrink */
+}
+
+.studio-history {
+  min-width: 384px; /* w-96 = 384px */
+  max-width: 384px;
 }
 
 .error-boundary {
@@ -456,13 +551,27 @@ onUnmounted(() => {
 }
 
 /* Responsive styles */
+@media (max-width: 1200px) {
+  .studio-history {
+    min-width: 320px;
+    max-width: 320px;
+  }
+}
+
 @media (max-width: 768px) {
   .responsive-layout .studio-header {
     @apply p-2;
   }
   
-  .responsive-layout .studio-iframe {
-    height: calc(100% - 60px);
+  .responsive-layout .studio-content {
+    @apply flex-col;
+  }
+  
+  .responsive-layout .studio-history {
+    @apply w-full;
+    min-width: unset;
+    max-width: unset;
+    height: 300px;
   }
 }
 </style>
