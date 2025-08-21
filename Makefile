@@ -1,4 +1,4 @@
-.PHONY: install dev test test-unit test-integration test-performance lint format clean build tdd-cycle red green refactor
+.PHONY: install dev test test-unit test-integration test-performance lint format security-scan security-test security-full clean build tdd-cycle red green refactor
 
 install:
 	uv sync
@@ -32,6 +32,25 @@ lint:
 format:
 	uv run ruff format .
 	uv run ruff check --fix .
+
+# Security scanning commands
+security-scan:
+	@echo "🔒 Running security scans..."
+	uv run bandit -r src/
+	uv run safety check
+	uv run ruff check --select S .
+
+security-test:
+	@echo "🔒 Running security tests..."
+	uv run pytest tests/security/ -v
+
+security-full:
+	@echo "🔒 Running complete security audit..."
+	uv run bandit -r src/ -f json -o bandit-report.json
+	uv run safety check --json --output safety-report.json || true
+	uv run ruff check --select S . --format json --output-file ruff-security-report.json || true
+	uv run pytest tests/security/ -v --junitxml=security-tests.xml
+	@echo "Security reports generated: bandit-report.json, safety-report.json, ruff-security-report.json, security-tests.xml"
 
 clean:
 	rm -rf dist/

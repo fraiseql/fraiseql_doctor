@@ -45,8 +45,10 @@ class TestGraphQLClient:
         
         # Handle random failures
         if self.random_failures:
-            import random
-            if random.random() < self.failure_rate:
+            import secrets
+            # Use cryptographically secure random for test failures
+            secure_random = secrets.SystemRandom()
+            if secure_random.random() < self.failure_rate:
                 raise Exception("Random execution failure")
         
         # Realistic timing simulation

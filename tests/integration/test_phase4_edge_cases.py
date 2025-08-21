@@ -15,6 +15,7 @@ import pytest
 import asyncio
 import json
 import math
+import logging
 from datetime import datetime, timezone, timedelta
 from uuid import uuid4, UUID
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -542,9 +543,9 @@ class TestFileSystemEdgeCases:
                     # Should be within the base path
                     assert tmp_path in file_path.parents
                     
-            except Exception:
-                # Expected to fail for malicious paths
-                pass
+            except Exception as e:
+                # Expected to fail for malicious paths - log for debugging
+                logging.getLogger(__name__).debug(f"Malicious path rejected as expected: {e}")
 
 
 class TestNetworkProtocolEdgeCases:
@@ -657,8 +658,9 @@ class TestMemoryAndResourceLimits:
             for storage_key in large_objects:
                 try:
                     await limited_storage_manager.delete_result(storage_key)
-                except Exception:
-                    pass
+                except Exception as e:
+                    # Log cleanup failures for debugging
+                    logging.getLogger(__name__).debug(f"Failed to cleanup storage key during test: {e}")
 
 
 if __name__ == "__main__":

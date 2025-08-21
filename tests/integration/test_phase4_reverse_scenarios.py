@@ -17,6 +17,7 @@ import asyncio
 import json
 import time
 import threading
+import logging
 from datetime import datetime, timezone, timedelta
 from uuid import uuid4, UUID
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -718,8 +719,9 @@ class TestCleanupAndMaintenance:
                         {"data": f"item_{i}"}
                     )
                     await asyncio.sleep(0.01)  # Small delay
-                except Exception:
-                    pass  # Expected under load
+                except Exception as e:
+                    # Expected under load - log for debugging
+                    logging.getLogger(__name__).debug(f"Storage operation failed under load: {e}")
         
         # Start background task
         storage_task = asyncio.create_task(background_storage())
@@ -756,7 +758,7 @@ class TestExtremeConcurrency:
         
         async def random_operation(index):
             """Perform a random operation."""
-            import random
+            import secrets
             operations = [
                 lambda: collection_manager.get_collection(uuid4()),
                 lambda: collection_manager.search_queries(QuerySearchFilter(limit=1)),
@@ -764,7 +766,9 @@ class TestExtremeConcurrency:
             ]
             
             try:
-                operation = random.choice(operations)
+                # Use cryptographically secure random for operation selection
+                secure_random = secrets.SystemRandom()
+                operation = secure_random.choice(operations)
                 await operation()
                 return True
             except Exception:

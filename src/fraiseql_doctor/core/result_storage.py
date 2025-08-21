@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 import pickle
+import warnings
 import aiofiles
 from abc import ABC, abstractmethod
 
@@ -227,13 +228,14 @@ class FileSystemStorageBackend:
     
     def _get_file_path(self, key: str) -> Path:
         """Get file path for key."""
-        # Hash key to avoid file system issues
-        key_hash = hashlib.md5(key.encode()).hexdigest()
+        # Hash key to avoid file system issues (using secure Blake2b)
+        key_hash = hashlib.blake2b(key.encode(), digest_size=32).hexdigest()
         return self.base_path / f"{key_hash}.dat"
     
     def _get_metadata_path(self, key: str) -> Path:
         """Get metadata file path for key."""
-        key_hash = hashlib.md5(key.encode()).hexdigest()
+        # Hash key to avoid file system issues (using secure Blake2b)
+        key_hash = hashlib.blake2b(key.encode(), digest_size=32).hexdigest()
         return self.metadata_path / f"{key_hash}.json"
     
     async def store(self, key: str, data: bytes, metadata: Dict[str, Any]) -> bool:
@@ -528,7 +530,20 @@ class ResultStorageManager:
         if self.config.serialization == SerializationFormat.JSON:
             return json.dumps(data, default=str).encode('utf-8')
         elif self.config.serialization == SerializationFormat.PICKLE:
+            # Issue security warning for pickle usage
+            warnings.warn(
+                "Pickle serialization is enabled. This can be unsafe with untrusted data. "
+                "Consider using JSON serialization for better security.",
+                UserWarning,
+                stacklevel=2
+            )
             return pickle.dumps(data)
+        elif self.config.serialization == SerializationFormat.MSGPACK:
+            try:
+                import msgpack
+                return msgpack.packb(data, default=str)
+            except ImportError:
+                raise ValueError("msgpack is not installed. Install with: pip install msgpack")
         else:
             raise ValueError(f"Unsupported serialization format: {self.config.serialization}")
     
@@ -537,7 +552,23 @@ class ResultStorageManager:
         if self.config.serialization == SerializationFormat.JSON:
             return json.loads(data.decode('utf-8'))
         elif self.config.serialization == SerializationFormat.PICKLE:
+            # Issue security warning and perform basic validation
+            warnings.warn(
+                "Pickle deserialization is being used. This can execute arbitrary code "
+                "from untrusted data. Ensure data source is trusted.",
+                UserWarning,
+                stacklevel=2
+            )
+            # Basic validation - check if data looks like pickle
+            if not data.startswith(b'\x80'):
+                raise ValueError("Data does not appear to be valid pickle format")
             return pickle.loads(data)
+        elif self.config.serialization == SerializationFormat.MSGPACK:
+            try:
+                import msgpack
+                return msgpack.unpackb(data, raw=False, strict_map_key=False)
+            except ImportError:
+                raise ValueError("msgpack is not installed. Install with: pip install msgpack")
         else:
             raise ValueError(f"Unsupported serialization format: {self.config.serialization}")
     

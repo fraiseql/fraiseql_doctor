@@ -46,6 +46,10 @@ dev = [
     "pre-commit>=3.4.0",
     "aioresponses>=0.7.0",
     "hypothesis>=6.82.0",
+    # Security tools
+    "bandit>=1.7.5",
+    "safety>=3.0.0",
+    "semgrep>=1.45.0",
 ]
 
 [project.scripts]

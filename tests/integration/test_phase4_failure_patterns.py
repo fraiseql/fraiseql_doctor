@@ -16,6 +16,7 @@ import gc
 import psutil
 import threading
 import time
+import logging
 from datetime import datetime, timezone, timedelta
 from uuid import uuid4
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -146,8 +147,9 @@ class TestCircuitBreakerPatterns:
         for _ in range(circuit_breaker.failure_threshold + 1):
             try:
                 await circuit_breaker.call(unstable_operation)
-            except Exception:
-                pass
+            except Exception as e:
+                # Expected failures to trip circuit breaker
+                logging.getLogger(__name__).debug(f"Circuit breaker operation failed as expected: {e}")
         
         assert circuit_breaker.state == "OPEN"
         
@@ -502,8 +504,9 @@ class TestDeadlockPrevention:
                 update_schema = QueryCollectionUpdate(name=f"Updated {i}")
                 try:
                     await collection_manager.update_collection(collection_id, update_schema)
-                except Exception:
-                    pass  # Expected due to missing collection
+                except Exception as e:
+                    # Expected due to missing collection - log for debugging
+                    logging.getLogger(__name__).debug(f"Collection update failed as expected: {e}")
                 await asyncio.sleep(0.01)
         
         # Run operations concurrently
@@ -562,7 +565,7 @@ class TestDeadlockPrevention:
         # This test demonstrates potential deadlock
         # In real implementation, consistent lock ordering should prevent this
         if deadlock_detected:
-            print("Deadlock detected - implement consistent lock ordering")
+            logging.getLogger(__name__).warning("Deadlock detected - implement consistent lock ordering")
 
 
 class TestErrorPropagation:

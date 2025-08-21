@@ -14,6 +14,7 @@ import asyncio
 import time
 import gc
 import statistics
+import logging
 from datetime import datetime, timezone, timedelta
 from uuid import uuid4
 from unittest.mock import AsyncMock, MagicMock
@@ -190,11 +191,11 @@ class TestRealisticWorkloadStress:
             except Exception as e:
                 operation_time = time.time() - start_time
                 performance_monitor.record_operation(operation_time, success=False)
-                print(f"Collection creation failed: {e}")
+                logging.getLogger(__name__).info(f"Collection creation failed: {e}")
         
         # Verify performance metrics
         stats = performance_monitor.get_stats()
-        print(f"Collection stress test stats: {stats}")
+        logging.getLogger(__name__).info(f"Collection stress test stats: {stats}")
         
         # Performance assertions
         assert stats["success_rate"] > 0.9  # At least 90% success rate
@@ -267,7 +268,7 @@ class TestRealisticWorkloadStress:
         assert total_time < 60             # Complete within 1 minute
         assert total_time / len(results) < 0.5  # Average under 0.5s per query
         
-        print(f"Burst execution: {successful} successful, {failed} failed, {exceptions} exceptions in {total_time:.2f}s")
+        logging.getLogger(__name__).info(f"Burst execution: {successful} successful, {failed} failed, {exceptions} exceptions in {total_time:.2f}s")
 
 
 class TestRecoveryAndResilience:
@@ -435,8 +436,9 @@ class TestIntegrationStabilityUnderLoad:
                     )
                     await collection_manager.create_collection(collection_schema)
                     await asyncio.sleep(0.1)  # Small delay
-                except Exception:
-                    pass  # Continue on errors
+                except Exception as e:
+                    # Log the error but continue with load testing
+                    logging.getLogger(__name__).debug(f"Create collection failed during load test: {e}")
         
         async def search_queries():
             """Search queries continuously."""
@@ -449,8 +451,9 @@ class TestIntegrationStabilityUnderLoad:
                     )
                     await collection_manager.search_queries(search_filter)
                     await asyncio.sleep(0.05)  # Small delay
-                except Exception:
-                    pass  # Continue on errors
+                except Exception as e:
+                    # Log the error but continue with load testing
+                    logging.getLogger(__name__).debug(f"Search queries failed during load test: {e}")
         
         async def execute_queries():
             """Execute queries continuously."""
@@ -470,8 +473,9 @@ class TestIntegrationStabilityUnderLoad:
                     
                     await execution_manager.execute_query(query_id, endpoint_id)
                     await asyncio.sleep(0.2)  # Small delay
-                except Exception:
-                    pass  # Continue on errors
+                except Exception as e:
+                    # Log the error but continue with load testing
+                    logging.getLogger(__name__).debug(f"Execute query failed during load test: {e}")
         
         async def store_and_retrieve_results():
             """Store and retrieve results continuously."""
@@ -490,8 +494,9 @@ class TestIntegrationStabilityUnderLoad:
                     # Retrieve result
                     await storage_manager.retrieve_result(storage_key)
                     await asyncio.sleep(0.3)  # Small delay
-                except Exception:
-                    pass  # Continue on errors
+                except Exception as e:
+                    # Log the error but continue with load testing
+                    logging.getLogger(__name__).debug(f"Store/retrieve result failed during load test: {e}")
         
         # Run mixed workload
         start_time = time.time()
@@ -512,7 +517,7 @@ class TestIntegrationStabilityUnderLoad:
         # Should complete within reasonable time
         assert total_time < 120  # Within 2 minutes
         
-        print(f"Mixed workload completed in {total_time:.2f} seconds")
+        logging.getLogger(__name__).info(f"Mixed workload completed in {total_time:.2f} seconds")
 
 
 class TestPerformanceRegressionDetection:
@@ -589,9 +594,9 @@ class TestPerformanceRegressionDetection:
         assert collection_variance < 0.1    # Low variance in collection times
         assert execution_variance < 1.0     # Reasonable variance in execution times
         
-        print(f"Benchmark results:")
-        print(f"  Collection creation: {avg_collection_time:.3f}s ± {collection_variance:.3f}")
-        print(f"  Query execution: {avg_execution_time:.3f}s ± {execution_variance:.3f}")
+        logging.getLogger(__name__).info(f"Benchmark results:")
+        logging.getLogger(__name__).info(f"  Collection creation: {avg_collection_time:.3f}s ± {collection_variance:.3f}")
+        logging.getLogger(__name__).info(f"  Query execution: {avg_execution_time:.3f}s ± {execution_variance:.3f}")
 
 
 @pytest.mark.slow
@@ -631,7 +636,7 @@ class TestEndToEndReverseScenarios:
         ]
         
         for scenario in adversarial_scenarios:
-            print(f"Running adversarial scenario: {scenario['name']}")
+            logging.getLogger(__name__).info(f"Running adversarial scenario: {scenario['name']}")
             
             start_time = time.time()
             successful_ops = 0
@@ -694,18 +699,18 @@ class TestEndToEndReverseScenarios:
                     
                 except Exception as e:
                     failed_ops += 1
-                    print(f"  Operation {i} failed: {e}")
+                    logging.getLogger(__name__).debug(f"  Operation {i} failed: {e}")
                 
                 await asyncio.sleep(scenario["delay"])
             
             end_time = time.time()
             total_time = end_time - start_time
             
-            print(f"  Scenario '{scenario['name']}' completed:")
-            print(f"    Total time: {total_time:.2f}s")
-            print(f"    Successful: {successful_ops}/{scenario['operations']}")
-            print(f"    Failed: {failed_ops}/{scenario['operations']}")
-            print(f"    Success rate: {successful_ops/scenario['operations']*100:.1f}%")
+            logging.getLogger(__name__).info(f"  Scenario '{scenario['name']}' completed:")
+            logging.getLogger(__name__).info(f"    Total time: {total_time:.2f}s")
+            logging.getLogger(__name__).info(f"    Successful: {successful_ops}/{scenario['operations']}")
+            logging.getLogger(__name__).info(f"    Failed: {failed_ops}/{scenario['operations']}")
+            logging.getLogger(__name__).info(f"    Success rate: {successful_ops/scenario['operations']*100:.1f}%")
             
             # System should maintain reasonable performance even under adversarial conditions
             assert successful_ops > 0  # Some operations should succeed

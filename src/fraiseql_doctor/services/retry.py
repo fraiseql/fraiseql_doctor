@@ -5,7 +5,7 @@ Provides sophisticated retry mechanisms for GraphQL client operations
 with exponential backoff, jitter, and circuit breaker patterns.
 """
 import asyncio
-import random
+import secrets
 import time
 from typing import Optional, Callable, Any, Union, Type
 from dataclasses import dataclass
@@ -255,7 +255,9 @@ class RetryableClient:
         
         # Add jitter to prevent thundering herd
         if config.jitter:
-            delay = delay * (0.5 + random.random() * 0.5)
+            # Use cryptographically secure random for jitter
+            secure_random = secrets.SystemRandom()
+            delay = delay * (0.5 + secure_random.random() * 0.5)
         
         return delay
     
