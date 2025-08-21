@@ -179,7 +179,7 @@
         <button
           type="submit"
           data-testid="submit-btn"
-          :disabled="loading"
+          :disabled="!!loading"
           class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span v-if="loading">
@@ -341,9 +341,9 @@ function handleSubmit() {
     const createData: CreateEndpointInput = {
       name: formData.name.trim(),
       url: formData.url.trim(),
-      description: formData.description.trim() || undefined,
       introspectionEnabled: formData.introspectionEnabled,
-      headers: Object.keys(headersData).length > 0 ? headersData : {}
+      ...(formData.description.trim() && { description: formData.description.trim() }),
+      ...(Object.keys(headersData).length > 0 && { headers: headersData })
     }
     
     emit('create', createData)
@@ -351,9 +351,9 @@ function handleSubmit() {
     const updateData: UpdateEndpointInput = {
       name: formData.name.trim(),
       url: formData.url.trim(),
-      description: formData.description.trim() || undefined,
       introspectionEnabled: formData.introspectionEnabled,
-      headers: headersData
+      ...(formData.description.trim() && { description: formData.description.trim() }),
+      ...(Object.keys(headersData).length > 0 && { headers: headersData })
     }
     
     emit('update', updateData)

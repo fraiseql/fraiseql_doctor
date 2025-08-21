@@ -2,7 +2,6 @@ import type {
   QueryHistoryEntry,
   QueryHistoryFilter,
   QueryHistoryStats,
-  QueryHistorySortOptions,
   CreateQueryHistoryInput,
   UpdateQueryHistoryInput,
   QueryHistoryExportOptions,
@@ -187,15 +186,15 @@ function updateTemplateUsage(query: string): void {
         id: generateId(),
         endpointId: input.endpointId,
         query: input.query,
-        variables: input.variables,
-        operationName: input.operationName,
+        ...(input.variables && { variables: input.variables }),
+        ...(input.operationName && { operationName: input.operationName }),
         timestamp: now,
         executionTime: input.executionTime,
         success: input.success,
-        result: input.result,
-        error: input.error,
-        statusCode: input.statusCode,
-        headers: input.headers,
+        ...(input.result && { result: input.result }),
+        ...(input.error && { error: input.error }),
+        ...(input.statusCode && { statusCode: input.statusCode }),
+        ...(input.headers && { headers: input.headers }),
         tags: input.tags || [],
         favorite: false,
         createdAt: now,
@@ -381,11 +380,17 @@ function updateTemplateUsage(query: string): void {
       
       // Remove sensitive data if requested
       if (!includeResults) {
-        dataToExport = dataToExport.map(entry => ({ ...entry, result: undefined }))
+        dataToExport = dataToExport.map(entry => {
+          const { result, ...entryWithoutResult } = entry
+          return entryWithoutResult
+        })
       }
       
       if (!includeVariables) {
-        dataToExport = dataToExport.map(entry => ({ ...entry, variables: undefined }))
+        dataToExport = dataToExport.map(entry => {
+          const { variables, ...entryWithoutVariables } = entry
+          return entryWithoutVariables
+        })
       }
       
       const timestamp = new Date().toISOString().split('T')[0]
@@ -493,14 +498,13 @@ function updateTemplateUsage(query: string): void {
       const template: QueryTemplate = {
         id: generateId(),
         name: input.name,
-        description: input.description,
+        ...(input.description && { description: input.description }),
         query: input.query,
-        variables: input.variables,
+        ...(input.variables && { variables: input.variables }),
         tags: input.tags || [],
         endpointIds: input.endpointIds || [],
         favorite: false,
         usageCount: 0,
-        lastUsed: undefined,
         createdAt: now,
         updatedAt: now
       }

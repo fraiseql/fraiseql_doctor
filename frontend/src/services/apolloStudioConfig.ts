@@ -47,6 +47,7 @@ export interface SafeResult<T> {
   config?: StudioConfig
   error?: string | null
   warnings?: string[]
+  fallbackConfig?: StudioConfig
 }
 
 export interface RetryOptions {
@@ -141,6 +142,7 @@ export function useApolloStudioConfig() {
   }
   
   // Common error handling patterns
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function handleError<T>(
     operation: () => T,
     fallback: T,
@@ -406,6 +408,7 @@ export function useApolloStudioConfig() {
   }
 
   function switchEndpointWithAuth(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     fromEndpoint: GraphQLEndpoint,
     toEndpoint: GraphQLEndpoint,
     forceAuthType: AuthType
@@ -585,8 +588,7 @@ export function useApolloStudioConfig() {
       return {
         config,
         retryCount: 0,
-        canRetry: true,
-        lastError: undefined
+        canRetry: true
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'

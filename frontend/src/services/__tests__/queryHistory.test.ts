@@ -1,11 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createFreshQueryHistory } from '../queryHistory'
 import type { 
-  QueryHistoryEntry, 
   CreateQueryHistoryInput, 
   QueryHistoryFilter,
-  QueryHistoryStats,
-  QueryTemplate,
   CreateQueryTemplateInput
 } from '../../types/queryHistory'
 
@@ -17,7 +14,6 @@ describe('useQueryHistory', () => {
     queryHistory = createFreshQueryHistory()
   })
 
-  const getHistoryService = () => queryHistory
 
   describe('Basic Query History Management', () => {
     it('should add a query to history', () => {
@@ -207,7 +203,7 @@ describe('useQueryHistory', () => {
       testQueries.forEach(query => {
         const input = { ...query } as CreateQueryHistoryInput
         delete (input as any).timestamp
-        const result = queryHistory.addQuery(input)
+        queryHistory.addQuery(input)
         // Manually set timestamp and favorite for testing
         const history = queryHistory.getHistory()
         const addedQuery = history.find(h => h.query === query.query)

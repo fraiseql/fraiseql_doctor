@@ -120,7 +120,7 @@ interface Emits {
   (event: 'close'): void
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const exportOptions = ref<QueryHistoryExportOptions>({

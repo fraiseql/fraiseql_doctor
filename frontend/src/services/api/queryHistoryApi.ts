@@ -100,7 +100,9 @@ class QueryHistoryApiService {
         totalQueries: data.total_queries,
         successfulQueries: data.successful_queries,
         failedQueries: data.failed_queries,
-        averageResponseTime: data.average_response_time
+        averageExecutionTime: data.average_response_time,
+        mostUsedEndpoints: data.most_used_endpoints || [],
+        recentTags: data.recent_tags || []
       }
       
       return {
@@ -280,10 +282,10 @@ class QueryHistoryApiService {
           const csvHeaders = ['Timestamp', 'Endpoint', 'Query', 'Success', 'Response Time', 'Error']
           const csvRows = executions.map(entry => [
             entry.timestamp.toISOString(),
-            entry.endpoint?.name || 'Unknown',
+            'Unknown', // TODO: endpoint name not available in QueryHistoryEntry
             entry.query.replace(/"/g, '""'), // Escape quotes
             entry.success ? 'Yes' : 'No',
-            entry.executionTime?.toString() || '',
+            entry.executionTime.toString(),
             entry.error || ''
           ])
           

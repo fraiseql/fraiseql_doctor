@@ -11,8 +11,7 @@ import type {
   UpdateQueryHistoryInput,
   QueryHistoryExportOptions,
   QueryHistoryExportResult,
-  QueryTemplate,
-  CreateQueryTemplateInput
+  QueryTemplate
 } from '../types/queryHistory'
 
 import { queryHistoryApi } from './api/queryHistoryApi'
@@ -224,7 +223,7 @@ class HybridQueryHistoryService {
     await this.testApiConnection()
 
     // Clear localStorage
-    const localResult = this.localService.clearHistory()
+    this.localService.clearHistory()
 
     if (this.apiConnected) {
       try {
@@ -242,7 +241,7 @@ class HybridQueryHistoryService {
     }
 
     return {
-      ...localResult,
+      success: true,
       source: 'localStorage'
     }
   }

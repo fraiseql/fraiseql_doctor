@@ -24,6 +24,7 @@
         </nav>
 
         <EndpointDetails
+          v-if="endpoint"
           :endpoint="endpoint"
           @edit="handleEdit"
           @delete="handleDelete"

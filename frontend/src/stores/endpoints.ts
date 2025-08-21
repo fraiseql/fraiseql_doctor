@@ -17,7 +17,7 @@ export const useEndpointsStore = defineStore('endpoints', () => {
   const error = ref<string | null>(null)
 
   // Services
-  const { testEndpoint: testEndpointConnectivity, getIntrospectionSchema } = useGraphQLClient()
+  const { testEndpoint: testEndpointConnectivity } = useGraphQLClient()
 
   // Getters
   const healthyEndpointsCount = computed(() => 
@@ -59,9 +59,9 @@ export const useEndpointsStore = defineStore('endpoints', () => {
         id: generateId(),
         name: input.name,
         url: input.url,
-        description: input.description,
+        ...(input.description && { description: input.description }),
         status: EndpointStatus.ACTIVE,
-        headers: input.headers,
+        ...(input.headers && { headers: input.headers }),
         introspectionEnabled: input.introspectionEnabled,
         isHealthy: false, // Will be updated by health check
         createdAt: new Date(),
@@ -162,7 +162,9 @@ export const useEndpointsStore = defineStore('endpoints', () => {
       endpoint.responseTime = result.responseTime
       endpoint.lastChecked = new Date()
       endpoint.status = result.success ? EndpointStatus.ACTIVE : EndpointStatus.ERROR
-      endpoint.errorMessage = result.errorMessage || undefined
+      if (result.errorMessage) {
+        endpoint.errorMessage = result.errorMessage
+      }
     } catch (err) {
       endpoint.isHealthy = false
       endpoint.status = EndpointStatus.ERROR
