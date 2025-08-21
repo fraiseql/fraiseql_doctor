@@ -2,13 +2,35 @@
   <div data-testid="dashboard-view" class="space-y-6">
     <!-- Header -->
     <div>
-      <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
-      <p class="mt-2 text-gray-600">Real-time monitoring of your FraiseQL endpoints</p>
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p class="mt-2 text-gray-600">Real-time monitoring of your FraiseQL endpoints</p>
+        </div>
+
+        <!-- Connection Status -->
+        <div class="flex items-center space-x-2" data-testid="connection-status">
+          <div
+            :class="[
+              'w-3 h-3 rounded-full',
+              {
+                'bg-green-500': connectionState === 'connected',
+                'bg-yellow-500': connectionState === 'connecting' || connectionState === 'reconnecting',
+                'bg-red-500': connectionState === 'error',
+                'bg-gray-500': connectionState === 'disconnected'
+              }
+            ]"
+          />
+          <span class="text-sm text-gray-600 capitalize">
+            {{ connectionState === 'connected' ? 'Live' : connectionState }}
+          </span>
+        </div>
+      </div>
     </div>
 
     <!-- Error State -->
-    <div 
-      v-if="error" 
+    <div
+      v-if="error"
       data-testid="error-message"
       class="bg-red-50 border border-red-200 rounded-md p-4"
     >
@@ -33,12 +55,12 @@
         <div class="p-5">
           <div class="flex items-center">
             <div class="flex-shrink-0">
-              <div 
+              <div
                 :class="[
                   'w-8 h-8 rounded-full',
                   {
                     'bg-green-500': stat.status === 'success',
-                    'bg-yellow-500': stat.status === 'warning', 
+                    'bg-yellow-500': stat.status === 'warning',
                     'bg-red-500': stat.status === 'error',
                     'bg-blue-500': stat.status === 'info',
                     'bg-gray-200': dashboardStore.isLoading
@@ -61,6 +83,22 @@
       </div>
     </div>
 
+    <!-- Endpoints Grid -->
+    <div v-if="endpointsStore.endpoints.length > 0" class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-lg font-medium text-gray-900 mb-4">Endpoint Status</h2>
+      <div
+        class="endpoints-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+        data-testid="endpoints-grid"
+      >
+        <HealthStatusCard
+          v-for="endpoint in endpointsStore.endpoints"
+          :key="endpoint.id"
+          :endpoint="endpoint"
+          data-testid="endpoint-status-card"
+        />
+      </div>
+    </div>
+
     <!-- Chart Section -->
     <div v-if="dashboardStore.chartData && !dashboardStore.isEmpty" class="bg-white shadow rounded-lg p-6">
       <h2 class="text-lg font-medium text-gray-900 mb-4">Performance Metrics</h2>
@@ -73,8 +111,8 @@
     </div>
 
     <!-- Empty State -->
-    <div 
-      v-if="dashboardStore.isEmpty" 
+    <div
+      v-if="dashboardStore.isEmpty"
       data-testid="empty-state"
       class="text-center py-12"
     >
@@ -90,52 +128,101 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, computed } from 'vue'
-import { useWebSocket } from '@/services/websocket/useWebSocket'
+import { onMounted, onUnmounted, computed, ref } from 'vue'
+import { useEndpointsStore } from '@/stores/endpoints'
 import { useDashboard } from '@/stores/dashboard'
+import { WebSocketService, ConnectionState } from '@/services/websocket'
+import { WEBSOCKET_EVENTS } from '@/config/websocket'
+import HealthStatusCard from '@/components/HealthStatusCard.vue'
 
-// Store and WebSocket setup
+// Store setup
+const endpointsStore = useEndpointsStore()
 const dashboardStore = useDashboard()
-const { connect, disconnect, emit, error: wsError } = useWebSocket()
+
+// WebSocket setup
+const webSocketService = ref<WebSocketService | null>(null)
+const error = ref<string | null>(null)
+const connectionState = ref<ConnectionState>(ConnectionState.DISCONNECTED)
 
 // Computed properties
-const error = computed(() => wsError?.value?.message || dashboardStore.error)
-
-// Display stats with fallback for empty state
 const displayStats = computed(() => {
-  if (dashboardStore.stats && dashboardStore.stats.length > 0) {
-    return dashboardStore.stats
-  }
-  
-  // Fallback placeholder stats for loading state
+  const healthyCount = endpointsStore.healthyEndpointsCount
+  const unhealthyCount = endpointsStore.unhealthyEndpointsCount
+  const totalCount = endpointsStore.endpoints.length
+
   return [
-    { label: 'Healthy Endpoints', value: 0, status: 'success' as const },
-    { label: 'Warning Endpoints', value: 0, status: 'warning' as const },
-    { label: 'Failed Endpoints', value: 0, status: 'error' as const },
-    { label: 'Total Requests', value: 0, status: 'info' as const }
+    { label: 'Total Endpoints', value: totalCount, status: 'info' as const },
+    { label: 'Healthy Endpoints', value: healthyCount, status: 'success' as const },
+    { label: 'Unhealthy Endpoints', value: unhealthyCount, status: 'error' as const },
+    { label: 'Average Response Time', value: calculateAverageResponseTime(), status: 'info' as const }
   ]
 })
 
-// WebSocket message handler
-const handleWebSocketMessage = (data: any) => {
-  if (data.stats && Array.isArray(data.stats)) {
-    dashboardStore.updateDashboardData(data)
-  } else if (data.stats && data.stats.length === 0) {
-    // Handle empty data case
-    dashboardStore.updateDashboardData({ stats: [], chartData: null })
+function calculateAverageResponseTime(): number {
+  const endpoints = endpointsStore.endpoints
+  if (endpoints.length === 0) return 0
+
+  const total = endpoints.reduce((sum, endpoint) => sum + (endpoint.responseTime || 0), 0)
+  return Math.round(total / endpoints.length)
+}
+
+// WebSocket handlers
+const handleHealthUpdate = (healthData: any) => {
+  endpointsStore.updateEndpointHealth(healthData.endpointId, {
+    isHealthy: healthData.isHealthy,
+    responseTime: healthData.responseTime,
+    timestamp: healthData.timestamp,
+    errorMessage: healthData.errorMessage
+  })
+}
+
+const handleConnectionStateChange = (data: { state: ConnectionState }) => {
+  connectionState.value = data.state
+  if (data.state === ConnectionState.CONNECTED) {
+    error.value = null
+  }
+}
+
+const handleWebSocketError = (errorData: any) => {
+  error.value = errorData?.message || 'WebSocket connection error'
+  connectionState.value = ConnectionState.ERROR
+}
+
+const handleDisconnection = (data: { reason: string; code: number }) => {
+  connectionState.value = ConnectionState.DISCONNECTED
+  if (data.reason !== 'Manual disconnect') {
+    error.value = `Connection lost: ${data.reason}`
+  }
+}
+
+const setupWebSocket = async () => {
+  try {
+    webSocketService.value = new WebSocketService()
+
+    webSocketService.value.on(WEBSOCKET_EVENTS.CONNECTED, handleConnectionStateChange)
+    webSocketService.value.on(WEBSOCKET_EVENTS.DISCONNECTED, handleDisconnection)
+    webSocketService.value.on(WEBSOCKET_EVENTS.ENDPOINT_HEALTH_UPDATE, handleHealthUpdate)
+    webSocketService.value.on(WEBSOCKET_EVENTS.ERROR, handleWebSocketError)
+
+    await webSocketService.value.connect()
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to initialize WebSocket'
+    connectionState.value = ConnectionState.ERROR
   }
 }
 
 // Lifecycle hooks
-onMounted(() => {
-  // Connect to WebSocket for real-time updates
-  connect('dashboard', handleWebSocketMessage)
-  
-  // Request initial data
-  emit('request-update')
+onMounted(async () => {
+  // Load initial endpoints data
+  await endpointsStore.loadEndpoints()
+
+  // Setup WebSocket for real-time updates
+  await setupWebSocket()
 })
 
 onUnmounted(() => {
-  disconnect('dashboard')
+  if (webSocketService.value) {
+    webSocketService.value.disconnect()
+  }
 })
 </script>

@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { 
-  GraphQLEndpoint, 
-  CreateEndpointInput, 
-  UpdateEndpointInput, 
-  EndpointTestResult 
+import type {
+  GraphQLEndpoint,
+  CreateEndpointInput,
+  UpdateEndpointInput,
+  EndpointTestResult
 } from '../types/endpoint'
 import { EndpointStatus } from '../types/endpoint'
 import { useGraphQLClient } from '../services/graphql/client'
@@ -20,15 +20,15 @@ export const useEndpointsStore = defineStore('endpoints', () => {
   const { testEndpoint: testEndpointConnectivity } = useGraphQLClient()
 
   // Getters
-  const healthyEndpointsCount = computed(() => 
+  const healthyEndpointsCount = computed(() =>
     endpoints.value.filter(endpoint => endpoint.isHealthy).length
   )
 
-  const unhealthyEndpointsCount = computed(() => 
+  const unhealthyEndpointsCount = computed(() =>
     endpoints.value.filter(endpoint => !endpoint.isHealthy).length
   )
 
-  const activeEndpoints = computed(() => 
+  const activeEndpoints = computed(() =>
     endpoints.value.filter(endpoint => endpoint.status === EndpointStatus.ACTIVE)
   )
 
@@ -41,7 +41,7 @@ export const useEndpointsStore = defineStore('endpoints', () => {
       // In a real app, this would fetch from an API
       // For now, we'll use mock data
       await new Promise(resolve => setTimeout(resolve, 500)) // Simulate API delay
-      
+
       endpoints.value = generateMockEndpoints()
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to load endpoints'
@@ -69,10 +69,10 @@ export const useEndpointsStore = defineStore('endpoints', () => {
       }
 
       endpoints.value.push(newEndpoint)
-      
+
       // Test the endpoint immediately after creation
       await performHealthCheck(newEndpoint.id)
-      
+
       return newEndpoint
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to create endpoint'
@@ -157,7 +157,7 @@ export const useEndpointsStore = defineStore('endpoints', () => {
 
     try {
       const result = await testEndpoint(endpoint.url)
-      
+
       endpoint.isHealthy = result.success
       endpoint.responseTime = result.responseTime
       endpoint.lastChecked = new Date()
@@ -179,6 +179,35 @@ export const useEndpointsStore = defineStore('endpoints', () => {
 
   function clearSelection(): void {
     selectedEndpoint.value = null
+  }
+
+  function updateEndpointHealth(endpointId: string, healthData: {
+    isHealthy: boolean
+    responseTime: number
+    timestamp?: string
+    errorMessage?: string
+  }): void {
+    const endpoint = endpoints.value.find(e => e.id === endpointId)
+    if (!endpoint) return
+
+    endpoint.isHealthy = healthData.isHealthy
+    endpoint.responseTime = healthData.responseTime
+
+    if (healthData.timestamp) {
+      endpoint.lastChecked = new Date(healthData.timestamp)
+    } else {
+      endpoint.lastChecked = new Date()
+    }
+
+    if (healthData.errorMessage) {
+      endpoint.errorMessage = healthData.errorMessage
+      endpoint.status = EndpointStatus.ERROR
+    } else if (healthData.isHealthy) {
+      endpoint.status = EndpointStatus.ACTIVE
+      delete endpoint.errorMessage
+    }
+
+    endpoint.updatedAt = new Date()
   }
 
   // Helper functions
@@ -252,6 +281,7 @@ export const useEndpointsStore = defineStore('endpoints', () => {
     testEndpoint,
     performHealthCheck,
     selectEndpoint,
-    clearSelection
+    clearSelection,
+    updateEndpointHealth
   }
 })

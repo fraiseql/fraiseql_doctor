@@ -20,3 +20,20 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies: [types-requests]
+
+  # Frontend TypeScript and Vue.js checks
+  - repo: local
+    hooks:
+      - id: typescript-check
+        name: TypeScript compilation check
+        entry: bash -c 'cd frontend && npm run type-check'
+        language: system
+        files: ^frontend/.*\.(ts|tsx|vue)$
+        pass_filenames: false
+
+      - id: vue-lint
+        name: Vue/TypeScript linting
+        entry: bash -c 'cd frontend && npm run lint'
+        language: system
+        files: ^frontend/.*\.(ts|tsx|vue|js|jsx)$
+        pass_filenames: false
