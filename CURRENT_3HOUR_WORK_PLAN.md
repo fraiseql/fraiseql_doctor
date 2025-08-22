@@ -1,7 +1,7 @@
 # 🎯 3-Hour Work Plan: GraphQL Admin UI + Real-Time Analytics
 
-**Session Date**: 2025-01-22  
-**Duration**: 3 hours (9 micro-cycles, 20 min each)  
+**Session Date**: 2025-01-22
+**Duration**: 3 hours (9 micro-cycles, 20 min each)
 **Focus**: Complete Sub-PRD GraphQL Admin UI + Enhanced Real-Time Dashboard
 
 ## 📊 Current Status Analysis
@@ -9,11 +9,11 @@
 ### ✅ **Completed Foundation**
 - Vue 3 + TypeScript project setup with TailwindCSS
 - Basic routing and navigation structure
-- Endpoint management (CRUD operations) 
+- Endpoint management (CRUD operations)
 - Strong test coverage (42+ tests passing in Apollo Studio config, query history, auth)
 - Real-time WebSocket foundation established
 
-### 🔄 **In Progress** 
+### 🔄 **In Progress**
 - Dashboard overview layout with basic cards
 - Component testing suite (comprehensive coverage)
 - Real-time analytics integration
@@ -26,7 +26,7 @@
 
 ---
 
-## 🕐 **Hour 1: GraphQL API Configuration Admin UI** 
+## 🕐 **Hour 1: GraphQL API Configuration Admin UI**
 *Priority: HIGH (Sub-PRD requirement)*
 
 ### **TDD Micro-Cycle 1A: ApiConfigurationAdmin Component** (20 min)
@@ -41,7 +41,7 @@ describe('ApiConfigurationAdmin', () => {
     const cards = wrapper.findAll('[data-testid="api-endpoint-card"]')
     expect(cards).toHaveLength(3)
     expect(wrapper.text()).toContain('api.example.dev')
-    expect(wrapper.text()).toContain('api.example.st') 
+    expect(wrapper.text()).toContain('api.example.st')
     expect(wrapper.text()).toContain('api.example.io')
   })
 
@@ -111,7 +111,7 @@ const endpoints = ref([
     lastCheck: new Date()
   },
   {
-    id: 'api-example-st', 
+    id: 'api-example-st',
     name: 'Example Staging API',
     url: 'https://api.example.st/graphql',
     environment: 'staging',
@@ -121,7 +121,7 @@ const endpoints = ref([
   },
   {
     id: 'api-example-io',
-    name: 'Example Production API', 
+    name: 'Example Production API',
     url: 'https://api.example.io/graphql',
     environment: 'prod',
     isHealthy: true,
@@ -163,7 +163,7 @@ describe('AdminHealthUpdates', () => {
   it('should update health status via WebSocket', async () => {
     const wrapper = mount(ApiConfigurationAdmin)
     const mockWebSocket = useMockWebSocket()
-    
+
     mockWebSocket.emit('api-health-update', {
       apiId: 'api-example-dev',
       isHealthy: false,
@@ -192,12 +192,12 @@ describe('AdminHealthUpdates', () => {
 ```vue
 <!-- src/components/admin/components/ApiEndpointCard.vue -->
 <template>
-  <div class="bg-white p-6 rounded-lg shadow border-l-4" 
+  <div class="bg-white p-6 rounded-lg shadow border-l-4"
        :class="healthBorderClass">
     <div class="flex items-center justify-between mb-4">
       <h3 class="font-semibold text-lg">{{ endpoint.name }}</h3>
       <div class="flex items-center space-x-2">
-        <div 
+        <div
           :data-testid="`${endpoint.id}-status`"
           :class="statusClasses"
           class="w-3 h-3 rounded-full"
@@ -229,14 +229,14 @@ describe('AdminHealthUpdates', () => {
     </div>
 
     <div class="flex space-x-2">
-      <button 
+      <button
         :data-testid="`configure-${endpoint.id}`"
         class="flex-1 bg-blue-50 text-blue-600 px-3 py-2 rounded text-sm hover:bg-blue-100"
         @click="$emit('configure', endpoint)"
       >
         Configure
       </button>
-      <button 
+      <button
         class="flex-1 bg-gray-50 text-gray-600 px-3 py-2 rounded text-sm hover:bg-gray-100"
         @click="$emit('test', endpoint)"
       >
@@ -359,7 +359,7 @@ describe('ApiConfigurationModal', () => {
               <div class="grid grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium mb-1">Name</label>
-                  <input 
+                  <input
                     v-model="config.name"
                     class="w-full border rounded px-3 py-2"
                     data-testid="endpoint-name-input"
@@ -367,7 +367,7 @@ describe('ApiConfigurationModal', () => {
                 </div>
                 <div>
                   <label class="block text-sm font-medium mb-1">Environment</label>
-                  <select 
+                  <select
                     v-model="config.environment"
                     class="w-full border rounded px-3 py-2"
                   >
@@ -385,7 +385,7 @@ describe('ApiConfigurationModal', () => {
               <div class="space-y-4">
                 <div>
                   <label class="block text-sm font-medium mb-1">Type</label>
-                  <select 
+                  <select
                     v-model="config.authentication.type"
                     data-testid="auth-type-select"
                     class="w-full border rounded px-3 py-2"
@@ -396,10 +396,10 @@ describe('ApiConfigurationModal', () => {
                     <option value="basic">Basic Auth</option>
                   </select>
                 </div>
-                
+
                 <div v-if="config.authentication.type === 'bearer'">
                   <label class="block text-sm font-medium mb-1">Token</label>
-                  <input 
+                  <input
                     v-model="config.authentication.token"
                     type="password"
                     data-testid="auth-token-input"
@@ -416,7 +416,7 @@ describe('ApiConfigurationModal', () => {
               <div class="grid grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium mb-1">Response Time Warning (ms)</label>
-                  <input 
+                  <input
                     v-model.number="config.thresholds.responseTime.warning"
                     type="number"
                     data-testid="response-time-warning"
@@ -425,7 +425,7 @@ describe('ApiConfigurationModal', () => {
                 </div>
                 <div>
                   <label class="block text-sm font-medium mb-1">Response Time Critical (ms)</label>
-                  <input 
+                  <input
                     v-model.number="config.thresholds.responseTime.critical"
                     type="number"
                     data-testid="response-time-critical"
@@ -449,7 +449,7 @@ describe('ApiConfigurationModal', () => {
                   {{ testing ? 'Testing...' : 'Test Connection' }}
                 </button>
               </div>
-              <div 
+              <div
                 v-if="testResult"
                 data-testid="connection-test-result"
                 :class="testResult.success ? 'text-green-600' : 'text-red-600'"
@@ -549,7 +549,7 @@ watch(() => props.endpoint, (endpoint) => {
 ## 🕑 **Hour 2: Enhanced Real-Time Analytics Dashboard**
 
 ### **TDD Micro-Cycle 2A: Interactive Time Series Chart** (20 min)
-### **TDD Micro-Cycle 2B: Real-Time Performance Dashboard** (20 min)  
+### **TDD Micro-Cycle 2B: Real-Time Performance Dashboard** (20 min)
 ### **TDD Micro-Cycle 2C: Advanced Query History** (20 min)
 
 ---

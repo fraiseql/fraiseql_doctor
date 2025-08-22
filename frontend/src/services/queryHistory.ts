@@ -405,7 +405,7 @@ function updateTemplateUsage(query: string): void {
           }
           break
 
-        case 'csv':
+        case 'csv': {
           const headers = [
             'id', 'endpointId', 'query', 'operationName', 'timestamp',
             'executionTime', 'success', 'error', 'statusCode', 'tags', 'favorite'
@@ -448,8 +448,9 @@ function updateTemplateUsage(query: string): void {
             mimeType: 'text/csv'
           }
           break
+        }
 
-        case 'graphql':
+        case 'graphql': {
           const graphqlQueries = dataToExport
             .map(entry => {
               const comment = `# ${entry.operationName || 'Query'} - ${entry.timestamp.toISOString()}\n# Endpoint: ${entry.endpointId}\n# Success: ${entry.success}, Time: ${entry.executionTime}ms\n`
@@ -464,6 +465,7 @@ function updateTemplateUsage(query: string): void {
             mimeType: 'application/graphql'
           }
           break
+        }
 
         default:
           throw new Error(`Unsupported export format: ${format}`)

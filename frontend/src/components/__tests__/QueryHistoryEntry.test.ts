@@ -280,7 +280,7 @@ describe('QueryHistoryEntry', () => {
 
   describe('Operation Name Extraction', () => {
     it('should extract operation name from query when not provided', () => {
-      const { operationName, ...entryWithoutName } = mockSuccessfulEntry
+      const { operationName: _operationName, ...entryWithoutName } = mockSuccessfulEntry
 
       const wrapper = mount(QueryHistoryEntry, {
         props: {
@@ -293,7 +293,7 @@ describe('QueryHistoryEntry', () => {
     })
 
     it('should show "Unnamed Query" when no operation name found', () => {
-      const { operationName, ...entryWithoutName } = {
+      const { operationName: _operationName, ...entryWithoutName } = {
         ...mockSuccessfulEntry,
         query: '{ users { id } }'
       }
@@ -309,7 +309,7 @@ describe('QueryHistoryEntry', () => {
     })
 
     it('should handle mutation operation names', () => {
-      const { operationName, ...mutationEntry } = {
+      const { operationName: _operationName, ...mutationEntry } = {
         ...mockSuccessfulEntry,
         query: 'mutation CreateUser($input: UserInput!) { createUser(input: $input) { id } }'
       }

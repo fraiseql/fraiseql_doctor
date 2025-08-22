@@ -278,7 +278,7 @@ class QueryHistoryApiService {
           filename = `query-history-${timestamp}.json`
           break
 
-        case 'csv':
+        case 'csv': {
           const csvHeaders = ['Timestamp', 'Endpoint', 'Query', 'Success', 'Response Time', 'Error']
           const csvRows = executions.map(entry => [
             entry.timestamp.toISOString(),
@@ -297,13 +297,15 @@ class QueryHistoryApiService {
           mimeType = 'text/csv'
           filename = `query-history-${timestamp}.csv`
           break
+        }
 
-        case 'graphql':
+        case 'graphql': {
           const queries = executions.map(entry => entry.query).join('\n\n# ---\n\n')
           exportData = `# Query History Export - ${timestamp}\n\n${queries}`
           mimeType = 'text/plain'
           filename = `queries-${timestamp}.graphql`
           break
+        }
 
         default:
           throw new Error(`Unsupported export format: ${options.format}`)

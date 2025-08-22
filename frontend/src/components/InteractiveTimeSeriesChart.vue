@@ -351,7 +351,7 @@ function updateChart() {
 
 // Removed unused _handleDataUpdate
 
-function handleChartHover(_event: any, _elements: any) {
+function handleChartHover(_event: any, __elements: any) {
   if (!chartCanvas.value) return
 
   const rect = chartCanvas.value.getBoundingClientRect()
