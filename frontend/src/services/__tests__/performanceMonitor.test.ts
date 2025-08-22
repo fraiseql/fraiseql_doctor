@@ -5,7 +5,7 @@ describe('PerformanceMonitor', () => {
   let monitor: PerformanceMonitor
 
   beforeEach(() => {
-    monitor = new PerformanceMonitor()
+    monitor = new PerformanceMonitor({ enableAnalytics: false })
   })
 
   it('should track query execution metrics', async () => {
@@ -95,10 +95,11 @@ describe('PerformanceMonitor', () => {
     expect(recentMetrics[1].query).toBe('query3')
   })
 
-  it('should send metrics to analytics backend', async () => {
-    const mockSendToAnalytics = vi.spyOn(monitor as any, 'sendToAnalytics').mockResolvedValue(undefined)
+  it('should send metrics to analytics backend when enabled', async () => {
+    const analyticsMonitor = new PerformanceMonitor({ enableAnalytics: true })
+    const mockSendToAnalytics = vi.spyOn(analyticsMonitor as any, 'sendToAnalytics').mockResolvedValue(undefined)
 
-    await monitor.trackQuery('endpoint-1', 'query { users }', {
+    await analyticsMonitor.trackQuery('endpoint-1', 'query { users }', {
       executionTime: 120,
       responseSize: 1024,
       timestamp: new Date()
@@ -114,8 +115,20 @@ describe('PerformanceMonitor', () => {
     )
   })
 
+  it('should not send metrics to analytics backend when disabled', async () => {
+    const mockSendToAnalytics = vi.spyOn(monitor as any, 'sendToAnalytics')
+
+    await monitor.trackQuery('endpoint-1', 'query { users }', {
+      executionTime: 120,
+      responseSize: 1024,
+      timestamp: new Date()
+    })
+
+    expect(mockSendToAnalytics).not.toHaveBeenCalled()
+  })
+
   it('should clear old metrics beyond retention limit', async () => {
-    const monitor = new PerformanceMonitor({ maxMetrics: 2 })
+    const monitor = new PerformanceMonitor({ maxMetrics: 2, enableAnalytics: false })
 
     await monitor.trackQuery('endpoint-1', 'query1', {
       executionTime: 100,

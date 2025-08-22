@@ -16,6 +16,7 @@ export interface QueryMetric {
 export interface PerformanceMonitorOptions {
   maxMetrics?: number
   analyticsEndpoint?: string
+  enableAnalytics?: boolean
 }
 
 export class PerformanceMonitor extends EventTarget {
@@ -26,7 +27,8 @@ export class PerformanceMonitor extends EventTarget {
     super()
     this.options = {
       maxMetrics: options.maxMetrics ?? 1000,
-      analyticsEndpoint: options.analyticsEndpoint ?? '/api/analytics/metrics'
+      analyticsEndpoint: options.analyticsEndpoint ?? '/api/analytics/metrics',
+      enableAnalytics: options.enableAnalytics ?? (typeof window !== 'undefined' && window.location.origin !== 'http://localhost:3000')
     }
   }
 
@@ -54,7 +56,9 @@ export class PerformanceMonitor extends EventTarget {
     }))
 
     // Send to analytics backend
-    await this.sendToAnalytics(metric)
+    if (this.options.enableAnalytics) {
+      await this.sendToAnalytics(metric)
+    }
   }
 
   getMetrics(endpointId: string): QueryMetric[] {
@@ -83,7 +87,13 @@ export class PerformanceMonitor extends EventTarget {
 
   private async sendToAnalytics(metric: QueryMetric): Promise<void> {
     try {
-      await fetch(this.options.analyticsEndpoint, {
+      // Build full URL if needed
+      let url = this.options.analyticsEndpoint
+      if (url.startsWith('/') && typeof window !== 'undefined') {
+        url = window.location.origin + url
+      }
+      
+      await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
