@@ -23,10 +23,15 @@ export interface ApiEndpoint {
 
 export interface ApiConfiguration {
   name: string
+  url: string
   environment: 'dev' | 'staging' | 'prod'
   authentication: {
     type: 'none' | 'bearer' | 'api-key' | 'basic'
     token?: string
+    apiKey?: string
+    headerName?: string
+    username?: string
+    password?: string
   }
   thresholds: {
     responseTime: { warning: number; critical: number }
