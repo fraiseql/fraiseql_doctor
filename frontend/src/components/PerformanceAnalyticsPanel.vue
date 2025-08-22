@@ -172,7 +172,7 @@
             v-for="anomaly in anomalies.slice(0, 5)"
             :key="anomaly.metric.id"
             class="anomaly-item bg-white border rounded-lg p-4"
-            :class="`border-${getSeverityColor(anomaly.severity)}-200 bg-${getSeverityColor(anomaly.severity)}-50`"
+            :class="`border-${getSeverityColor(anomaly.severity)}-200 bg-${getSeverityColor(anomaly.severity)}-50 severity-${anomaly.severity}`"
             :data-testid="`anomaly-severity-${anomaly.severity}`"
           >
             <div class="flex items-center justify-between">

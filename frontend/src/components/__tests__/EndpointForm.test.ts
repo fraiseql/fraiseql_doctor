@@ -104,8 +104,8 @@ describe('EndpointForm', () => {
         name: 'Test Endpoint',
         url: 'https://api.example.com/graphql',
         description: 'Test description',
-        introspectionEnabled: true,
-        headers: {}
+        introspectionEnabled: true
+        // headers are only included when present, not as empty object
       }])
     })
   })

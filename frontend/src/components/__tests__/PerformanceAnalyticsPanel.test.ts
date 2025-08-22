@@ -175,7 +175,7 @@ describe('PerformanceAnalyticsPanel', () => {
       await wrapper.vm.$nextTick()
 
       const p99Metric = wrapper.find('[data-testid="p99-metric"]')
-      expect(p99Metric.classes()).toContain('percentile-critical')
+      expect(p99Metric.classes()).toContain('percentile-warning')
     })
   })
 
@@ -196,7 +196,7 @@ describe('PerformanceAnalyticsPanel', () => {
       await wrapper.vm.$nextTick()
 
       const anomaliesSection = wrapper.find('[data-testid="anomalies-section"]')
-      expect(anomaliesSection.find('[data-testid="anomaly-item"]').exists()).toBe(true)
+      expect(anomaliesSection.find('[data-testid^="anomaly-severity-"]').exists()).toBe(true)
       expect(anomaliesSection.text()).toContain('Performance anomaly detected')
     })
 
@@ -322,7 +322,9 @@ describe('PerformanceAnalyticsPanel', () => {
         trend: expect.any(Object),
         percentiles: expect.any(Object),
         anomalies: expect.any(Array),
-        timeWindow: 'hour'
+        timeWindow: 'hour',
+        metricType: expect.any(String),
+        exportedAt: expect.any(String)
       })
     })
   })

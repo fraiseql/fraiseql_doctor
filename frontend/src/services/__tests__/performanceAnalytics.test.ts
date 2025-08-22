@@ -72,12 +72,15 @@ describe('PerformanceAnalytics', () => {
 
   describe('Time-based Aggregation', () => {
     it('should aggregate metrics by hour', () => {
-      const now = new Date()
+      // Create timestamps that clearly fall in different hours
+      const baseTime = new Date('2024-01-01T12:00:00Z') // Noon
+      const hourBefore = new Date('2024-01-01T11:30:00Z') // 11:30 AM (previous hour)
+      
       const metrics: QueryMetric[] = [
-        createMockMetric({ executionTime: 100, timestamp: new Date(now.getTime() - 3600000) }),
-        createMockMetric({ executionTime: 120, timestamp: new Date(now.getTime() - 3300000) }),
-        createMockMetric({ executionTime: 80, timestamp: new Date(now.getTime() - 1800000) }),
-        createMockMetric({ executionTime: 90, timestamp: new Date(now.getTime() - 1500000) })
+        createMockMetric({ executionTime: 100, timestamp: hourBefore }),
+        createMockMetric({ executionTime: 120, timestamp: new Date('2024-01-01T11:45:00Z') }), // Same hour as first
+        createMockMetric({ executionTime: 80, timestamp: baseTime }),
+        createMockMetric({ executionTime: 90, timestamp: new Date('2024-01-01T12:15:00Z') }) // Same hour as third
       ]
 
       const aggregated = analytics.aggregateByTimeWindow(metrics, 'hour')
@@ -85,7 +88,14 @@ describe('PerformanceAnalytics', () => {
       expect(aggregated).toHaveLength(2) // Two different hours
       expect(aggregated[0]).toEqual({
         window: expect.any(String),
-        avgExecutionTime: 110, // (100 + 120) / 2
+        avgExecutionTime: 110, // (100 + 120) / 2 for 11:00 hour
+        avgResponseSize: 1024,
+        count: 2,
+        timestamp: expect.any(Date)
+      })
+      expect(aggregated[1]).toEqual({
+        window: expect.any(String),
+        avgExecutionTime: 85, // (80 + 90) / 2 for 12:00 hour
         avgResponseSize: 1024,
         count: 2,
         timestamp: expect.any(Date)

@@ -223,9 +223,8 @@
         <button
           type="button"
           data-testid="save-config-btn"
-          class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          :disabled="!isValid"
-          @click="handleSave"
+          class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          @click="handleSaveWithValidation"
         >
           Save Configuration
         </button>
@@ -373,6 +372,16 @@ const handleSave = () => {
 
   emit('save', configToSave)
   emit('update:modelValue', false)
+}
+
+const handleSaveWithValidation = () => {
+  // Always trigger validation to show errors
+  validateForm()
+  
+  // Only proceed with save if valid
+  if (isValid.value) {
+    handleSave()
+  }
 }
 
 const handleCancel = () => {

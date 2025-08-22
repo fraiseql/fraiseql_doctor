@@ -285,14 +285,17 @@ describe('TimeSeriesAnalytics', () => {
     })
 
     it('should provide contextual anomaly explanations', () => {
+      // Create test data with a clear anomaly during low traffic hours
+      const baseTime = new Date('2024-01-01T02:00:00Z') // 2 AM - clearly low traffic hours
       const contextualData = Array.from({ length: 48 }, (_, i) => {
-        const hour = i % 24
+        const timestamp = new Date(baseTime.getTime() + i * 60 * 60 * 1000) // Each hour
+        const hour = timestamp.getHours()
         const isBusinessHours = hour >= 9 && hour <= 17
         const expectedValue = isBusinessHours ? 150 : 50
 
         return createMockMetric({
-          executionTime: i === 25 ? 200 : expectedValue, // Anomaly at 1 AM (usually low traffic)
-          timestamp: new Date(Date.now() - (48 - i) * 60 * 60 * 1000)
+          executionTime: i === 1 ? 200 : expectedValue, // Anomaly at 3 AM (i=1, clearly low traffic)
+          timestamp
         })
       })
 
