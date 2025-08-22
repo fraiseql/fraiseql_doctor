@@ -4,18 +4,33 @@ import type { Alert, NotificationPreferences } from '../alertingEngine'
 
 // Mock browser APIs
 const mockNotification = vi.fn()
+const mockFetch = vi.fn()
+
+// Mock global fetch
+Object.defineProperty(global, 'fetch', {
+  value: mockFetch,
+  configurable: true
+})
+
+// Mock Notification API
 Object.defineProperty(global, 'Notification', {
   value: mockNotification,
   configurable: true
 })
 
-Object.defineProperty(Notification, 'permission', {
+Object.defineProperty(global.Notification, 'permission', {
   value: 'granted',
   configurable: true
 })
 
-Object.defineProperty(Notification, 'requestPermission', {
+Object.defineProperty(global.Notification, 'requestPermission', {
   value: vi.fn().mockResolvedValue('granted'),
+  configurable: true
+})
+
+// Mock window object for Notification check
+Object.defineProperty(global, 'window', {
+  value: global,
   configurable: true
 })
 
@@ -37,6 +52,13 @@ describe('NotificationService', () => {
   beforeEach(() => {
     notificationService = new NotificationService()
     vi.clearAllMocks()
+    
+    // Reset fetch mock to success by default
+    mockFetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ success: true })
+    })
   })
 
   afterEach(() => {
@@ -54,7 +76,17 @@ describe('NotificationService', () => {
 
       notificationService.setPreferences(preferences)
 
-      expect(notificationService.getPreferences()).toEqual(preferences)
+      // Service merges with defaults, so expect all default properties to be included
+      const expectedPreferences = {
+        browserNotifications: true,
+        emailNotifications: false,
+        webhookUrl: 'https://api.example.com/webhook',
+        severityFilter: ['high', 'critical'],
+        doNotDisturb: false, // Default
+        allowCriticalDuringDnD: true // Default
+      }
+
+      expect(notificationService.getPreferences()).toEqual(expectedPreferences)
     })
 
     it('should use default preferences when none set', () => {
