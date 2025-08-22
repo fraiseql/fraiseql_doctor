@@ -37,3 +37,11 @@ repos:
         language: system
         files: ^frontend/.*\.(ts|tsx|vue|js|jsx)$
         pass_filenames: false
+
+      - id: frontend-tests
+        name: Frontend test validation
+        entry: bash -c 'cd frontend && npm test -- --run'
+        language: system
+        files: ^frontend/.*\.(ts|tsx|vue|js|jsx)$
+        pass_filenames: false
+        # This hook ensures all tests pass before allowing commits
