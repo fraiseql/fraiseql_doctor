@@ -143,16 +143,14 @@
         </div>
       </div>
 
-      <!-- Historical Trend Chart -->
+      <!-- Historical Trend Chart - Will be replaced with eCharts -->
       <div class="historical-chart-section">
-        <HistoricalTrendChart
-          :metrics="metrics"
-          :time-window="selectedTimeWindow"
-          :metric-type="selectedMetricType"
-          :show-trend="true"
-          :allow-zoom="true"
-          @data-point-selected="onDataPointSelected"
-        />
+        <div class="flex items-center justify-center h-64 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg">
+          <p class="text-gray-500 text-center">
+            Historical Trend Chart<br>
+            <span class="text-sm">Will be implemented with eCharts</span>
+          </p>
+        </div>
       </div>
 
       <!-- Anomalies Section -->
@@ -217,7 +215,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import HistoricalTrendChart from './HistoricalTrendChart.vue'
+// import HistoricalTrendChart from './HistoricalTrendChart.vue' // Removed Chart.js component
 import type { QueryMetric } from '../services/performanceMonitor'
 import type { MetricField, TimeWindow } from '../services/performanceAnalytics'
 import { PerformanceAnalytics } from '../services/performanceAnalytics'
@@ -313,9 +311,7 @@ function exportAnalytics() {
   emit('export-analytics', exportData)
 }
 
-function onDataPointSelected(data: any) {
-  emit('data-point-selected', data)
-}
+// onDataPointSelected function removed with Chart.js components
 
 // Expose for testing
 defineExpose({

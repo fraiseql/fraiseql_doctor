@@ -146,12 +146,14 @@
         </div>
       </div>
 
-      <!-- Performance Chart -->
+      <!-- Performance Chart - Replaced with eCharts in future implementation -->
       <div data-testid="performance-chart-container" class="h-80">
-        <PerformanceChart
-          :metrics="filteredMetrics"
-          :chart-type="chartType"
-        />
+        <div class="flex items-center justify-center h-full bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg">
+          <p class="text-gray-500 text-center">
+            Performance Chart<br>
+            <span class="text-sm">Will be implemented with eCharts</span>
+          </p>
+        </div>
       </div>
     </div>
 
@@ -196,7 +198,6 @@ import { useDashboard } from '@/stores/dashboard'
 import { WebSocketService, ConnectionState } from '@/services/websocket'
 import { WEBSOCKET_EVENTS } from '@/config/websocket'
 import HealthStatusCard from '@/components/HealthStatusCard.vue'
-import PerformanceChart from '@/components/PerformanceChart.vue'
 import PerformanceAnalyticsPanel from '@/components/PerformanceAnalyticsPanel.vue'
 import { PerformanceMonitor, type QueryMetric } from '@/services/performanceMonitor'
 
