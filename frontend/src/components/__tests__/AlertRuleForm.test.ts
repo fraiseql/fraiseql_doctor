@@ -291,7 +291,7 @@ describe('AlertRuleForm', () => {
       await submitButton.trigger('click')
 
       expect(wrapper.emitted('create-rule')).toBeTruthy()
-      
+
       const emittedRule = wrapper.emitted('create-rule')[0][0] as AlertRule
       expect(emittedRule.name).toBe('Test Alert Rule')
       expect(emittedRule.endpointId).toBe('endpoint-1')
@@ -315,7 +315,7 @@ describe('AlertRuleForm', () => {
       await submitButton.trigger('click')
 
       expect(wrapper.emitted('update-rule')).toBeTruthy()
-      
+
       const emittedRule = wrapper.emitted('update-rule')[0][0] as AlertRule
       expect(emittedRule.name).toBe('Updated Rule Name')
       expect(emittedRule.id).toBe(mockRule.id)

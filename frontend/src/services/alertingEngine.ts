@@ -120,15 +120,15 @@ export class AlertingEngine extends EventTarget {
       if (endpointMetrics.length === 0) continue
 
       const shouldTrigger = this.evaluateRule(rule, endpointMetrics)
-      
+
       if (shouldTrigger) {
         const existingAlert = this.findActiveAlertForRule(rule.id)
-        
+
         if (!existingAlert) {
           const alert = this.createAlert(rule, endpointMetrics)
           newAlerts.push(alert)
           this.alerts.set(alert.id, alert)
-          
+
           this.dispatchEvent(new CustomEvent('alert-triggered', {
             detail: alert
           }))
@@ -139,10 +139,10 @@ export class AlertingEngine extends EventTarget {
         if (existingAlert && existingAlert.status === 'active') {
           existingAlert.status = 'resolved'
           existingAlert.resolvedAt = new Date()
-          
+
           // Add to history when resolved
           this.alertHistory.push({...existingAlert})
-          
+
           this.dispatchEvent(new CustomEvent('alert-resolved', {
             detail: existingAlert
           }))
@@ -160,7 +160,7 @@ export class AlertingEngine extends EventTarget {
     const now = Date.now()
     const durationStart = now - rule.condition.duration
 
-    const recentMetrics = metrics.filter(m => 
+    const recentMetrics = metrics.filter(m =>
       m.timestamp.getTime() >= durationStart
     )
 
@@ -170,14 +170,14 @@ export class AlertingEngine extends EventTarget {
     if (rule.condition.duration > 0) {
       const oldestMetric = Math.min(...recentMetrics.map(m => m.timestamp.getTime()))
       const metricSpan = now - oldestMetric
-      
+
       // For short durations (< 5 min), just need 3+ metrics
       // For longer durations, need at least 10% coverage
       const isShortDuration = rule.condition.duration < 300000 // 5 minutes
-      const hasAdequateCoverage = isShortDuration 
+      const hasAdequateCoverage = isShortDuration
         ? recentMetrics.length >= 3
         : metricSpan >= (rule.condition.duration * 0.1) && recentMetrics.length >= 3
-      
+
       if (!hasAdequateCoverage) return false
     }
 
@@ -209,7 +209,7 @@ export class AlertingEngine extends EventTarget {
 
   private createAlert(rule: AlertRule, metrics: any[]): Alert {
     const latestMetric = metrics[metrics.length - 1]
-    
+
     return {
       id: this.generateAlertId(),
       ruleId: rule.id,
@@ -254,7 +254,7 @@ export class AlertingEngine extends EventTarget {
 
   getAlertStatistics(): AlertStatistics {
     const allAlerts = Array.from(this.alerts.values())
-    
+
     const stats: AlertStatistics = {
       totalAlerts: allAlerts.length,
       activeAlerts: allAlerts.filter(a => a.status === 'active').length,
@@ -269,9 +269,9 @@ export class AlertingEngine extends EventTarget {
 
     for (const alert of allAlerts) {
       // Count by endpoint
-      stats.alertsByEndpoint[alert.endpointId] = 
+      stats.alertsByEndpoint[alert.endpointId] =
         (stats.alertsByEndpoint[alert.endpointId] || 0) + 1
-      
+
       // Count by severity
       stats.alertsBySeverity[alert.severity]++
     }

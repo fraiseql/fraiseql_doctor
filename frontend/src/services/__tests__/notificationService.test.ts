@@ -53,13 +53,13 @@ describe('NotificationService', () => {
       }
 
       notificationService.setPreferences(preferences)
-      
+
       expect(notificationService.getPreferences()).toEqual(preferences)
     })
 
     it('should use default preferences when none set', () => {
       const defaultPreferences = notificationService.getPreferences()
-      
+
       expect(defaultPreferences.browserNotifications).toBe(true)
       expect(defaultPreferences.emailNotifications).toBe(false)
       expect(defaultPreferences.severityFilter).toEqual(['medium', 'high', 'critical'])
@@ -82,7 +82,7 @@ describe('NotificationService', () => {
   describe('Browser Notifications', () => {
     it('should request notification permission', async () => {
       const permission = await notificationService.requestPermission()
-      
+
       expect(Notification.requestPermission).toHaveBeenCalled()
       expect(permission).toBe('granted')
     })
@@ -310,7 +310,7 @@ describe('NotificationService', () => {
 
       // Should send browser notification
       expect(mockNotification).toHaveBeenCalled()
-      
+
       // Should send email and webhook (2 fetch calls)
       expect(fetchMock).toHaveBeenCalledTimes(2)
     })
@@ -366,7 +366,7 @@ describe('NotificationService', () => {
       await notificationService.sendNotification(alert)
 
       const history = notificationService.getNotificationHistory()
-      
+
       expect(history).toHaveLength(1)
       expect(history[0]).toEqual({
         alertId: alert.id,

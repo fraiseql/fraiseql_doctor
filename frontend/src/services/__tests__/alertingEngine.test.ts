@@ -38,7 +38,7 @@ describe('AlertingEngine', () => {
       }
 
       alertingEngine.addRule(rule)
-      
+
       expect(alertingEngine.getRules()).toHaveLength(1)
       expect(alertingEngine.getRule('rule-1')).toEqual(rule)
     })
@@ -60,7 +60,7 @@ describe('AlertingEngine', () => {
       }
 
       alertingEngine.addRule(rule)
-      
+
       const updatedRule = { ...rule, threshold: 800 }
       alertingEngine.updateRule('rule-1', { condition: { ...rule.condition, threshold: 800 } })
 
@@ -113,7 +113,7 @@ describe('AlertingEngine', () => {
 
       // Create metrics that exceed threshold
       const slowMetrics = Array.from({ length: 5 }, () =>
-        createMockMetric({ 
+        createMockMetric({
           executionTime: 300, // Above threshold
           timestamp: new Date()
         })
@@ -147,7 +147,7 @@ describe('AlertingEngine', () => {
 
       // Create metrics that don't exceed threshold
       const normalMetrics = Array.from({ length: 5 }, () =>
-        createMockMetric({ 
+        createMockMetric({
           executionTime: 100, // Below threshold
           timestamp: new Date()
         })
@@ -179,7 +179,7 @@ describe('AlertingEngine', () => {
       // Create metrics that exceed threshold but not for duration
       const now = Date.now()
       const recentMetrics = Array.from({ length: 3 }, (_, i) =>
-        createMockMetric({ 
+        createMockMetric({
           executionTime: 300,
           timestamp: new Date(now - i * 1000) // Only spans 3 seconds, not 5 minutes
         })
@@ -210,7 +210,7 @@ describe('AlertingEngine', () => {
 
       // Create metrics spread over 6 minutes, all exceeding threshold
       const sustainedMetrics = Array.from({ length: 10 }, (_, i) =>
-        createMockMetric({ 
+        createMockMetric({
           executionTime: 300,
           timestamp: new Date(Date.now() - (i * 60000)) // 1 minute intervals, going back 10 minutes
         })
@@ -300,9 +300,9 @@ describe('AlertingEngine', () => {
 
       // First trigger an alert with duration coverage
       const now = Date.now()
-      const badMetrics = Array.from({ length: 3 }, (_, i) => 
-        createMockMetric({ 
-          executionTime: 300, 
+      const badMetrics = Array.from({ length: 3 }, (_, i) =>
+        createMockMetric({
+          executionTime: 300,
           timestamp: new Date(now - (60000 - i * 1000)) // Cover the duration window
         })
       )
@@ -347,17 +347,17 @@ describe('AlertingEngine', () => {
         // Create metrics with proper duration coverage
         const now = Date.now()
         const badMetrics = Array.from({ length: 3 }, (_, j) =>
-          createMockMetric({ 
+          createMockMetric({
             executionTime: 200,
             timestamp: new Date(now - (60000 - j * 1000)) // Cover duration window
           })
         )
         await alertingEngine.evaluateMetrics(badMetrics)
-        
+
         // Resolve each alert
         const goodMetrics = [createMockMetric({ executionTime: 50 })]
         await alertingEngine.evaluateMetrics(goodMetrics)
-        
+
         // Small delay to ensure different timestamps
         await new Promise(resolve => setTimeout(resolve, 10))
       }
@@ -390,7 +390,7 @@ describe('AlertingEngine', () => {
       await alertingEngine.evaluateMetrics(badMetrics)
 
       const stats = alertingEngine.getAlertStatistics()
-      
+
       expect(stats.totalAlerts).toBe(1)
       expect(stats.activeAlerts).toBe(1)
       expect(stats.alertsByEndpoint['endpoint-1']).toBe(1)

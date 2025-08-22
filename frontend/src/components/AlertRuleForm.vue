@@ -210,7 +210,7 @@
                   />
                   <span class="ml-2 text-sm text-gray-700">Email notifications</span>
                 </label>
-                
+
                 <label class="flex items-center">
                   <input
                     v-model="formData.notifications.browser"
@@ -291,7 +291,7 @@
           >
             Cancel
           </button>
-          
+
           <button
             v-if="mode === 'create'"
             type="submit"
@@ -301,7 +301,7 @@
           >
             {{ loading ? 'Creating...' : 'Create Rule' }}
           </button>
-          
+
           <button
             v-else
             type="submit"

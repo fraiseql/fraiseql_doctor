@@ -103,7 +103,7 @@ describe('AlertDashboard', () => {
 
       const alertItems = wrapper.findAll('[data-testid="alert-item"]')
       expect(alertItems).toHaveLength(2)
-      
+
       expect(wrapper.text()).toContain('High response time detected')
       expect(wrapper.text()).toContain('Moderate performance degradation')
     })
@@ -144,7 +144,7 @@ describe('AlertDashboard', () => {
     it('should acknowledge alerts', async () => {
       const mockAlert = createMockAlert({ id: 'alert-1', status: 'active' })
       const wrapper = mount(AlertDashboard)
-      
+
       wrapper.vm.activeAlerts = [mockAlert]
       await wrapper.vm.$nextTick()
 
@@ -158,7 +158,7 @@ describe('AlertDashboard', () => {
     it('should show acknowledge confirmation dialog', async () => {
       const mockAlert = createMockAlert({ id: 'alert-1' })
       const wrapper = mount(AlertDashboard)
-      
+
       wrapper.vm.activeAlerts = [mockAlert]
       await wrapper.vm.$nextTick()
 
@@ -227,7 +227,7 @@ describe('AlertDashboard', () => {
 
       const ruleItems = wrapper.findAll('[data-testid="alert-rule-item"]')
       expect(ruleItems).toHaveLength(2)
-      
+
       expect(wrapper.text()).toContain('High Response Time')
       expect(wrapper.text()).toContain('Error Rate Threshold')
     })
@@ -249,7 +249,7 @@ describe('AlertDashboard', () => {
     it('should allow editing alert rules', async () => {
       const mockRule = createMockRule({ id: 'rule-1', name: 'Test Rule' })
       const wrapper = mount(AlertDashboard)
-      
+
       wrapper.vm.alertRules = [mockRule]
       await wrapper.vm.$nextTick()
 
@@ -263,7 +263,7 @@ describe('AlertDashboard', () => {
     it('should allow deleting alert rules', async () => {
       const mockRule = createMockRule({ id: 'rule-1', name: 'Test Rule' })
       const wrapper = mount(AlertDashboard)
-      
+
       wrapper.vm.alertRules = [mockRule]
       await wrapper.vm.$nextTick()
 
@@ -276,7 +276,7 @@ describe('AlertDashboard', () => {
     it('should confirm rule deletion', async () => {
       const mockRule = createMockRule({ id: 'rule-1', name: 'Test Rule' })
       const wrapper = mount(AlertDashboard)
-      
+
       wrapper.vm.alertRules = [mockRule]
       await wrapper.vm.$nextTick()
 
@@ -327,7 +327,7 @@ describe('AlertDashboard', () => {
     it('should handle alert resolution updates', async () => {
       const activeAlert = createMockAlert({ id: 'alert-1', status: 'active' })
       const wrapper = mount(AlertDashboard)
-      
+
       wrapper.vm.activeAlerts = [activeAlert]
       await wrapper.vm.$nextTick()
 
@@ -382,7 +382,7 @@ describe('AlertDashboard', () => {
       await wrapper.vm.$nextTick()
 
       expect(wrapper.find('[data-testid="pagination"]').exists()).toBe(true)
-      
+
       const historyItems = wrapper.findAll('[data-testid="history-item"]')
       expect(historyItems.length).toBeLessThanOrEqual(10) // Page size
     })
@@ -391,7 +391,7 @@ describe('AlertDashboard', () => {
   describe('Export Functionality', () => {
     it('should export alert data', async () => {
       const wrapper = mount(AlertDashboard)
-      
+
       const exportButton = wrapper.find('[data-testid="export-alerts-button"]')
       await exportButton.trigger('click')
 
@@ -400,7 +400,7 @@ describe('AlertDashboard', () => {
 
     it('should export alert rules configuration', async () => {
       const wrapper = mount(AlertDashboard)
-      
+
       const exportButton = wrapper.find('[data-testid="export-rules-button"]')
       await exportButton.trigger('click')
 

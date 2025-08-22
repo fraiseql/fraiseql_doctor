@@ -8,7 +8,7 @@ export class NotificationService extends EventTarget {
     doNotDisturb: false,
     allowCriticalDuringDnD: true
   }
-  
+
   private notificationHistory: NotificationHistory[] = []
   private readonly maxHistorySize = 100
 
@@ -69,15 +69,15 @@ export class NotificationService extends EventTarget {
 
     // Wait for all notifications to complete
     const results = await Promise.allSettled(tasks)
-    
+
     // Track results
     results.forEach((result, index) => {
       const method = this.getMethodByIndex(index)
       const success = result.status === 'fulfilled' && result.value
-      
-      this.trackNotification(alert.id, method, success, 
+
+      this.trackNotification(alert.id, method, success,
         result.status === 'rejected' ? result.reason : undefined)
-      
+
       this.dispatchEvent(new CustomEvent(
         success ? 'notification-sent' : 'notification-failed',
         {
@@ -101,7 +101,7 @@ export class NotificationService extends EventTarget {
           const now = new Date()
           const currentTime = now.toTimeString().substring(0, 5)
           const { start, end } = this.preferences.dndTimeWindow
-          
+
           if (this.isTimeInWindow(currentTime, start, end)) {
             return false
           }
@@ -211,7 +211,7 @@ export class NotificationService extends EventTarget {
         }
       } catch (error) {
         console.error(`Webhook attempt ${attempt + 1} failed:`, error)
-        
+
         if (attempt < retries) {
           // Wait before retry
           await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
@@ -255,9 +255,9 @@ View in FraiseQL Doctor Dashboard for more details.
 
   // Notification History
   private trackNotification(
-    alertId: string, 
-    method: string, 
-    success: boolean, 
+    alertId: string,
+    method: string,
+    success: boolean,
     error?: string
   ): void {
     this.notificationHistory.push({
