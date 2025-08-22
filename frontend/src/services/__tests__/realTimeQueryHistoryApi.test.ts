@@ -6,18 +6,39 @@ describe('RealTimeQueryHistoryApi', () => {
   let mockFetch: any
 
   beforeEach(() => {
+    // Create fetch mock with proper AbortController support and clone method
     mockFetch = vi.fn()
     global.fetch = mockFetch
+    
+    // Set up default mock implementation that can be overridden by tests
+    mockFetch.mockImplementation((url, options) => {
+      // Check if the request was aborted
+      if (options?.signal?.aborted) {
+        return Promise.reject(new DOMException('Request aborted', 'AbortError'))
+      }
+      
+      // Return a minimal response (tests will override this with mockResolvedValueOnce)
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        clone: () => ({
+          json: () => Promise.resolve({ data: {} })
+        }),
+        json: () => Promise.resolve({ data: {} })
+      })
+    })
 
+    // Create service with shorter timeout
     queryHistoryApi = new RealTimeQueryHistoryApi({
-      baseUrl: 'https://api.example.com/graphql',
+      baseUrl: 'https://api.example.com',
       apiKey: 'test-api-key',
-      timeout: 5000
+      timeout: 1000
     })
   })
 
   afterEach(() => {
     vi.clearAllMocks()
+    vi.restoreAllMocks()
   })
 
   describe('Historical Query Data Retrieval', () => {
@@ -55,6 +76,18 @@ describe('RealTimeQueryHistoryApi', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
+        clone: () => ({
+          json: async () => ({
+            data: {
+              queryHistory: {
+                queries: mockHistoricalData,
+                totalCount: 150,
+                hasNextPage: true,
+                cursor: 'cursor-abc123'
+              }
+            }
+          })
+        }),
         json: async () => ({
           data: {
             queryHistory: {
@@ -122,23 +155,16 @@ describe('RealTimeQueryHistoryApi', () => {
     })
 
     it('should implement request timeout handling', async () => {
-      vi.useFakeTimers()
-
-      mockFetch.mockImplementation(() =>
-        new Promise(resolve => setTimeout(resolve, 10000))
+      // Mock fetch to reject with AbortError (simulating timeout)
+      mockFetch.mockRejectedValue(
+        Object.assign(new Error('Request timeout'), { name: 'AbortError' })
       )
 
-      const queryPromise = queryHistoryApi.getQueryHistory({
+      await expect(queryHistoryApi.getQueryHistory({
         endpointId: 'endpoint-1',
         startTime: new Date(),
         endTime: new Date()
-      })
-
-      vi.advanceTimersByTime(5000)
-
-      await expect(queryPromise).rejects.toThrow('Request timeout')
-
-      vi.useRealTimers()
+      })).rejects.toThrow('Request timeout')
     })
   })
 

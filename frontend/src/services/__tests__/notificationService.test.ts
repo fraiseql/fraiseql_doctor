@@ -24,7 +24,7 @@ Object.defineProperty(global.Notification, 'permission', {
 })
 
 Object.defineProperty(global.Notification, 'requestPermission', {
-  value: vi.fn().mockResolvedValue('granted'),
+  value: vi.fn(() => Promise.resolve('granted')),
   configurable: true
 })
 
@@ -53,11 +53,27 @@ describe('NotificationService', () => {
     notificationService = new NotificationService()
     vi.clearAllMocks()
     
-    // Reset fetch mock to success by default
-    mockFetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ success: true })
+    // Reset Notification.permission to 'granted' for each test
+    Object.defineProperty(Notification, 'permission', {
+      value: 'granted',
+      configurable: true
+    })
+    
+    // Reset fetch mock with clone() method for retry logic support
+    mockFetch.mockImplementation((url, options) => {
+      // Check if the request was aborted
+      if (options?.signal?.aborted) {
+        return Promise.reject(new DOMException('Request aborted', 'AbortError'))
+      }
+      
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        clone: () => ({
+          json: () => Promise.resolve({ success: true })
+        }),
+        json: () => Promise.resolve({ success: true })
+      })
     })
   })
 
