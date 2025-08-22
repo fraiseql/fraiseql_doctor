@@ -14,17 +14,40 @@ const mockDeleteQuery = vi.fn()
 const mockClearHistory = vi.fn()
 const mockExportHistory = vi.fn()
 
-// Mock the service
-vi.mock('../../services/queryHistory', () => ({
-  useQueryHistory: () => ({
+// Mock the hybrid service
+vi.mock('../../services/queryHistoryHybrid', () => ({
+  useQueryHistoryHybrid: () => ({
     getHistory: mockGetHistory,
     getStats: mockGetStats,
     searchHistory: mockSearchHistory,
     updateQuery: mockUpdateQuery,
     deleteQuery: mockDeleteQuery,
     clearHistory: mockClearHistory,
-    exportHistory: mockExportHistory
+    exportHistory: mockExportHistory,
+    getConnectionStatus: () => ({ connected: false, source: 'localStorage' }),
+    isApiConnected: () => false,
+    loadHistory: vi.fn()
   })
+}))
+
+// Mock QueryHistoryEntry component
+vi.mock('../QueryHistoryEntry.vue', () => ({
+  default: {
+    name: 'QueryHistoryEntry',
+    template: '<div class="query-history-entry">Mock Entry</div>',
+    props: ['entry', 'endpoint'],
+    emits: ['toggle-favorite', 'delete', 'replay', 'save-as-template']
+  }
+}))
+
+// Mock ExportModal component
+vi.mock('../ExportModal.vue', () => ({
+  default: {
+    name: 'ExportModal',
+    template: '<div class="export-modal">Mock Export Modal</div>',
+    props: ['historyCount'],
+    emits: ['export', 'close']
+  }
 }))
 
 const mockEndpoints: GraphQLEndpoint[] = [
@@ -102,9 +125,9 @@ describe('QueryHistory', () => {
     // Reset and setup default mock behavior
     vi.clearAllMocks()
     
-    // Set up default mock returns
-    mockGetHistory.mockReturnValue(mockHistory)
-    mockGetStats.mockReturnValue(mockStats)
+    // Set up default mock returns (async methods)
+    mockGetHistory.mockResolvedValue(mockHistory)
+    mockGetStats.mockResolvedValue(mockStats)
     mockSearchHistory.mockImplementation((filter) => {
       let results = mockHistory
 
@@ -121,13 +144,13 @@ describe('QueryHistory', () => {
 
       return results
     })
-    mockUpdateQuery.mockImplementation((id, updates) => ({
+    mockUpdateQuery.mockImplementation(async (id, updates) => ({
       success: true,
       entry: { ...mockHistory.find(h => h.id === id)!, ...updates }
     }))
-    mockDeleteQuery.mockReturnValue({ success: true })
-    mockClearHistory.mockReturnValue(undefined)
-    mockExportHistory.mockReturnValue({
+    mockDeleteQuery.mockResolvedValue({ success: true })
+    mockClearHistory.mockResolvedValue(undefined)
+    mockExportHistory.mockResolvedValue({
       success: true,
       result: {
         data: JSON.stringify(mockHistory),
@@ -402,7 +425,7 @@ describe('QueryHistory', () => {
       expect((wrapper.vm as any).queryHistoryService.exportHistory).toBeDefined()
 
       // Mock the export result
-      const exportResult = (wrapper.vm as any).queryHistoryService.exportHistory({ format: 'json' })
+      const exportResult = await (wrapper.vm as any).queryHistoryService.exportHistory({ format: 'json' })
       expect(exportResult.success).toBe(true)
     })
 
@@ -435,18 +458,19 @@ describe('QueryHistory', () => {
   })
 
   describe('Empty States', () => {
-    it('should handle empty history state', () => {
+    it('should handle empty history state', async () => {
       // Create a new wrapper with empty history
+      mockGetHistory.mockResolvedValue([])
+      mockSearchHistory.mockResolvedValue([])
+
       const emptyWrapper = mount(QueryHistory, {
         props: {
           endpoints: mockEndpoints
         }
       })
 
-      mockGetHistory.mockReturnValue([])
-      mockSearchHistory.mockReturnValue([])
-
-      (emptyWrapper.vm as any).loadHistory()
+      await (emptyWrapper.vm as any).loadHistory()
+      await emptyWrapper.vm.$nextTick()
 
       expect((emptyWrapper.vm as any).hasHistory).toBe(false)
     })
@@ -461,16 +485,18 @@ describe('QueryHistory', () => {
       expect((wrapper.vm as any).filteredHistory.length).toBe(0)
     })
 
-    it('should disable action buttons when no history exists', () => {
+    it('should disable action buttons when no history exists', async () => {
       // Create wrapper with no history
+      mockGetHistory.mockResolvedValue([])
+      
       const emptyWrapper = mount(QueryHistory, {
         props: {
           endpoints: mockEndpoints
         }
       })
 
-      mockGetHistory.mockReturnValue([])
-      (emptyWrapper.vm as any).loadHistory()
+      await (emptyWrapper.vm as any).loadHistory()
+      await emptyWrapper.vm.$nextTick()
 
       expect((emptyWrapper.vm as any).hasHistory).toBe(false)
     })
