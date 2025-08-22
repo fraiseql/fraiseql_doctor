@@ -162,6 +162,9 @@ describe('LivePerformanceDashboard', () => {
       const subscriptionCallback = mockSubscriptionClient.subscribeToPerformanceMetrics.mock.calls[0][0].callback
       subscriptionCallback(highLatencyQuery)
 
+      // Wait for debounced alert to fire
+      await new Promise(resolve => setTimeout(resolve, 50))
+
       expect(alertCallback).toHaveBeenCalledWith({
         type: 'execution_time_critical',
         endpointId: 'endpoint-1',
@@ -210,6 +213,9 @@ describe('LivePerformanceDashboard', () => {
 
       const subscriptionCallback = mockSubscriptionClient.subscribeToPerformanceMetrics.mock.calls[0][0].callback
       normalQueries.forEach(query => subscriptionCallback(query))
+
+      // Wait for anomaly check to be scheduled and executed
+      await new Promise(resolve => setTimeout(resolve, 100))
 
       expect(mockAnalyticsEngine.detectAnomalies).toHaveBeenCalled()
       expect(anomalyCallback).toHaveBeenCalledWith({
@@ -267,7 +273,8 @@ describe('LivePerformanceDashboard', () => {
           recentQueries: mockQueries,
           performanceTrend: expect.any(String)
         },
-        timestamp: expect.any(Date)
+        timestamp: expect.any(Date),
+        dataQuality: expect.any(Object)
       })
     })
   })
