@@ -60,7 +60,7 @@
                   'w-8 h-8 rounded-full',
                   {
                     'bg-green-500': stat.status === 'success',
-                    'bg-yellow-500': stat.status === 'warning',
+                    'bg-yellow-500': stat.status === 'warning' as any,
                     'bg-red-500': stat.status === 'error',
                     'bg-blue-500': stat.status === 'info',
                     'bg-gray-200': dashboardStore.isLoading
@@ -74,7 +74,7 @@
                   {{ stat.label }}
                 </dt>
                 <dd class="text-lg font-medium text-gray-900">
-                  {{ dashboardStore.isLoading ? 'Loading...' : `${stat.status === 'success' ? 'Healthy' : stat.status === 'warning' ? 'Warning' : stat.status === 'error' ? 'Failed' : ''}: ${stat.value}` }}
+                  {{ dashboardStore.isLoading ? 'Loading...' : formatStatDisplay(stat) }}
                 </dd>
               </dl>
             </div>
@@ -243,6 +243,14 @@ function calculateAverageResponseTime(): number {
 
   const total = endpoints.reduce((sum, endpoint) => sum + (endpoint.responseTime || 0), 0)
   return Math.round(total / endpoints.length)
+}
+
+function formatStatDisplay(stat: { status: string; value: number }): string {
+  const statusText = stat.status === 'success' ? 'Healthy' :
+                    stat.status === 'warning' ? 'Warning' :
+                    stat.status === 'error' ? 'Failed' :
+                    stat.status === 'info' ? 'Info' : ''
+  return `${statusText}: ${stat.value}`
 }
 
 // WebSocket handlers

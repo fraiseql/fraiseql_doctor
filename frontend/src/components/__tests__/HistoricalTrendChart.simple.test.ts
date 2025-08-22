@@ -106,6 +106,6 @@ describe('HistoricalTrendChart - Simple Tests', () => {
     })
 
     expect(wrapper.vm.trendAnalysis).toBeTruthy()
-    expect(wrapper.vm.trendAnalysis.direction).toBe('improving')
+    expect((wrapper.vm as any).trendAnalysis?.direction).toBe('improving')
   })
 })

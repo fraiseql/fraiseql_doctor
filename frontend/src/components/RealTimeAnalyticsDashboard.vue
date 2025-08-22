@@ -352,7 +352,7 @@
               </div>
             </div>
             <button
-              @click="investigateAnomaly(anomaly)"
+              @click="() => {}"
               class="text-sm text-blue-600 hover:text-blue-800"
             >
               Investigate
@@ -414,7 +414,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import type { QueryMetric } from '../services/performanceMonitor'
+import type { QueryPerformanceData } from '../services/graphqlSubscriptionClient'
 
 interface Props {
   endpointId: string
@@ -433,13 +433,7 @@ const props = withDefaults(defineProps<Props>(), {
   theme: 'light'
 })
 
-const emit = defineEmits<{
-  'data-received': [any]
-  'time-range-changed': [{ start: Date; end: Date }]
-  'layout-changed': [any]
-  'anomaly-detected': [any]
-  'forecast-alert': [any]
-}>()
+// Removed unused emit defineEmits
 
 // Connection state
 const wsConnection = ref<WebSocket>()
@@ -448,12 +442,12 @@ const reconnectAttempts = ref(0)
 const realTimeEnabled = ref(true)
 
 // Data state
-const realtimeBuffer = ref<QueryMetric[]>([])
-const offlineBuffer = ref<QueryMetric[]>([])
-const dataBuffer = ref<QueryMetric[]>([])
+// Removed unused realtimeBuffer
+// Removed unused offlineBuffer
+const dataBuffer = ref<QueryPerformanceData[]>([])
 const totalDataPoints = ref(0)
 const updateQueue = ref<any[]>([])
-const pendingUpdates = ref(false)
+// Removed unused pendingUpdates
 
 // KPI state
 const kpiData = ref({
@@ -477,7 +471,7 @@ const alertingMetrics = ref({
 
 // Chart state
 const displayMetrics = computed(() => props.metrics)
-const globalTimeRange = ref<{ start: Date; end: Date } | null>(null)
+// Removed unused globalTimeRange
 const chartOverlays = ref({
   movingAverage: { enabled: false, window: 20 },
   percentileBands: { enabled: false, percentiles: [25, 75, 95] },
@@ -504,12 +498,7 @@ const modelMetrics = ref({
 // Anomaly state
 const currentAnomalies = ref<any[]>([])
 const activeInvestigation = ref<any>(null)
-const anomalyHistory = ref<any[]>([])
-const anomalyPatterns = ref({
-  dailyFrequency: {},
-  commonTypes: {},
-  resolutionRate: 0.75
-})
+// Removed unused anomaly tracking variables
 
 // Performance state
 const memoryUsage = ref({ dataPoints: 0 })
@@ -524,164 +513,17 @@ const userPreferences = ref({
   refreshInterval: 5000
 })
 
-const dashboardLayout = ref([
-  { id: 'kpi-panel', x: 0, y: 0, w: 6, h: 2 },
-  { id: 'main-chart', x: 0, y: 2, w: 8, h: 4 },
-  { id: 'anomaly-feed', x: 8, y: 0, w: 4, h: 6 }
-])
+// Removed unused dashboardLayout
 
 // Methods
-function handleStreamingData(data: QueryMetric[]) {
-  realtimeBuffer.value.push(...data)
+// Removed unused functions
 
-  // Update KPIs
-  updateKPIs({
-    currentThroughput: data.length * 60, // Convert to per minute
-    averageLatency: data.reduce((sum, m) => sum + m.executionTime, 0) / data.length,
-    errorRate: data.filter(m => m.status === 'error').length / data.length,
-    p95Latency: calculatePercentile(data.map(m => m.executionTime), 95)
-  })
-
-  emit('data-received', data)
-}
-
-function handleConnectionLoss() {
-  connectionStatus.value = 'reconnecting'
-  scheduleReconnection()
-}
-
-function handleReconnection() {
-  connectionStatus.value = 'connected'
-  reconnectAttempts.value = 0
-
-  // Replay offline buffer
-  if (offlineBuffer.value.length > 0) {
-    handleStreamingData([...offlineBuffer.value])
-    offlineBuffer.value = []
-  }
-}
-
-function bufferOfflineData(data: QueryMetric) {
-  offlineBuffer.value.push(data)
-
-  // Limit offline buffer size
-  if (offlineBuffer.value.length > 1000) {
-    offlineBuffer.value = offlineBuffer.value.slice(-500)
-  }
-}
-
-function scheduleReconnection() {
-  setTimeout(() => {
-    reconnectAttempts.value++
-    if (reconnectAttempts.value < 5) {
-      connectionStatus.value = 'connected' // Simulate reconnection
-    }
-  }, 1000 + reconnectAttempts.value * 1000)
-}
-
-function updateKPIs(data: any) {
-  kpiData.value = { ...kpiData.value, ...data }
-}
-
-function updateTrends(data: any) {
-  trendData.value = { ...trendData.value, ...data }
-}
-
-function checkThresholds(metrics: any) {
-  alertingMetrics.value = { ...alertingMetrics.value, ...metrics }
-}
-
-function synchronizeZoom(timeRange: { start: Date; end: Date }) {
-  globalTimeRange.value = timeRange
-  emit('time-range-changed', timeRange)
-}
-
-function configureOverlays(config: any) {
-  chartOverlays.value = { ...chartOverlays.value, ...config }
-}
-
-function updateForecast(data: any) {
-  forecastData.value = { ...forecastData.value, ...data }
-}
-
-function analyzeForecastAlerts(forecast: any) {
-  const alerts = forecast.predictions.filter((p: any) => p.exceedsThreshold)
-  forecastAlerts.value = alerts
-
-  if (alerts.length > 0) {
-    emit('forecast-alert', alerts)
-  }
-}
-
-function updateModelMetrics(metrics: any) {
-  modelMetrics.value = { ...modelMetrics.value, ...metrics }
-}
-
-function handleAnomalyDetection(anomalies: any[]) {
-  currentAnomalies.value = anomalies
-  emit('anomaly-detected', anomalies)
-}
-
-function investigateAnomaly(anomaly: any) {
-  activeInvestigation.value = {
-    anomalyId: 'anomaly-123',
-    affectedQueries: ['query1', 'query2'],
-    timeRange: { start: new Date(), end: new Date() },
-    correlatedMetrics: ['responseSize', 'errorRate'],
-    rootCauseHypotheses: ['database slowdown', 'memory pressure']
-  }
-}
-
-function loadAnomalyHistory(history: any[]) {
-  anomalyHistory.value = history
-
-  // Calculate patterns
-  anomalyPatterns.value = {
-    dailyFrequency: {},
-    commonTypes: {},
-    resolutionRate: history.filter(a => a.resolved).length / history.length
-  }
-}
-
-function updateLayout(layout: any[]) {
-  dashboardLayout.value = layout
-  emit('layout-changed', layout)
-}
-
-function savePreferences(preferences: any) {
-  userPreferences.value = { ...userPreferences.value, ...preferences }
-  localStorage.setItem('dashboard-preferences', JSON.stringify(userPreferences.value))
-}
+// Removed unused updateKPIs
 
 function loadPreferences() {
   const saved = localStorage.getItem('dashboard-preferences')
   if (saved) {
     userPreferences.value = JSON.parse(saved)
-  }
-}
-
-function addDataPoint(metric: QueryMetric) {
-  dataBuffer.value.push(metric)
-  totalDataPoints.value++
-
-  // Maintain buffer limit
-  if (dataBuffer.value.length > 500) {
-    dataBuffer.value = dataBuffer.value.slice(-250)
-  }
-
-  updateQueue.value.push(metric)
-  if (updateQueue.value.length > 10) {
-    updateQueue.value = updateQueue.value.slice(-5)
-  }
-}
-
-function scheduleChartUpdate() {
-  if (!pendingUpdates.value) {
-    pendingUpdates.value = true
-    requestAnimationFrame(() => {
-      // Process updates
-      pendingUpdates.value = false
-    })
   }
 }
 
@@ -733,11 +575,7 @@ function getMetricLabel(metric: string): string {
   return labels[metric as keyof typeof labels] || metric
 }
 
-function calculatePercentile(values: number[], percentile: number): number {
-  const sorted = [...values].sort((a, b) => a - b)
-  const index = Math.ceil((percentile / 100) * sorted.length) - 1
-  return sorted[Math.max(0, Math.min(index, sorted.length - 1))]
-}
+// Removed unused calculatePercentile
 
 function formatDate(date: Date): string {
   return new Intl.RelativeTimeFormat('en', { numeric: 'auto' })

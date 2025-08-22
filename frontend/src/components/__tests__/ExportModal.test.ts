@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import ExportModal from '../ExportModal.vue'
 
@@ -37,7 +37,7 @@ describe('ExportModal', () => {
 
       expect(jsonRadio.exists()).toBe(true)
       expect((jsonRadio.element as HTMLInputElement).checked).toBe(true)
-      expect(wrapper.vm.exportOptions.format).toBe('json')
+      expect((wrapper.vm as any).exportOptions.format).toBe('json')
     })
 
     it('should have CSV format option', () => {
@@ -64,7 +64,7 @@ describe('ExportModal', () => {
 
       await csvRadio.setValue(true)
 
-      expect(wrapper.vm.exportOptions.format).toBe('csv')
+      expect((wrapper.vm as any).exportOptions.format).toBe('csv')
     })
 
     it('should display format descriptions', () => {
@@ -80,7 +80,7 @@ describe('ExportModal', () => {
     it('should have variables inclusion checkbox checked by default', () => {
       const wrapper = mount(ExportModal, { props: defaultProps })
 
-      expect(wrapper.vm.exportOptions.includeVariables).toBe(true)
+      expect((wrapper.vm as any).exportOptions.includeVariables).toBe(true)
 
       const variablesCheckbox = wrapper.find('input[type="checkbox"]:checked')
       expect(variablesCheckbox.exists()).toBe(true)
@@ -89,7 +89,7 @@ describe('ExportModal', () => {
     it('should have results inclusion checkbox checked by default', () => {
       const wrapper = mount(ExportModal, { props: defaultProps })
 
-      expect(wrapper.vm.exportOptions.includeResults).toBe(true)
+      expect((wrapper.vm as any).exportOptions.includeResults).toBe(true)
     })
 
     it('should toggle variables inclusion when checkbox is clicked', async () => {
@@ -101,10 +101,10 @@ describe('ExportModal', () => {
 
       if (variablesCheckbox) {
         await variablesCheckbox.setValue(false)
-        expect(wrapper.vm.exportOptions.includeVariables).toBe(false)
+        expect((wrapper.vm as any).exportOptions.includeVariables).toBe(false)
 
         await variablesCheckbox.setValue(true)
-        expect(wrapper.vm.exportOptions.includeVariables).toBe(true)
+        expect((wrapper.vm as any).exportOptions.includeVariables).toBe(true)
       }
     })
 
@@ -117,10 +117,10 @@ describe('ExportModal', () => {
 
       if (resultsCheckbox) {
         await resultsCheckbox.setValue(false)
-        expect(wrapper.vm.exportOptions.includeResults).toBe(false)
+        expect((wrapper.vm as any).exportOptions.includeResults).toBe(false)
 
         await resultsCheckbox.setValue(true)
-        expect(wrapper.vm.exportOptions.includeResults).toBe(true)
+        expect((wrapper.vm as any).exportOptions.includeResults).toBe(true)
       }
     })
 
@@ -326,7 +326,7 @@ describe('ExportModal', () => {
     it('should initialize with correct default export options', () => {
       const wrapper = mount(ExportModal, { props: defaultProps })
 
-      expect(wrapper.vm.exportOptions).toEqual({
+      expect((wrapper.vm as any).exportOptions).toEqual({
         format: 'json',
         includeVariables: true,
         includeResults: true
@@ -345,9 +345,9 @@ describe('ExportModal', () => {
         await checkbox.setValue(false)
       }
 
-      expect(wrapper.vm.exportOptions.format).toBe('csv')
-      expect(wrapper.vm.exportOptions.includeVariables).toBe(false)
-      expect(wrapper.vm.exportOptions.includeResults).toBe(false)
+      expect((wrapper.vm as any).exportOptions.format).toBe('csv')
+      expect((wrapper.vm as any).exportOptions.includeVariables).toBe(false)
+      expect((wrapper.vm as any).exportOptions.includeResults).toBe(false)
     })
   })
 })

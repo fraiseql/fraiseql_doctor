@@ -6,14 +6,12 @@ describe('TimeSeriesAnalytics', () => {
   let timeSeriesAnalytics: TimeSeriesAnalytics
 
   const createMockMetric = (overrides: Partial<QueryMetric> = {}): QueryMetric => ({
+    id: `metric_${Date.now()}`,
     query: 'test query',
-    variables: {},
     executionTime: 100,
     responseSize: 1024,
     timestamp: new Date(),
-    status: 'success',
     endpointId: 'endpoint-1',
-    operationType: 'query',
     ...overrides
   })
 

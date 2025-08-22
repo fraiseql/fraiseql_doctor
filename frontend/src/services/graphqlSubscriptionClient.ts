@@ -236,7 +236,7 @@ export class GraphQLSubscriptionClient extends EventTarget {
     }
   }
 
-  private dispatchToSubscriptions(type: string, data: any): void {
+  private dispatchToSubscriptions(_type: string, data: any): void {
     this.subscriptions.forEach(subscription => {
       const callback = (subscription as any).callback
       if (callback) {
@@ -263,7 +263,7 @@ export class GraphQLSubscriptionClient extends EventTarget {
     }
   }
 
-  private handleClose(event: CloseEvent): void {
+  private handleClose(_event: CloseEvent): void {
     this.clearTimers()
 
     if (this.reconnectAttempts < this.config.reconnectAttempts) {

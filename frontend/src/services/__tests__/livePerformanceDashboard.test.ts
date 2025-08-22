@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { LivePerformanceDashboard, type DashboardConfiguration, type LiveMetrics, type AlertThreshold } from '../livePerformanceDashboard'
+import { LivePerformanceDashboard } from '../livePerformanceDashboard'
 import type { QueryPerformanceData } from '../graphqlSubscriptionClient'
 
 describe('LivePerformanceDashboard', () => {
@@ -140,7 +140,7 @@ describe('LivePerformanceDashboard', () => {
   describe('Real-time Alerting and Monitoring', () => {
     it('should trigger alerts when performance thresholds are exceeded', async () => {
       const alertCallback = vi.fn()
-      dashboard.on('performance-alert', alertCallback)
+      dashboard.addEventListener('performance-alert', alertCallback)
 
       await dashboard.initialize(['endpoint-1'])
 
@@ -189,7 +189,7 @@ describe('LivePerformanceDashboard', () => {
       mockAnalyticsEngine.detectAnomalies.mockReturnValue(mockAnomalies)
 
       const anomalyCallback = vi.fn()
-      dashboard.on('anomaly-detected', anomalyCallback)
+      dashboard.addEventListener('anomaly-detected', anomalyCallback)
 
       await dashboard.initialize(['endpoint-1'])
 
@@ -221,7 +221,7 @@ describe('LivePerformanceDashboard', () => {
 
     it('should provide real-time performance dashboard updates', async () => {
       const updateCallback = vi.fn()
-      dashboard.on('metrics-updated', updateCallback)
+      dashboard.addEventListener('metrics-updated', updateCallback)
 
       await dashboard.initialize(['endpoint-1'])
 

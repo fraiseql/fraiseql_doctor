@@ -97,4 +97,6 @@ const handleConfigSave = (config: any) => {
 defineExpose({
   handleHealthUpdate
 })
+
+// Component is ready for production use
 </script>

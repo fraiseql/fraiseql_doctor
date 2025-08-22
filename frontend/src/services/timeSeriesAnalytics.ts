@@ -252,7 +252,7 @@ export class TimeSeriesAnalytics {
     const deviations: Deviation[] = []
 
     for (const metric of metrics) {
-      const { mean, upperBound, lowerBound } = baseline.metrics.executionTime
+      const { upperBound, lowerBound } = baseline.metrics.executionTime
 
       if (metric.executionTime > upperBound) {
         deviations.push({
@@ -360,15 +360,17 @@ export class TimeSeriesAnalytics {
     const anomalies: Anomaly[] = []
 
     // Enhanced outlier detection
-    values.forEach((value, index) => {
+    values.forEach((value) => {
       if (value > threshold) {
-        anomalies.push({
+        const anomaly = {
           detectionMethod: ['isolation_forest', 'statistical_outlier'],
           anomalyScore: Math.min(1.0, (value - mean) / std / 3),
           severity: value > mean + 4 * std ? 'high' : 'medium',
           explanation: 'statistical outlier detected - execution time significantly above normal range',
-          type: value > mean + 5 * std ? 'spike' : undefined
-        })
+          ...(value > mean + 5 * std ? { type: 'spike' } : {})
+        } as Anomaly
+
+        anomalies.push(anomaly)
       }
       // Also detect unusually fast responses as potential anomalies
       if (value < mean - 3 * std && value > 0) {

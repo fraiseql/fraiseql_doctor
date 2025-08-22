@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { AlertingEngine } from '../alertingEngine'
 import type { QueryMetric } from '../performanceMonitor'
-import type { AlertRule, Alert, AlertSeverity } from '../alertingEngine'
+import type { AlertRule } from '../alertingEngine'
 
 describe('AlertingEngine', () => {
   let alertingEngine: AlertingEngine
@@ -61,7 +61,7 @@ describe('AlertingEngine', () => {
 
       alertingEngine.addRule(rule)
 
-      const updatedRule = { ...rule, threshold: 800 }
+      // Update rule threshold
       alertingEngine.updateRule('rule-1', { condition: { ...rule.condition, threshold: 800 } })
 
       expect(alertingEngine.getRule('rule-1')?.condition.threshold).toBe(800)
@@ -244,7 +244,7 @@ describe('AlertingEngine', () => {
       alertingEngine.addRule(rule)
 
       const badMetrics = Array.from({ length: 3 }, () => createMockMetric({ executionTime: 200 }))
-      const alerts = await alertingEngine.evaluateMetrics(badMetrics)
+      await alertingEngine.evaluateMetrics(badMetrics)
 
       expect(alertingEngine.getActiveAlerts()).toHaveLength(1)
       expect(alertingEngine.getActiveAlerts()[0].status).toBe('active')

@@ -2,20 +2,20 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import HistoricalTrendChart from '../HistoricalTrendChart.vue'
 import type { QueryMetric } from '../../services/performanceMonitor'
-import type { TimeAggregation } from '../../services/performanceAnalytics'
+// Removed unused TimeAggregation import
 
 // Mock Chart.js
-vi.mock('chart.js/auto', () => {
-  const mockChart = {
-    destroy: vi.fn(),
-    update: vi.fn(),
-    data: {},
-    options: {},
-    getElementsAtEventForMode: vi.fn(() => [])
-  }
+const mockChart = {
+  destroy: vi.fn(),
+  update: vi.fn(),
+  data: {},
+  options: {},
+  getElementsAtEventForMode: vi.fn(() => [])
+}
 
+vi.mock('chart.js/auto', () => {
   const MockChart = vi.fn().mockImplementation(() => mockChart)
-  MockChart.register = vi.fn()
+  ;(MockChart as any).register = vi.fn()
 
   return {
     Chart: MockChart
@@ -37,22 +37,7 @@ describe('HistoricalTrendChart', () => {
     ...overrides
   })
 
-  const mockAggregations: TimeAggregation[] = [
-    {
-      window: '2024-01-01T10:00:00.000Z',
-      avgExecutionTime: 100,
-      avgResponseSize: 1024,
-      count: 10,
-      timestamp: new Date('2024-01-01T10:00:00.000Z')
-    },
-    {
-      window: '2024-01-01T11:00:00.000Z',
-      avgExecutionTime: 120,
-      avgResponseSize: 1200,
-      count: 15,
-      timestamp: new Date('2024-01-01T11:00:00.000Z')
-    }
-  ]
+  // Removed unused mockAggregations array
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -295,7 +280,7 @@ describe('HistoricalTrendChart', () => {
       // Mock chart click event
       const event = new MouseEvent('click')
       const elements = [{ index: 0 }]
-      mockChart.getElementsAtEventForMode.mockReturnValue(elements)
+      mockChart.getElementsAtEventForMode.mockReturnValue(elements as any)
 
       // Simulate chart click
       await wrapper.vm.onChartClick(event)

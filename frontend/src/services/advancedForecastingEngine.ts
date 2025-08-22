@@ -113,11 +113,10 @@ export interface ModelMetadata {
 }
 
 export class AdvancedForecastingEngine {
-  private config: any
   private modelRegistry: Map<string, any> = new Map()
 
-  constructor(config: any = {}) {
-    this.config = config
+  constructor(_config: any = {}) {
+    // Configuration stored for future use
   }
 
   async analyzeSeasonality(data: QueryMetric[]): Promise<SeasonalityResult> {
@@ -154,7 +153,7 @@ export class AdvancedForecastingEngine {
     }
   }
 
-  async buildExponentialSmoothingModel(data: QueryMetric[], options: any): Promise<ExponentialSmoothingModel> {
+  async buildExponentialSmoothingModel(data: QueryMetric[], _options: any): Promise<ExponentialSmoothingModel> {
     return {
       parameters: { alpha: 0.3, beta: 0.1, gamma: 0.05 },
       forecastFunction: () => 100, // Simplified
@@ -264,7 +263,7 @@ export class AdvancedForecastingEngine {
     }
   }
 
-  async forecastAnomalyProbabilities(data: QueryMetric[], options: any): Promise<AnomalyProbabilities> {
+  async forecastAnomalyProbabilities(data: QueryMetric[], _options: any): Promise<AnomalyProbabilities> {
     const hourlyRates = new Array(24).fill(0)
     const hourlyCounts = new Array(24).fill(0)
 
@@ -344,7 +343,7 @@ export class AdvancedForecastingEngine {
     }
   }
 
-  async autoSelectModel(data: QueryMetric[], options: any): Promise<AutoModelSelection> {
+  async autoSelectModel(_data: QueryMetric[], _options: any): Promise<AutoModelSelection> {
     return {
       selectedModel: {
         type: 'arima',
@@ -360,7 +359,7 @@ export class AdvancedForecastingEngine {
     }
   }
 
-  async calculateForecastAccuracy(actual: number[], forecast: number[], options: any): Promise<ForecastAccuracyMetrics> {
+  async calculateForecastAccuracy(actual: number[], forecast: number[], _options: any): Promise<ForecastAccuracyMetrics> {
     const mae = this.calculateMAE(actual, forecast)
     const mape = this.calculateMAPE(actual, forecast)
     const rmse = this.calculateRMSE(actual, forecast)
@@ -375,10 +374,10 @@ export class AdvancedForecastingEngine {
     }
   }
 
-  async initializeOnlineModel(data: QueryMetric[], options: any): Promise<OnlineModel> {
+  async initializeOnlineModel(_data: QueryMetric[], _options: any): Promise<OnlineModel> {
     return {
       modelState: { weights: [0.5, 0.3, 0.2] },
-      adaptationConfig: { learningRate: options.adaptationRate },
+      adaptationConfig: { learningRate: _options.adaptationRate },
       updateCount: 0,
       adaptationHistory: []
     }
@@ -497,7 +496,7 @@ export class AdvancedForecastingEngine {
     return values.map((v, i) => v - (trend[i] || v))
   }
 
-  private autoSelectOrder(values: number[]): { p: number; d: number; q: number } {
+  private autoSelectOrder(_values: number[]): { p: number; d: number; q: number } {
     // Simplified auto-selection
     return { p: 1, d: 1, q: 1 }
   }

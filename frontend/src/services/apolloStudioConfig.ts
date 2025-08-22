@@ -141,34 +141,7 @@ export function useApolloStudioConfig() {
     }
   }
 
-  // Common error handling patterns
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  function handleError<T>(
-    operation: () => T,
-    fallback: T,
-    context: string,
-    logContext: any = {}
-  ): SafeResult<T> {
-    try {
-      const result = operation()
-      return {
-        success: true,
-        data: result,
-        error: null,
-        warnings: []
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      logError(`${context} failed`, { ...logContext, error: errorMessage })
-
-      return {
-        success: false,
-        data: fallback,
-        error: errorMessage,
-        warnings: ['Using fallback due to error']
-      }
-    }
-  }
+  // Removed unused _handleError function
 
   function validateEndpointStructure(endpoint: GraphQLEndpoint): string[] {
     const errors: string[] = []
@@ -409,7 +382,7 @@ export function useApolloStudioConfig() {
 
   function switchEndpointWithAuth(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    fromEndpoint: GraphQLEndpoint,
+    _fromEndpoint: GraphQLEndpoint,
     toEndpoint: GraphQLEndpoint,
     forceAuthType: AuthType
   ): StudioConfig {

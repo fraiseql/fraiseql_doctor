@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import AlertDashboard from '../AlertDashboard.vue'
-import type { Alert, AlertRule, AlertSeverity } from '../../services/alertingEngine'
+import type { Alert, AlertRule } from '../../services/alertingEngine'
 
 // Mock the AlertingEngine
 vi.mock('../../services/alertingEngine', () => ({
@@ -152,7 +152,7 @@ describe('AlertDashboard', () => {
       await acknowledgeButton.trigger('click')
 
       expect(wrapper.emitted('alert-acknowledged')).toBeTruthy()
-      expect(wrapper.emitted('alert-acknowledged')[0]).toEqual(['alert-1'])
+      expect(wrapper.emitted('alert-acknowledged')?.[0]).toEqual(['alert-1'])
     })
 
     it('should show acknowledge confirmation dialog', async () => {
@@ -257,7 +257,7 @@ describe('AlertDashboard', () => {
       await editButton.trigger('click')
 
       expect(wrapper.emitted('edit-rule')).toBeTruthy()
-      expect(wrapper.emitted('edit-rule')[0]).toEqual(['rule-1'])
+      expect(wrapper.emitted('edit-rule')?.[0]).toEqual(['rule-1'])
     })
 
     it('should allow deleting alert rules', async () => {
@@ -289,7 +289,7 @@ describe('AlertDashboard', () => {
       await confirmButton.trigger('click')
 
       expect(wrapper.emitted('delete-rule')).toBeTruthy()
-      expect(wrapper.emitted('delete-rule')[0]).toEqual(['rule-1'])
+      expect(wrapper.emitted('delete-rule')?.[0]).toEqual(['rule-1'])
     })
   })
 
@@ -332,7 +332,7 @@ describe('AlertDashboard', () => {
       await wrapper.vm.$nextTick()
 
       // Simulate alert resolution
-      const resolvedAlert = { ...activeAlert, status: 'resolved', resolvedAt: new Date() }
+      const resolvedAlert = { ...activeAlert, status: 'resolved', resolvedAt: new Date() } as Alert
       wrapper.vm.handleAlertResolved(resolvedAlert)
       await wrapper.vm.$nextTick()
 

@@ -265,7 +265,7 @@ View in FraiseQL Doctor Dashboard for more details.
       method,
       success,
       sentAt: new Date(),
-      error: error?.message || error
+      ...(error !== undefined ? { error } : {})
     })
 
     // Maintain history size limit

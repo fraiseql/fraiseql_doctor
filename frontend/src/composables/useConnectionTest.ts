@@ -9,20 +9,20 @@ export function useConnectionTest() {
   const testing = ref(false)
   const testResult = ref<ConnectionTestResult | null>(null)
 
-  const testConnection = async (url: string, authConfig?: any): Promise<ConnectionTestResult> => {
+  const testConnection = async (url: string, _authConfig?: any): Promise<ConnectionTestResult> => {
     testing.value = true
     testResult.value = null
 
     try {
       // Simulate connection test
       await new Promise(resolve => setTimeout(resolve, 1000))
-      
+
       // Mock success/failure based on URL
-      const isValidUrl = url && url.includes('api.example')
-      
+      const isValidUrl = !!(url && url.includes('api.example'))
+
       const result: ConnectionTestResult = {
         success: isValidUrl,
-        message: isValidUrl 
+        message: isValidUrl
           ? 'Connection successful! GraphQL endpoint is responding.'
           : 'Connection failed: Unable to reach the GraphQL endpoint.'
       }
@@ -34,7 +34,7 @@ export function useConnectionTest() {
         success: false,
         message: `Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`
       }
-      
+
       testResult.value = result
       return result
     } finally {

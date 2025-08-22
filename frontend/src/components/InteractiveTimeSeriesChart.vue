@@ -181,18 +181,9 @@ const displayData = computed(() => {
   return data
 })
 
-const decimationRatio = computed(() => {
-  return props.metrics.length > props.maxDataPoints
-    ? Math.ceil(props.metrics.length / props.maxDataPoints)
-    : 1
-})
+// Removed unused computed properties
 
-const renderedDataPoints = computed(() => {
-  // Simplified - in real implementation would use viewport culling
-  return displayData.value
-})
-
-const visibleDataRange = ref({ start: 0, end: 100 })
+// Removed unused visibleDataRange
 
 const chartData = computed(() => {
   const baseData = displayData.value.map(m => ({
@@ -264,7 +255,7 @@ const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   animation: {
-    duration: realTimeUpdates.value ? 300 : 750
+    duration: props.realTimeUpdates ? 300 : 750
   },
   interaction: {
     intersect: false,
@@ -356,19 +347,17 @@ function updateChart() {
   chartInstance.value.update('none') // Skip animation for performance
 }
 
-const updateChartDebounced = debounce(updateChart, 100)
+// Removed unused updateChartDebounced
 
-function handleDataUpdate(newData: QueryMetric[]) {
-  updateChartDebounced()
-}
+// Removed unused _handleDataUpdate
 
-function handleChartHover(event: any, elements: any) {
+function handleChartHover(_event: any, _elements: any) {
   if (!chartCanvas.value) return
 
   const rect = chartCanvas.value.getBoundingClientRect()
   crosshairPosition.value = {
-    x: event.native.clientX - rect.left,
-    y: event.native.clientY - rect.top,
+    x: (_event as MouseEvent).clientX - rect.left,
+    y: (_event as MouseEvent).clientY - rect.top,
     visible: true
   }
 }
@@ -448,76 +437,13 @@ function exportToCSV(): string {
   return csvContent
 }
 
-function generateStatisticalSummary() {
-  const values = displayData.value.map(m => m[props.metric as keyof QueryMetric] as number)
-  const sorted = [...values].sort((a, b) => a - b)
+// Removed unused _generateStatisticalSummary
 
-  const mean = values.reduce((sum, v) => sum + v, 0) / values.length
-  const median = getPercentile(sorted, 50)
-  const std = Math.sqrt(values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / values.length)
+// Removed unused _addAnnotation
 
-  return {
-    count: values.length,
-    mean,
-    median,
-    standardDeviation: std,
-    min: Math.min(...values),
-    max: Math.max(...values),
-    percentiles: {
-      p25: getPercentile(sorted, 25),
-      p50: median,
-      p75: getPercentile(sorted, 75),
-      p90: getPercentile(sorted, 90),
-      p95: getPercentile(sorted, 95),
-      p99: getPercentile(sorted, 99)
-    }
-  }
-}
+// Removed unused _setViewport
 
-function addAnnotation(annotation: any) {
-  annotations.value.push({
-    type: 'line',
-    scaleID: 'x',
-    value: annotation.x,
-    borderColor: annotation.color,
-    borderWidth: 2,
-    label: {
-      content: annotation.text,
-      enabled: true
-    }
-  })
-
-  emit('annotation-added', annotation)
-  updateChart()
-}
-
-function setViewport(viewport: { start: number; end: number }) {
-  visibleDataRange.value = viewport
-}
-
-function aggregateToResolution(metrics: QueryMetric[], resolution: string) {
-  const windowMs = getResolutionWindow(resolution)
-  const grouped = new Map<number, QueryMetric[]>()
-
-  for (const metric of metrics) {
-    const windowStart = Math.floor(metric.timestamp.getTime() / windowMs) * windowMs
-    if (!grouped.has(windowStart)) {
-      grouped.set(windowStart, [])
-    }
-    grouped.get(windowStart)!.push(metric)
-  }
-
-  return Array.from(grouped.entries()).map(([windowStart, windowMetrics]) => {
-    const executionTimes = windowMetrics.map(m => m.executionTime)
-    return {
-      timestamp: new Date(windowStart),
-      averageExecutionTime: executionTimes.reduce((sum, t) => sum + t, 0) / executionTimes.length,
-      minExecutionTime: Math.min(...executionTimes),
-      maxExecutionTime: Math.max(...executionTimes),
-      dataPointCount: windowMetrics.length
-    }
-  })
-}
+// Removed unused _aggregateToResolution
 
 // Helper functions
 function calculateMovingAverage(data: any[], window: number) {
@@ -577,27 +503,9 @@ function getTrendDirection(index: number): string {
   return current > previous ? 'increasing' : 'decreasing'
 }
 
-function getResolutionWindow(resolution: string): number {
-  const windows = {
-    minute: 60 * 1000,
-    '5minute': 5 * 60 * 1000,
-    hour: 60 * 60 * 1000,
-    day: 24 * 60 * 60 * 1000
-  }
-  return windows[resolution as keyof typeof windows] || windows.minute
-}
+// Removed unused getResolutionWindow
 
-function debounce(func: Function, wait: number) {
-  let timeout: number
-  return function executedFunction(...args: any[]) {
-    const later = () => {
-      clearTimeout(timeout)
-      func(...args)
-    }
-    clearTimeout(timeout)
-    timeout = setTimeout(later, wait) as unknown as number
-  }
-}
+// Removed unused debounce function
 
 // Lifecycle
 onMounted(async () => {

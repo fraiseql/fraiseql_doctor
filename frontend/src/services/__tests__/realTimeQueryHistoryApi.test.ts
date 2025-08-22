@@ -254,10 +254,14 @@ describe('RealTimeQueryHistoryApi', () => {
       const mockEventSource = {
         addEventListener: vi.fn(),
         close: vi.fn(),
-        readyState: EventSource.OPEN
+        readyState: 1 // EventSource.OPEN
       }
 
-      global.EventSource = vi.fn().mockImplementation(() => mockEventSource)
+      const EventSourceMock = vi.fn().mockImplementation(() => mockEventSource)
+      ;(EventSourceMock as any).CONNECTING = 0
+      ;(EventSourceMock as any).OPEN = 1
+      ;(EventSourceMock as any).CLOSED = 2
+      global.EventSource = EventSourceMock as any
 
       const stream = await queryHistoryApi.streamLiveQueries({
         endpointId: 'endpoint-1',
@@ -319,12 +323,16 @@ describe('RealTimeQueryHistoryApi', () => {
       const mockEventSource = {
         addEventListener: vi.fn(),
         close: vi.fn(),
-        readyState: EventSource.CONNECTING
+        readyState: 0 // EventSource.CONNECTING
       }
 
-      global.EventSource = vi.fn().mockImplementation(() => mockEventSource)
+      const EventSourceMock = vi.fn().mockImplementation(() => mockEventSource)
+      ;(EventSourceMock as any).CONNECTING = 0
+      ;(EventSourceMock as any).OPEN = 1
+      ;(EventSourceMock as any).CLOSED = 2
+      global.EventSource = EventSourceMock as any
 
-      const stream = await queryHistoryApi.streamLiveQueries({
+      await queryHistoryApi.streamLiveQueries({
         endpointId: 'endpoint-1',
         callback: vi.fn(),
         onReconnect: reconnectCallback

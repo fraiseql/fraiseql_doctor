@@ -25,7 +25,7 @@
               :class="{ 'border-red-500': errors.name }"
               placeholder="Enter a descriptive name for this rule"
               data-testid="rule-name-input"
-              :aria-describedby="errors.name ? 'name-error' : undefined"
+              :aria-describedby="errors.name ? 'name-error' : ''"
             />
           </div>
           <p v-if="errors.name" id="name-error" class="mt-2 text-sm text-red-600" data-testid="name-error">
@@ -295,7 +295,7 @@
           <button
             v-if="mode === 'create'"
             type="submit"
-            :disabled="loading"
+            :disabled="loading || false"
             class="bg-indigo-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             data-testid="create-rule-button"
           >
@@ -305,7 +305,7 @@
           <button
             v-else
             type="submit"
-            :disabled="loading"
+            :disabled="loading || false"
             class="bg-indigo-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             data-testid="update-rule-button"
           >
@@ -453,11 +453,11 @@ function submitForm(): void {
     severity: formData.value.severity,
     enabled: formData.value.enabled,
     createdAt: props.mode === 'edit' && props.rule ? props.rule.createdAt : new Date(),
-    updatedAt: props.mode === 'edit' ? new Date() : undefined,
+    ...(props.mode === 'edit' ? { updatedAt: new Date() } : {}),
     notifications: {
       email: formData.value.notifications.email,
       browser: formData.value.notifications.browser,
-      webhook: formData.value.notifications.webhook || undefined
+      ...(formData.value.notifications.webhook && { webhook: formData.value.notifications.webhook })
     }
   }
 

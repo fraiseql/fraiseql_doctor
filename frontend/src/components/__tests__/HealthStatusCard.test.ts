@@ -77,9 +77,9 @@ describe('HealthStatusCard', () => {
 
   it('should display "Never" when lastChecked is undefined', () => {
     const endpoint: GraphQLEndpoint = {
-      ...baseEndpoint,
-      lastChecked: undefined
+      ...baseEndpoint
     }
+    delete (endpoint as any).lastChecked
 
     const wrapper = mount(HealthStatusCard, { props: { endpoint } })
 
@@ -124,9 +124,9 @@ describe('HealthStatusCard', () => {
 
   it('should handle missing response time gracefully', () => {
     const endpoint: GraphQLEndpoint = {
-      ...baseEndpoint,
-      responseTime: undefined
+      ...baseEndpoint
     }
+    delete (endpoint as any).responseTime
 
     const wrapper = mount(HealthStatusCard, { props: { endpoint } })
 

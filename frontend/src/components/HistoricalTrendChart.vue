@@ -194,7 +194,7 @@ const chartConfig = computed((): ChartConfiguration => ({
       intersect: false,
       mode: 'index'
     },
-    onClick: (event, elements) => {
+    onClick: (_event, elements) => {
       if (elements.length > 0) {
         const elementIndex = elements[0].index
         const aggregation = aggregatedData.value[elementIndex]
@@ -335,7 +335,9 @@ function updateChart() {
   if (!chartInstance) return
 
   chartInstance.data = chartData.value
-  chartInstance.options = chartConfig.value.options
+  if (chartConfig.value.options) {
+    chartInstance.options = chartConfig.value.options
+  }
   chartInstance.update('none') // No animation for performance
 }
 

@@ -41,9 +41,9 @@ describe('EndpointForm', () => {
         }
       })
 
-      expect(wrapper.find('[data-testid="name-input"]').element.value).toBe('')
-      expect(wrapper.find('[data-testid="url-input"]').element.value).toBe('')
-      expect(wrapper.find('[data-testid="description-input"]').element.value).toBe('')
+      expect((wrapper.find('[data-testid="name-input"]').element as HTMLInputElement).value).toBe('')
+      expect((wrapper.find('[data-testid="url-input"]').element as HTMLTextAreaElement).value).toBe('')
+      expect((wrapper.find('[data-testid="description-input"]').element as HTMLInputElement).value).toBe('')
     })
 
     it('should validate required fields', async () => {
@@ -87,13 +87,13 @@ describe('EndpointForm', () => {
       await wrapper.find('[data-testid="name-input"]').setValue('Test Endpoint')
       await wrapper.find('[data-testid="url-input"]').setValue('https://api.example.com/graphql')
       await wrapper.find('[data-testid="description-input"]').setValue('Test description')
-      await wrapper.find('[data-testid="introspection-checkbox"]').setChecked(true)
+      await wrapper.find('[data-testid="introspection-checkbox"]').setValue(true)
       // Wait for reactive updates
       await wrapper.vm.$nextTick()
 
-      // Verify form data is set correctly
-      expect(wrapper.vm.formData.name).toBe('Test Endpoint')
-      expect(wrapper.vm.formData.url).toBe('https://api.example.com/graphql')
+      // Verify form inputs are populated
+      expect((wrapper.find('[data-testid="name-input"]').element as HTMLInputElement).value).toBe('Test Endpoint')
+      expect((wrapper.find('[data-testid="url-input"]').element as HTMLInputElement).value).toBe('https://api.example.com/graphql')
 
       // Trigger form submission
       await wrapper.find('form').trigger('submit.prevent')
@@ -146,10 +146,10 @@ describe('EndpointForm', () => {
         }
       })
 
-      expect(wrapper.find('[data-testid="name-input"]').element.value).toBe('Existing Endpoint')
-      expect(wrapper.find('[data-testid="url-input"]').element.value).toBe('https://existing.com/graphql')
-      expect(wrapper.find('[data-testid="description-input"]').element.value).toBe('Existing description')
-      expect(wrapper.find('[data-testid="introspection-checkbox"]').element.checked).toBe(true)
+      expect((wrapper.find('[data-testid="name-input"]').element as HTMLInputElement).value).toBe('Existing Endpoint')
+      expect((wrapper.find('[data-testid="url-input"]').element as HTMLInputElement).value).toBe('https://existing.com/graphql')
+      expect((wrapper.find('[data-testid="description-input"]').element as HTMLTextAreaElement).value).toBe('Existing description')
+      expect((wrapper.find('[data-testid="introspection-checkbox"]').element as HTMLInputElement).checked).toBe(true)
     })
 
     it('should emit update event with form data', async () => {
@@ -164,7 +164,7 @@ describe('EndpointForm', () => {
       await wrapper.vm.$nextTick()
 
       // Verify form data updated
-      expect(wrapper.vm.formData.name).toBe('Updated Name')
+      expect((wrapper.vm as any).formData.name).toBe('Updated Name')
 
       // Trigger form submission
       await wrapper.find('form').trigger('submit.prevent')
@@ -229,7 +229,7 @@ describe('EndpointForm', () => {
       await wrapper.find('form').trigger('submit.prevent')
       await wrapper.vm.$nextTick()
 
-      expect(wrapper.emitted('create')?.[0][0].headers).toEqual({
+      expect((wrapper.emitted('create')?.[0][0] as any).headers).toEqual({
         'Authorization': 'Bearer token'
       })
     })
@@ -308,7 +308,7 @@ describe('EndpointForm', () => {
       await wrapper.find('[data-testid="name-input"]').setValue('Test')
       await wrapper.find('[data-testid="cancel-btn"]').trigger('click')
 
-      expect(wrapper.find('[data-testid="name-input"]').element.value).toBe('')
+      expect((wrapper.find('[data-testid="name-input"]').element as HTMLInputElement).value).toBe('')
     })
   })
 })

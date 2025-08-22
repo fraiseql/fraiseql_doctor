@@ -121,8 +121,7 @@
             :key="alert.id"
             class="alert-item border rounded-lg p-4"
             :class="getAlertClasses(alert)"
-            data-testid="alert-item"
-            :data-testid="`alert-severity-${alert.severity}`"
+:data-testid="`alert-item alert-severity-${alert.severity}`"
           >
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-3">
@@ -533,19 +532,23 @@ onMounted(() => {
   updateStatistics()
 
   // Set up event listeners
-  alertingEngine.addEventListener('alert-triggered', (event: CustomEvent) => {
-    handleNewAlert(event.detail)
-  })
+  alertingEngine.addEventListener('alert-triggered', ((event: Event) => {
+    handleNewAlert((event as CustomEvent).detail)
+  }) as EventListener)
 
-  alertingEngine.addEventListener('alert-resolved', (event: CustomEvent) => {
-    handleAlertResolved(event.detail)
-  })
+  alertingEngine.addEventListener('alert-resolved', ((event: Event) => {
+    handleAlertResolved((event as CustomEvent).detail)
+  }) as EventListener)
 })
 
 onUnmounted(() => {
   // Clean up event listeners
-  alertingEngine.removeEventListener('alert-triggered', handleNewAlert)
-  alertingEngine.removeEventListener('alert-resolved', handleAlertResolved)
+  alertingEngine.removeEventListener('alert-triggered', ((event: Event) => {
+    handleNewAlert((event as CustomEvent).detail)
+  }) as EventListener)
+  alertingEngine.removeEventListener('alert-resolved', ((event: Event) => {
+    handleAlertResolved((event as CustomEvent).detail)
+  }) as EventListener)
 })
 
 // Expose methods for testing

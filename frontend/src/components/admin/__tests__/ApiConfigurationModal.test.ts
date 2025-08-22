@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import ApiConfigurationModal from '../components/ApiConfigurationModal.vue'
@@ -54,7 +54,7 @@ describe('ApiConfigurationModal', () => {
     // Test Bearer token authentication
     await wrapper.find('[data-testid="auth-type-select"]').setValue('bearer')
     expect(wrapper.find('[data-testid="auth-token-input"]').exists()).toBe(true)
-    
+
     await wrapper.find('[data-testid="auth-token-input"]').setValue('test-token-123')
     await wrapper.find('[data-testid="save-config-btn"]').trigger('click')
 
@@ -98,12 +98,12 @@ describe('ApiConfigurationModal', () => {
 
     const testBtn = wrapper.find('[data-testid="test-connection-btn"]')
     expect(testBtn.exists()).toBe(true)
-    
+
     await testBtn.trigger('click')
-    
+
     // Should show testing state
     expect(wrapper.text()).toContain('Testing...')
-    
+
     // Wait for async operation to complete (longer timeout for simulated delay)
     await new Promise(resolve => setTimeout(resolve, 1100))
     await wrapper.vm.$nextTick()
@@ -143,9 +143,9 @@ describe('ApiConfigurationModal', () => {
       }
     })
 
-    expect(wrapper.find('[data-testid="endpoint-name-input"]').element.value).toBe('Example Dev API')
-    expect(wrapper.find('[data-testid="endpoint-url-input"]').element.value).toBe('https://api.example.dev/graphql')
-    expect(wrapper.find('[data-testid="environment-select"]').element.value).toBe('dev')
+    expect((wrapper.find('[data-testid="endpoint-name-input"]').element as HTMLInputElement).value).toBe('Example Dev API')
+    expect((wrapper.find('[data-testid="endpoint-url-input"]').element as HTMLInputElement).value).toBe('https://api.example.dev/graphql')
+    expect((wrapper.find('[data-testid="environment-select"]').element as HTMLSelectElement).value).toBe('dev')
   })
 
   it('should emit update:modelValue on cancel', async () => {
@@ -198,7 +198,7 @@ describe('ApiConfigurationModal', () => {
 
     const resultElement = wrapper.find('[data-testid="connection-test-result"]')
     expect(resultElement.exists()).toBe(true)
-    
+
     // Should show success or failure message
     const resultText = resultElement.text()
     expect(resultText).toMatch(/success|failed|error/i)

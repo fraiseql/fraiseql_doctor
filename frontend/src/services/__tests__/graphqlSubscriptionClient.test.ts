@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { GraphQLSubscriptionClient, type PerformanceSubscription, type QueryPerformanceData } from '../graphqlSubscriptionClient'
+import { GraphQLSubscriptionClient, type QueryPerformanceData } from '../graphqlSubscriptionClient'
 
 describe('GraphQLSubscriptionClient', () => {
   let subscriptionClient: GraphQLSubscriptionClient
@@ -15,7 +15,12 @@ describe('GraphQLSubscriptionClient', () => {
       removeEventListener: vi.fn()
     }
 
-    global.WebSocket = vi.fn().mockImplementation(() => mockWebSocket)
+    const WebSocketMock = vi.fn().mockImplementation(() => mockWebSocket)
+    ;(WebSocketMock as any).CONNECTING = 0
+    ;(WebSocketMock as any).OPEN = 1
+    ;(WebSocketMock as any).CLOSING = 2
+    ;(WebSocketMock as any).CLOSED = 3
+    global.WebSocket = WebSocketMock as any
 
     subscriptionClient = new GraphQLSubscriptionClient({
       endpoint: 'ws://localhost:4000/graphql',
@@ -85,7 +90,7 @@ describe('GraphQLSubscriptionClient', () => {
       })
 
       mockWebSocket.addEventListener.mock.calls
-        .find(call => call[0] === 'message')[1](messageEvent)
+        .find((call: any) => call[0] === 'message')[1](messageEvent)
 
       expect(receivedData).toHaveLength(1)
       expect(receivedData[0]).toEqual(mockPerformanceData)
@@ -114,7 +119,7 @@ describe('GraphQLSubscriptionClient', () => {
       })
 
       mockWebSocket.addEventListener.mock.calls
-        .find(call => call[0] === 'message')[1](errorEvent)
+        .find((call: any) => call[0] === 'message')[1](errorEvent)
 
       expect(errorCallback).toHaveBeenCalledWith({
         message: 'Subscription failed: Invalid endpoint ID',
@@ -166,7 +171,7 @@ describe('GraphQLSubscriptionClient', () => {
       })
 
       mockWebSocket.addEventListener.mock.calls
-        .find(call => call[0] === 'message')[1](messageEvent)
+        .find((call: any) => call[0] === 'message')[1](messageEvent)
 
       expect(aggregatedData).toHaveLength(1)
       expect(aggregatedData[0].metrics.totalQueries).toBe(150)
@@ -207,7 +212,7 @@ describe('GraphQLSubscriptionClient', () => {
       })
 
       mockWebSocket.addEventListener.mock.calls
-        .find(call => call[0] === 'message')[1](messageEvent)
+        .find((call: any) => call[0] === 'message')[1](messageEvent)
 
       expect(schemaChanges).toHaveLength(1)
       expect(schemaChanges[0].changeType).toBe('field_added')
@@ -225,7 +230,7 @@ describe('GraphQLSubscriptionClient', () => {
       // Simulate connection loss
       const closeEvent = new CloseEvent('close', { code: 1006, reason: 'Connection lost' })
       mockWebSocket.addEventListener.mock.calls
-        .find(call => call[0] === 'close')[1](closeEvent)
+        .find((call: any) => call[0] === 'close')[1](closeEvent)
 
       // Wait for reconnection attempt
       await new Promise(resolve => setTimeout(resolve, 100))
@@ -250,12 +255,12 @@ describe('GraphQLSubscriptionClient', () => {
     })
 
     it('should handle subscription cleanup on disconnect', async () => {
-      const subscription1 = await subscriptionClient.subscribeToPerformanceMetrics({
+      await subscriptionClient.subscribeToPerformanceMetrics({
         endpointId: 'endpoint-1',
         callback: vi.fn()
       })
 
-      const subscription2 = await subscriptionClient.subscribeToAggregatedMetrics({
+      await subscriptionClient.subscribeToAggregatedMetrics({
         endpointId: 'endpoint-2',
         timeWindow: '5m',
         callback: vi.fn()
@@ -283,7 +288,7 @@ describe('GraphQLSubscriptionClient', () => {
       })
 
       mockWebSocket.addEventListener.mock.calls
-        .find(call => call[0] === 'message')[1](malformedEvent)
+        .find((call: any) => call[0] === 'message')[1](malformedEvent)
 
       expect(errorCallback).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -299,16 +304,19 @@ describe('GraphQLSubscriptionClient', () => {
       const reconnectDelays: number[] = []
       const originalSetTimeout = global.setTimeout
 
-      global.setTimeout = vi.fn().mockImplementation((callback, delay) => {
+      // Mock setTimeout to track delays
+      const mockSetTimeout = vi.fn().mockImplementation((callback: any, delay: number) => {
         reconnectDelays.push(delay)
         return originalSetTimeout(callback, 0) // Execute immediately for testing
       })
+      Object.assign(mockSetTimeout, { __promisify__: vi.fn() })
+      global.setTimeout = mockSetTimeout as any
 
       // Trigger multiple connection failures
       for (let i = 0; i < 3; i++) {
         const closeEvent = new CloseEvent('close', { code: 1006 })
         mockWebSocket.addEventListener.mock.calls
-          .find(call => call[0] === 'close')[1](closeEvent)
+          .find((call: any) => call[0] === 'close')[1](closeEvent)
 
         await new Promise(resolve => setTimeout(resolve, 10))
       }

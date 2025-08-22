@@ -226,7 +226,7 @@ export class GraphQLInstrumentation extends EventTarget {
 
   private setupPerformanceObserver(): void {
     if (typeof PerformanceObserver !== 'undefined') {
-      this.performanceObserver = new PerformanceObserver((list) => {
+      this.performanceObserver = new PerformanceObserver((_list) => {
         // Handle performance entries
       })
 

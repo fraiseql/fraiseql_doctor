@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import QueryHistory from '../QueryHistory.vue'
 import type { GraphQLEndpoint } from '../../types/endpoint'
+import { EndpointStatus } from '../../types/endpoint'
 import type { QueryHistoryEntry } from '../../types/queryHistory'
 
 // Mock the service
@@ -47,7 +48,7 @@ const mockEndpoints: GraphQLEndpoint[] = [
     id: 'endpoint-1',
     name: 'Test API',
     url: 'https://api.test.com/graphql',
-    status: 'active' as const,
+    status: EndpointStatus.ACTIVE,
     introspectionEnabled: true,
     isHealthy: true,
     createdAt: new Date(),
@@ -57,7 +58,7 @@ const mockEndpoints: GraphQLEndpoint[] = [
     id: 'endpoint-2',
     name: 'Dev API',
     url: 'https://dev.api.test.com/graphql',
-    status: 'active' as const,
+    status: EndpointStatus.ACTIVE,
     introspectionEnabled: false,
     isHealthy: true,
     createdAt: new Date(),
@@ -174,8 +175,8 @@ describe('QueryHistory', () => {
       await wrapper.vm.$nextTick()
 
       // Should show only endpoint-1 queries
-      expect(wrapper.vm.filteredHistory).toHaveLength(1)
-      expect(wrapper.vm.filteredHistory[0].endpointId).toBe('endpoint-1')
+      expect((wrapper.vm as any).filteredHistory).toHaveLength(1)
+      expect((wrapper.vm as any).filteredHistory[0].endpointId).toBe('endpoint-1')
     })
 
     it('should filter by success status', async () => {
@@ -183,8 +184,8 @@ describe('QueryHistory', () => {
       await successSelect.setValue('true')
       await wrapper.vm.$nextTick()
 
-      expect(wrapper.vm.filteredHistory).toHaveLength(1)
-      expect(wrapper.vm.filteredHistory[0].success).toBe(true)
+      expect((wrapper.vm as any).filteredHistory).toHaveLength(1)
+      expect((wrapper.vm as any).filteredHistory[0].success).toBe(true)
     })
 
     it('should filter by search term', async () => {
@@ -192,8 +193,8 @@ describe('QueryHistory', () => {
       await searchInput.setValue('GetUsers')
       await wrapper.vm.$nextTick()
 
-      expect(wrapper.vm.filteredHistory).toHaveLength(1)
-      expect(wrapper.vm.filteredHistory[0].operationName).toBe('GetUsers')
+      expect((wrapper.vm as any).filteredHistory).toHaveLength(1)
+      expect((wrapper.vm as any).filteredHistory[0].operationName).toBe('GetUsers')
     })
 
     it('should filter by favorites', async () => {
@@ -202,9 +203,9 @@ describe('QueryHistory', () => {
       await wrapper.vm.$nextTick()
 
       // Should only show favorite entries (query-2 has favorite: true)
-      const favoriteEntries = wrapper.vm.filteredHistory.filter(h => h.favorite)
-      expect(wrapper.vm.filteredHistory).toHaveLength(favoriteEntries.length)
-      expect(wrapper.vm.filteredHistory.every(h => h.favorite)).toBe(true)
+      const favoriteEntries = (wrapper.vm as any).filteredHistory.filter((h: any) => h.favorite)
+      expect((wrapper.vm as any).filteredHistory).toHaveLength(favoriteEntries.length)
+      expect((wrapper.vm as any).filteredHistory.every((h: any) => h.favorite)).toBe(true)
     })
 
     it('should clear filters when clear button is clicked', async () => {
@@ -218,15 +219,15 @@ describe('QueryHistory', () => {
       await wrapper.vm.$nextTick()
 
       // Should have active filters (filters.endpointId should be truthy)
-      expect(wrapper.vm.filters.endpointId).toBe('endpoint-1')
-      expect(wrapper.vm.filters.searchTerm).toBe('test')
+      expect((wrapper.vm as any).filters.endpointId).toBe('endpoint-1');
+      expect((wrapper.vm as any).filters.searchTerm).toBe('test');
 
       // Test the clearFilters method directly
-      wrapper.vm.clearFilters()
+      (wrapper.vm as any).clearFilters()
 
-      expect(wrapper.vm.filters.endpointId).toBe('')
-      expect(wrapper.vm.filters.searchTerm).toBe('')
-      expect(wrapper.vm.currentPage).toBe(1)
+      expect((wrapper.vm as any).filters.endpointId).toBe('')
+      expect((wrapper.vm as any).filters.searchTerm).toBe('')
+      expect((wrapper.vm as any).currentPage).toBe(1)
     })
 
     it('should show "Clear Filters" button when filters are active', async () => {
@@ -258,8 +259,8 @@ describe('QueryHistory', () => {
       })
 
       // Mock the service methods to return large history
-      vi.mocked(wrapperWithLargeHistory.vm.queryHistoryService.getHistory).mockReturnValue(largeHistory)
-      vi.mocked(wrapperWithLargeHistory.vm.queryHistoryService.searchHistory).mockReturnValue(largeHistory)
+      vi.mocked((wrapperWithLargeHistory.vm as any).queryHistoryService.getHistory).mockReturnValue(largeHistory)
+      vi.mocked((wrapperWithLargeHistory.vm as any).queryHistoryService.searchHistory).mockReturnValue(largeHistory)
     })
 
     it('should show pagination controls when there are many entries', () => {
@@ -288,7 +289,7 @@ describe('QueryHistory', () => {
     })
 
     it('should navigate between pages', async () => {
-      wrapperWithLargeHistory.vm.loadHistory()
+      (wrapperWithLargeHistory.vm as any).loadHistory()
       await wrapperWithLargeHistory.vm.$nextTick()
 
       const buttons = wrapperWithLargeHistory.findAll('button')
@@ -297,12 +298,12 @@ describe('QueryHistory', () => {
         await nextBtn.trigger('click')
         await wrapperWithLargeHistory.vm.$nextTick()
 
-        expect(wrapperWithLargeHistory.vm.currentPage).toBe(2)
+        expect((wrapperWithLargeHistory.vm as any).currentPage).toBe(2)
       }
     })
 
     it('should disable Previous button on first page', async () => {
-      wrapperWithLargeHistory.vm.loadHistory()
+      (wrapperWithLargeHistory.vm as any).loadHistory()
       await wrapperWithLargeHistory.vm.$nextTick()
 
       const buttons = wrapperWithLargeHistory.findAll('button')
@@ -341,7 +342,7 @@ describe('QueryHistory', () => {
       await entry.vm.$emit('toggle-favorite', mockHistory[0])
 
       // Should call updateQuery service method - toggle the favorite status
-      expect(wrapper.vm.queryHistoryService.updateQuery).toHaveBeenCalledWith(
+      expect((wrapper.vm as any).queryHistoryService.updateQuery).toHaveBeenCalledWith(
         mockHistory[0].id,
         { favorite: true } // mockHistory[0].favorite is false, so toggle to true
       )
@@ -356,7 +357,7 @@ describe('QueryHistory', () => {
       const entry = wrapper.findComponent({ name: 'QueryHistoryEntry' })
       await entry.vm.$emit('delete', mockHistory[0])
 
-      expect(wrapper.vm.queryHistoryService.deleteQuery).toHaveBeenCalledWith(mockHistory[0].id)
+      expect((wrapper.vm as any).queryHistoryService.deleteQuery).toHaveBeenCalledWith(mockHistory[0].id)
 
       vi.unstubAllGlobals()
     })
@@ -371,37 +372,37 @@ describe('QueryHistory', () => {
         await exportBtn.trigger('click')
         await wrapper.vm.$nextTick()
 
-        expect(wrapper.vm.showExportModal).toBe(true)
+        expect((wrapper.vm as any).showExportModal).toBe(true)
       }
     })
 
     it('should handle export functionality', async () => {
       // Test the export method directly
-      expect(wrapper.vm.queryHistoryService.exportHistory).toBeDefined()
+      expect((wrapper.vm as any).queryHistoryService.exportHistory).toBeDefined()
 
       // Mock the export result
-      const exportResult = wrapper.vm.queryHistoryService.exportHistory({ format: 'json' })
+      const exportResult = (wrapper.vm as any).queryHistoryService.exportHistory({ format: 'json' })
       expect(exportResult.success).toBe(true)
     })
 
     it('should close export modal when close event is emitted', async () => {
-      wrapper.vm.showExportModal = true
+      (wrapper.vm as any).showExportModal = true
       await wrapper.vm.$nextTick()
 
       // Directly test the state change
-      wrapper.vm.showExportModal = false
-      expect(wrapper.vm.showExportModal).toBe(false)
+      ;(wrapper.vm as any).showExportModal = false
+      expect((wrapper.vm as any).showExportModal).toBe(false)
     })
   })
 
   describe('Clear History Functionality', () => {
     it('should clear all history when confirmed', () => {
       // Test the clear functionality directly
-      expect(wrapper.vm.queryHistoryService.clearHistory).toBeDefined()
+      expect((wrapper.vm as any).queryHistoryService.clearHistory).toBeDefined();
 
       // Call clearHistory method
-      wrapper.vm.queryHistoryService.clearHistory()
-      expect(wrapper.vm.queryHistoryService.clearHistory).toHaveBeenCalled()
+      (wrapper.vm as any).queryHistoryService.clearHistory()
+      expect((wrapper.vm as any).queryHistoryService.clearHistory).toHaveBeenCalled()
     })
 
     it('should have clear button when history exists', () => {
@@ -421,12 +422,12 @@ describe('QueryHistory', () => {
         }
       })
 
-      vi.mocked(emptyWrapper.vm.queryHistoryService.getHistory).mockReturnValue([])
-      vi.mocked(emptyWrapper.vm.queryHistoryService.searchHistory).mockReturnValue([])
+      vi.mocked((emptyWrapper.vm as any).queryHistoryService.getHistory).mockReturnValue([])
+      vi.mocked((emptyWrapper.vm as any).queryHistoryService.searchHistory).mockReturnValue([])
 
-      emptyWrapper.vm.loadHistory()
+      (emptyWrapper.vm as any).loadHistory()
 
-      expect(emptyWrapper.vm.hasHistory).toBe(false)
+      expect((emptyWrapper.vm as any).hasHistory).toBe(false)
     })
 
     it('should handle search with no results', async () => {
@@ -436,7 +437,7 @@ describe('QueryHistory', () => {
       await wrapper.vm.$nextTick()
 
       // The mock searchHistory should handle this and return empty array for unknown terms
-      expect(wrapper.vm.filteredHistory.length).toBe(0)
+      expect((wrapper.vm as any).filteredHistory.length).toBe(0)
     })
 
     it('should disable action buttons when no history exists', () => {
@@ -447,10 +448,10 @@ describe('QueryHistory', () => {
         }
       })
 
-      vi.mocked(emptyWrapper.vm.queryHistoryService.getHistory).mockReturnValue([])
-      emptyWrapper.vm.loadHistory()
+      vi.mocked((emptyWrapper.vm as any).queryHistoryService.getHistory).mockReturnValue([])
+      (emptyWrapper.vm as any).loadHistory()
 
-      expect(emptyWrapper.vm.hasHistory).toBe(false)
+      expect((emptyWrapper.vm as any).hasHistory).toBe(false)
     })
   })
 
@@ -463,7 +464,7 @@ describe('QueryHistory', () => {
         }
       })
 
-      expect(wrapperWithCurrentEndpoint.vm.filters.endpointId).toBe(mockEndpoints[0].id)
+      expect((wrapperWithCurrentEndpoint.vm as any).filters.endpointId).toBe(mockEndpoints[0].id)
     })
 
     it('should handle endpoint changes', async () => {
@@ -471,7 +472,7 @@ describe('QueryHistory', () => {
       await wrapper.setProps({ currentEndpoint: mockEndpoints[1] })
 
       // The filter should respect the new current endpoint
-      expect(wrapper.props('currentEndpoint')?.id).toBe(mockEndpoints[1].id)
+      expect((wrapper.props() as any).currentEndpoint?.id).toBe(mockEndpoints[1].id)
     })
   })
 })

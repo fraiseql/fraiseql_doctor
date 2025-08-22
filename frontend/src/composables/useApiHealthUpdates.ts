@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted, type Ref } from 'vue'
+import { onMounted, onUnmounted, type Ref } from 'vue'
 import type { ApiEndpoint, ApiHealthUpdate } from '@/types/admin'
 import { useWebSocket } from '@/services/websocket/useWebSocket'
 
@@ -13,7 +13,7 @@ export function useApiHealthUpdates(endpoints: Ref<ApiEndpoint[]>) {
         ...endpoints.value[endpointIndex],
         isHealthy: update.isHealthy,
         responseTime: update.responseTime,
-        errorRate: update.errorRate !== undefined ? update.errorRate : endpoints.value[endpointIndex].errorRate,
+        ...(update.errorRate !== undefined && { errorRate: update.errorRate }),
         lastCheck: update.timestamp || new Date()
       }
     }

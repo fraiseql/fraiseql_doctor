@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { GraphQLInstrumentation, type InstrumentationConfig, type QueryExecution, type ResolverTrace } from '../graphqlInstrumentation'
+import { GraphQLInstrumentation, type InstrumentationConfig, type QueryExecution } from '../graphqlInstrumentation'
 
 describe('GraphQLInstrumentation', () => {
   let instrumentation: GraphQLInstrumentation
@@ -19,10 +19,12 @@ describe('GraphQLInstrumentation', () => {
       takeRecords: vi.fn().mockReturnValue([])
     }
 
-    global.PerformanceObserver = vi.fn().mockImplementation((callback) => {
+    const PerformanceObserverMock = vi.fn().mockImplementation((callback) => {
       mockPerformanceObserver.callback = callback
       return mockPerformanceObserver
     })
+    ;(PerformanceObserverMock as any).supportedEntryTypes = ['measure', 'navigation']
+    global.PerformanceObserver = PerformanceObserverMock as any
 
     const config: InstrumentationConfig = {
       enableDetailedTracing: true,
@@ -247,7 +249,7 @@ describe('GraphQLInstrumentation', () => {
   describe('Performance Monitoring Integration', () => {
     it('should emit performance events for real-time monitoring', async () => {
       const performanceCallback = vi.fn()
-      instrumentation.on('query-executed', performanceCallback)
+      instrumentation.addEventListener('query-executed', performanceCallback)
 
       const mockQuery = 'query Simple { currentUser { id } }'
       const mockResponse = {
@@ -311,7 +313,11 @@ describe('GraphQLInstrumentation', () => {
       // Set low sampling rate
       const lowSamplingInstrumentation = new GraphQLInstrumentation(mockGraphQLClient, {
         samplingRate: 0.1, // 10% sampling
-        enableDetailedTracing: true
+        enableDetailedTracing: true,
+        captureVariables: true,
+        captureErrors: true,
+        maxTraceDepth: 10,
+        excludeIntrospection: true
       })
 
       const mockQuery = 'query Test { test }'
@@ -321,7 +327,7 @@ describe('GraphQLInstrumentation', () => {
       await lowSamplingInstrumentation.enable()
 
       const executions: QueryExecution[] = []
-      lowSamplingInstrumentation.on('query-executed', (execution) => {
+      lowSamplingInstrumentation.addEventListener('query-executed', (execution: any) => {
         executions.push(execution)
       })
 

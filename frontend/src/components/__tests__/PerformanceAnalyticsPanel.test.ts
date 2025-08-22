@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import PerformanceAnalyticsPanel from '../PerformanceAnalyticsPanel.vue'
 import type { QueryMetric } from '../../services/performanceMonitor'
-import type { PerformanceTrend, Percentiles, Anomaly } from '../../services/performanceAnalytics'
+// Removed unused import types
 
 // Mock the analytics components
 vi.mock('../HistoricalTrendChart.vue', () => ({
@@ -24,29 +24,9 @@ describe('PerformanceAnalyticsPanel', () => {
     ...overrides
   })
 
-  const mockTrend: PerformanceTrend = {
-    direction: 'improving',
-    slope: -0.5,
-    confidence: 0.85,
-    changePercentage: -15.2
-  }
+  // Removed unused mockTrend
 
-  const mockPercentiles: Percentiles = {
-    p50: 100,
-    p90: 150,
-    p95: 180,
-    p99: 220
-  }
-
-  const mockAnomalies: Anomaly[] = [
-    {
-      metric: createMockMetric({ executionTime: 500 }),
-      severity: 'high',
-      deviationScore: 3.2,
-      expectedValue: 100,
-      detectedAt: new Date()
-    }
-  ]
+  // Removed unused mockPercentiles and mockAnomalies
 
   describe('Component Rendering', () => {
     it('should render analytics panel with all sections', () => {
@@ -286,7 +266,7 @@ describe('PerformanceAnalyticsPanel', () => {
       await wrapper.find('[data-testid="time-window-select"]').setValue('day')
 
       const chart = wrapper.findComponent('[data-testid="historical-trend-chart"]')
-      expect(chart.props('timeWindow')).toBe('day')
+      expect((chart as any).props('timeWindow')).toBe('day')
     })
   })
 
@@ -319,7 +299,7 @@ describe('PerformanceAnalyticsPanel', () => {
       await wrapper.find('[data-testid="response-size-button"]').trigger('click')
 
       const chart = wrapper.findComponent('[data-testid="historical-trend-chart"]')
-      expect(chart.props('metricType')).toBe('responseSize')
+      expect((chart as any).props('metricType')).toBe('responseSize')
     })
   })
 
@@ -336,7 +316,7 @@ describe('PerformanceAnalyticsPanel', () => {
       await exportButton.trigger('click')
 
       expect(wrapper.emitted('export-analytics')).toBeTruthy()
-      expect(wrapper.emitted('export-analytics')[0][0]).toEqual({
+      expect(wrapper.emitted('export-analytics')?.[0]?.[0]).toEqual({
         endpointId: 'endpoint-1',
         metrics: expect.any(Array),
         trend: expect.any(Object),

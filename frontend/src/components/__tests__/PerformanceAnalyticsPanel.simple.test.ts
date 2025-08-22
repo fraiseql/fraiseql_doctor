@@ -104,7 +104,7 @@ describe('PerformanceAnalyticsPanel - Simple Tests', () => {
     await wrapper.vm.$nextTick()
 
     expect(wrapper.vm.trendAnalysis).toBeTruthy()
-    expect(wrapper.vm.trendAnalysis.direction).toBe('improving')
+    expect((wrapper.vm as any).trendAnalysis?.direction).toBe('improving')
     expect(wrapper.text()).toContain('Performance improving')
   })
 
@@ -193,7 +193,7 @@ describe('PerformanceAnalyticsPanel - Simple Tests', () => {
     await exportButton.trigger('click')
 
     expect(wrapper.emitted('export-analytics')).toBeTruthy()
-    expect(wrapper.emitted('export-analytics')[0][0]).toEqual({
+    expect(wrapper.emitted('export-analytics')?.[0]?.[0]).toEqual({
       endpointId: 'endpoint-1',
       metrics: expect.any(Array),
       trend: expect.any(Object),

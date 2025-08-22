@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { NotificationService } from '../notificationService'
-import type { Alert, NotificationMethod, NotificationPreferences } from '../alertingEngine'
+import type { Alert, NotificationPreferences } from '../alertingEngine'
 
 // Mock browser APIs
 const mockNotification = vi.fn()

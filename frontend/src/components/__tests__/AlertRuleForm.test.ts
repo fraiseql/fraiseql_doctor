@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import AlertRuleForm from '../AlertRuleForm.vue'
-import type { AlertRule, AlertCondition } from '../../services/alertingEngine'
+import type { AlertRule } from '../../services/alertingEngine'
 
 describe('AlertRuleForm', () => {
   const createMockRule = (overrides: Partial<AlertRule> = {}): AlertRule => ({
@@ -292,7 +292,7 @@ describe('AlertRuleForm', () => {
 
       expect(wrapper.emitted('create-rule')).toBeTruthy()
 
-      const emittedRule = wrapper.emitted('create-rule')[0][0] as AlertRule
+      const emittedRule = wrapper.emitted('create-rule')?.[0]?.[0] as AlertRule
       expect(emittedRule.name).toBe('Test Alert Rule')
       expect(emittedRule.endpointId).toBe('endpoint-1')
       expect(emittedRule.condition.metric).toBe('executionTime')
@@ -316,7 +316,7 @@ describe('AlertRuleForm', () => {
 
       expect(wrapper.emitted('update-rule')).toBeTruthy()
 
-      const emittedRule = wrapper.emitted('update-rule')[0][0] as AlertRule
+      const emittedRule = wrapper.emitted('update-rule')?.[0]?.[0] as AlertRule
       expect(emittedRule.name).toBe('Updated Rule Name')
       expect(emittedRule.id).toBe(mockRule.id)
     })

@@ -30,14 +30,12 @@ describe('InteractiveTimeSeriesChart', () => {
   let wrapper: any
 
   const createMockMetric = (overrides: Partial<QueryMetric> = {}): QueryMetric => ({
+    id: `metric_${Date.now()}`,
     query: 'test query',
-    variables: {},
     executionTime: 100,
     responseSize: 1024,
     timestamp: new Date(),
-    status: 'success',
     endpointId: 'endpoint-1',
-    operationType: 'query',
     ...overrides
   })
 
@@ -172,7 +170,7 @@ describe('InteractiveTimeSeriesChart', () => {
     })
 
     it('should automatically adjust time window for streaming data', async () => {
-      const initialTimeRange = wrapper.vm.displayTimeRange
+      // TimeRange will be automatically adjusted
 
       await wrapper.setProps({
         autoTimeWindow: true,

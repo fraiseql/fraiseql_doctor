@@ -290,7 +290,7 @@ watch(() => props.endpoint, (endpoint) => {
     config.value.name = endpoint.name
     config.value.url = endpoint.url
     config.value.environment = endpoint.environment
-    
+
     // Reset other fields to defaults
     config.value.authentication = {
       type: 'none',
@@ -324,13 +324,13 @@ const testConnection = async () => {
   try {
     // Simulate connection test
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     // Mock success/failure based on URL
-    const isValidUrl = config.value.url && config.value.url.includes('api.example')
-    
+    const isValidUrl = !!(config.value.url && config.value.url.includes('api.example'))
+
     testResult.value = {
       success: isValidUrl,
-      message: isValidUrl 
+      message: isValidUrl
         ? 'Connection successful! GraphQL endpoint is responding.'
         : 'Connection failed: Unable to reach the GraphQL endpoint.'
     }
@@ -356,14 +356,14 @@ const handleSave = () => {
     environment: config.value.environment,
     authentication: {
       type: config.value.authentication.type,
-      ...(config.value.authentication.type === 'bearer' && { 
-        token: config.value.authentication.token 
+      ...(config.value.authentication.type === 'bearer' && {
+        token: config.value.authentication.token
       }),
-      ...(config.value.authentication.type === 'api-key' && { 
+      ...(config.value.authentication.type === 'api-key' && {
         apiKey: config.value.authentication.apiKey,
         headerName: config.value.authentication.headerName
       }),
-      ...(config.value.authentication.type === 'basic' && { 
+      ...(config.value.authentication.type === 'basic' && {
         username: config.value.authentication.username,
         password: config.value.authentication.password
       })

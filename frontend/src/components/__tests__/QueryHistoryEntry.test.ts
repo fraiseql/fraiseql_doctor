@@ -68,7 +68,7 @@ describe('QueryHistoryEntry', () => {
     })
 
     it('should display query preview', () => {
-      const preview = wrapper.vm.queryPreview
+      const preview = (wrapper.vm as any).queryPreview
       expect(preview).toContain('query GetUsers($limit: Int)')
       expect(preview.length).toBeLessThanOrEqual(103) // 100 chars + "..."
     })
