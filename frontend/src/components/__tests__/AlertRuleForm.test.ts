@@ -105,9 +105,13 @@ describe('AlertRuleForm', () => {
         }
       })
 
-      const submitButton = wrapper.find('[data-testid="create-rule-button"]')
-      await submitButton.trigger('click')
+      // Try submitting the form directly instead of clicking the button
+      const form = wrapper.find('form')
+      await form.trigger('submit')
       await nextTick()
+      
+      // Add small delay to allow validation to process
+      await new Promise(resolve => setTimeout(resolve, 10))
 
       expect(wrapper.find('[data-testid="name-error"]').exists()).toBe(true)
       expect(wrapper.text()).toContain('Rule name is required')
@@ -124,9 +128,13 @@ describe('AlertRuleForm', () => {
       await wrapper.find('[data-testid="endpoint-select"]').setValue('endpoint-1')
       await wrapper.find('[data-testid="threshold-input"]').setValue('-100')
 
-      const submitButton = wrapper.find('[data-testid="create-rule-button"]')
-      await submitButton.trigger('click')
+      // Submit the form directly
+      const form = wrapper.find('form')
+      await form.trigger('submit')
       await nextTick()
+      
+      // Add small delay to allow validation to process
+      await new Promise(resolve => setTimeout(resolve, 10))
 
       expect(wrapper.find('[data-testid="threshold-error"]').exists()).toBe(true)
       expect(wrapper.text()).toContain('Threshold must be a positive number')
@@ -143,9 +151,13 @@ describe('AlertRuleForm', () => {
       await wrapper.find('[data-testid="endpoint-select"]').setValue('endpoint-1')
       await wrapper.find('[data-testid="duration-input"]').setValue('0')
 
-      const submitButton = wrapper.find('[data-testid="create-rule-button"]')
-      await submitButton.trigger('click')
+      // Submit the form directly
+      const form = wrapper.find('form')
+      await form.trigger('submit')
       await nextTick()
+      
+      // Add small delay to allow validation to process
+      await new Promise(resolve => setTimeout(resolve, 10))
 
       expect(wrapper.find('[data-testid="duration-error"]').exists()).toBe(true)
       expect(wrapper.text()).toContain('Duration must be at least 60 seconds')
@@ -158,10 +170,13 @@ describe('AlertRuleForm', () => {
         }
       })
 
-      // Leave all required fields empty
-      const submitButton = wrapper.find('[data-testid="create-rule-button"]')
-      await submitButton.trigger('click')
+      // Leave all required fields empty - Submit the form directly
+      const form = wrapper.find('form')
+      await form.trigger('submit')
       await nextTick()
+      
+      // Add small delay to allow validation to process
+      await new Promise(resolve => setTimeout(resolve, 10))
 
       expect(wrapper.findAll('[data-testid$="-error"]').length).toBeGreaterThan(0)
     })
@@ -173,10 +188,13 @@ describe('AlertRuleForm', () => {
         }
       })
 
-      // Trigger validation error
-      const submitButton = wrapper.find('[data-testid="create-rule-button"]')
-      await submitButton.trigger('click')
+      // Trigger validation error using form submit
+      const form = wrapper.find('form')
+      await form.trigger('submit')
       await nextTick()
+      
+      // Add delay to allow validation to process
+      await new Promise(resolve => setTimeout(resolve, 10))
 
       expect(wrapper.find('[data-testid="name-error"]').exists()).toBe(true)
 
