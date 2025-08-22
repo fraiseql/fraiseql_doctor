@@ -3,13 +3,28 @@ import { mount } from '@vue/test-utils'
 import PerformanceAnalyticsPanel from '../PerformanceAnalyticsPanel.vue'
 import type { QueryMetric } from '../../services/performanceMonitor'
 
-// Mock the HistoricalTrendChart component
-vi.mock('../HistoricalTrendChart.vue', () => ({
+// Mock vue-echarts for testing
+vi.mock('vue-echarts', () => ({
   default: {
-    name: 'HistoricalTrendChart',
-    template: '<div data-testid="historical-trend-chart"></div>',
-    props: ['metrics', 'timeWindow', 'metricType', 'showTrend', 'allowZoom']
+    name: 'VChart',
+    template: '<div class="v-chart" data-testid="echarts-instance"><slot /></div>',
+    props: ['option', 'theme', 'autoresize'],
+    emits: ['click', 'brushselected', 'datazoom', 'finished'],
+    methods: {
+      resize: vi.fn(),
+      getDataURL: vi.fn(() => 'data:image/png;base64,mock-image-data'),
+      dispatchAction: vi.fn()
+    }
   }
+}))
+
+// Mock echarts core to prevent import errors
+vi.mock('echarts/core', () => ({ use: vi.fn() }))
+vi.mock('echarts/renderers', () => ({ CanvasRenderer: {} }))
+vi.mock('echarts/charts', () => ({ LineChart: {}, BarChart: {} }))
+vi.mock('echarts/components', () => ({
+  TitleComponent: {}, TooltipComponent: {}, LegendComponent: {}, GridComponent: {},
+  DataZoomComponent: {}, ToolboxComponent: {}, BrushComponent: {}, MarkLineComponent: {}, MarkPointComponent: {}
 }))
 
 describe('PerformanceAnalyticsPanel - Simple Tests', () => {

@@ -124,7 +124,7 @@ describe('QueryHistory', () => {
   beforeEach(() => {
     // Reset and setup default mock behavior
     vi.clearAllMocks()
-    
+
     // Set up default mock returns (async methods)
     mockGetHistory.mockResolvedValue(mockHistory)
     mockGetStats.mockResolvedValue(mockStats)
@@ -488,7 +488,7 @@ describe('QueryHistory', () => {
     it('should disable action buttons when no history exists', async () => {
       // Create wrapper with no history
       mockGetHistory.mockResolvedValue([])
-      
+
       const emptyWrapper = mount(QueryHistory, {
         props: {
           endpoints: mockEndpoints

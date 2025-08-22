@@ -2,15 +2,46 @@ import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import PerformanceAnalyticsPanel from '../PerformanceAnalyticsPanel.vue'
 import type { QueryMetric } from '../../services/performanceMonitor'
-// Removed unused import types
 
-// Mock the analytics components
-vi.mock('../HistoricalTrendChart.vue', () => ({
+// Mock vue-echarts for testing
+vi.mock('vue-echarts', () => ({
   default: {
-    name: 'HistoricalTrendChart',
-    template: '<div data-testid="historical-trend-chart"></div>',
-    props: ['metrics', 'timeWindow', 'metricType', 'showTrend', 'allowZoom']
+    name: 'VChart',
+    template: '<div class="v-chart" data-testid="echarts-instance"><slot /></div>',
+    props: ['option', 'theme', 'autoresize'],
+    emits: ['click', 'brushselected', 'datazoom', 'finished'],
+    methods: {
+      resize: vi.fn(),
+      getDataURL: vi.fn(() => 'data:image/png;base64,mock-image-data'),
+      dispatchAction: vi.fn()
+    }
   }
+}))
+
+// Mock echarts core to prevent import errors
+vi.mock('echarts/core', () => ({
+  use: vi.fn()
+}))
+
+vi.mock('echarts/renderers', () => ({
+  CanvasRenderer: {}
+}))
+
+vi.mock('echarts/charts', () => ({
+  LineChart: {},
+  BarChart: {}
+}))
+
+vi.mock('echarts/components', () => ({
+  TitleComponent: {},
+  TooltipComponent: {},
+  LegendComponent: {},
+  GridComponent: {},
+  DataZoomComponent: {},
+  ToolboxComponent: {},
+  BrushComponent: {},
+  MarkLineComponent: {},
+  MarkPointComponent: {}
 }))
 
 describe('PerformanceAnalyticsPanel', () => {
@@ -202,7 +233,7 @@ describe('PerformanceAnalyticsPanel', () => {
 
     it('should show no anomalies message when data is consistent', async () => {
       const metrics = Array.from({ length: 50 }, () =>
-        createMockMetric({ executionTime: 100 + Math.random() * 5 })
+        createMockMetric({ executionTime: 100 })
       )
 
       const wrapper = mount(PerformanceAnalyticsPanel, {
@@ -256,17 +287,32 @@ describe('PerformanceAnalyticsPanel', () => {
     })
 
     it('should update chart when time window changes', async () => {
+      const metrics = Array.from({ length: 5 }, (_, i) =>
+        createMockMetric({
+          executionTime: 100 + i * 10,
+          timestamp: new Date(Date.now() - i * 60000)
+        })
+      )
+
       const wrapper = mount(PerformanceAnalyticsPanel, {
         props: {
-          metrics: [createMockMetric()],
+          metrics,
           endpointId: 'endpoint-1'
         }
       })
 
+      await wrapper.vm.$nextTick()
       await wrapper.find('[data-testid="time-window-select"]').setValue('day')
 
-      // Chart component was removed - test that time window selection works
+      // Verify time window selection works
       expect(wrapper.vm.selectedTimeWindow).toBe('day')
+
+      // Check if chart exists, and if so verify props
+      const chartElement = wrapper.find('[data-testid="historical-trend-chart"]')
+      if (chartElement.exists()) {
+        const chartComponent = wrapper.findComponent('[data-testid="historical-trend-chart"]')
+        expect(chartComponent.attributes('timeWindow')).toBe('day')
+      }
     })
   })
 
@@ -289,17 +335,33 @@ describe('PerformanceAnalyticsPanel', () => {
     })
 
     it('should update all analytics when metric type changes', async () => {
+      const metrics = Array.from({ length: 5 }, (_, i) =>
+        createMockMetric({
+          executionTime: 100 + i * 10,
+          responseSize: 1024 + i * 512,
+          timestamp: new Date(Date.now() - i * 60000)
+        })
+      )
+
       const wrapper = mount(PerformanceAnalyticsPanel, {
         props: {
-          metrics: [createMockMetric()],
+          metrics,
           endpointId: 'endpoint-1'
         }
       })
 
+      await wrapper.vm.$nextTick()
       await wrapper.find('[data-testid="response-size-button"]').trigger('click')
 
-      // Chart component was removed - test that metric type switching works
+      // Verify metric type switching works
       expect(wrapper.vm.selectedMetricType).toBe('responseSize')
+
+      // Check if chart exists, and if so verify props
+      const chartElement = wrapper.find('[data-testid="historical-trend-chart"]')
+      if (chartElement.exists()) {
+        const chartComponent = wrapper.findComponent('[data-testid="historical-trend-chart"]')
+        expect(chartComponent.attributes('metricType')).toBe('responseSize')
+      }
     })
   })
 

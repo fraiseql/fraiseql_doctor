@@ -60,7 +60,7 @@ describe('NotificationService', () => {
     })
 
     // Reset fetch mock with clone() method for retry logic support
-    mockFetch.mockImplementation((url, options) => {
+    mockFetch.mockImplementation((_url: string, options: any) => {
       // Check if the request was aborted
       if (options?.signal?.aborted) {
         return Promise.reject(new DOMException('Request aborted', 'AbortError'))

@@ -68,12 +68,15 @@ export class GraphQLInstrumentation extends EventTarget {
   }
 
   // Override addEventListener to support test-style direct callback
-  addEventListener(type: string, listener: Function): void {
+  addEventListener(type: string, listener: EventListenerOrEventListenerObject | null, _options?: boolean | AddEventListenerOptions): void {
+    if (listener === null) return
+
+    const callback = typeof listener === 'function' ? listener : listener.handleEvent
     if (!this._eventListeners[type]) {
       this._eventListeners[type] = []
     }
-    this._eventListeners[type].push(listener)
-    super.addEventListener(type, listener as EventListener)
+    this._eventListeners[type].push(callback)
+    super.addEventListener(type, callback as EventListener, _options)
   }
 
   async enable(): Promise<void> {

@@ -11,6 +11,7 @@ export interface QueryMetric {
   executionTime: number
   responseSize: number
   timestamp: Date
+  errors?: string[] | null
 }
 
 export interface PerformanceMonitorOptions {
@@ -92,7 +93,7 @@ export class PerformanceMonitor extends EventTarget {
       if (url.startsWith('/') && typeof window !== 'undefined') {
         url = window.location.origin + url
       }
-      
+
       await fetch(url, {
         method: 'POST',
         headers: {

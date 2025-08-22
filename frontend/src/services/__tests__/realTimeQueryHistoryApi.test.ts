@@ -15,14 +15,14 @@ describe('RealTimeQueryHistoryApi', () => {
     // Mock EventSource to prevent errors in streaming methods
     const mockEventSource = {
       addEventListener: vi.fn(),
-      removeEventListener: vi.fn(), 
+      removeEventListener: vi.fn(),
       close: vi.fn(),
       readyState: 1
     }
-    
+
     const EventSourceMock = vi.fn().mockImplementation(() => mockEventSource)
     ;(EventSourceMock as any).CONNECTING = 0
-    ;(EventSourceMock as any).OPEN = 1  
+    ;(EventSourceMock as any).OPEN = 1
     ;(EventSourceMock as any).CLOSED = 2
     global.EventSource = EventSourceMock as any
 
@@ -390,7 +390,7 @@ describe('RealTimeQueryHistoryApi', () => {
 
       if (errorCallback) {
         errorCallback({ type: 'error' })
-        
+
         // Wait for reconnection (service uses 1000ms timeout)
         await new Promise(resolve => setTimeout(resolve, 1100))
       }

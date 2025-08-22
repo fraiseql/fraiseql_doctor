@@ -313,7 +313,7 @@ describe('AlertingEngine', () => {
 
       // Then resolve with good metrics - create recent metrics that are below threshold
       const goodMetrics = Array.from({ length: 5 }, (_, i) =>
-        createMockMetric({ 
+        createMockMetric({
           executionTime: 100,
           timestamp: new Date(Date.now() - (i * 5000)) // Recent metrics with good values
         })

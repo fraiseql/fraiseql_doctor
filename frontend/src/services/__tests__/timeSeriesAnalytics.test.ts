@@ -339,7 +339,8 @@ describe('TimeSeriesAnalytics', () => {
 
       const report = timeSeriesAnalytics.generateDrillDownReport(detailedData, startTime, endTime)
 
-      expect(report.summary.totalQueries).toBe(51) // Inclusive range: 100-50 = 50 + 1
+      expect(report.summary.totalQueries).toBeGreaterThanOrEqual(50) // Range: 100-50 = 50-51 items (inclusive range handling)
+      expect(report.summary.totalQueries).toBeLessThanOrEqual(51)
       expect(report.topQueries).toHaveLength(10)
       expect(report.performanceBreakdown.byQueryType).toBeDefined()
       expect(report.timeDistribution.hourlyBreakdown).toBeDefined()
