@@ -57,7 +57,7 @@ export class GraphQLSubscriptionClient extends EventTarget {
     return new Promise((resolve, reject) => {
       try {
         this.ws = new WebSocket(this.config.endpoint)
-        
+
         this.ws.onopen = () => {
           this.reconnectAttempts = 0
           this.startHeartbeat()
@@ -88,7 +88,7 @@ export class GraphQLSubscriptionClient extends EventTarget {
     }
 
     const subscriptionId = this.generateId()
-    
+
     const subscription: PerformanceSubscription = {
       id: subscriptionId,
       status: 'active'
@@ -120,7 +120,7 @@ export class GraphQLSubscriptionClient extends EventTarget {
     }
 
     const subscriptionId = this.generateId()
-    
+
     const subscription: PerformanceSubscription = {
       id: subscriptionId,
       status: 'active'
@@ -150,7 +150,7 @@ export class GraphQLSubscriptionClient extends EventTarget {
     }
 
     const subscriptionId = this.generateId()
-    
+
     const subscription: PerformanceSubscription = {
       id: subscriptionId,
       status: 'active'
@@ -175,7 +175,7 @@ export class GraphQLSubscriptionClient extends EventTarget {
 
   disconnect(): void {
     this.clearTimers()
-    
+
     if (this.ws) {
       this.ws.close()
       this.ws = null
@@ -202,7 +202,7 @@ export class GraphQLSubscriptionClient extends EventTarget {
         if (message.payload?.data?.queryPerformanceUpdates) {
           this.dispatchToSubscriptions('queryPerformanceUpdates', message.payload.data.queryPerformanceUpdates)
         }
-        
+
         if (message.payload?.data?.aggregatedPerformanceMetrics) {
           this.dispatchToSubscriptions('aggregatedPerformanceMetrics', message.payload.data.aggregatedPerformanceMetrics)
         }
@@ -265,7 +265,7 @@ export class GraphQLSubscriptionClient extends EventTarget {
 
   private handleClose(event: CloseEvent): void {
     this.clearTimers()
-    
+
     if (this.reconnectAttempts < this.config.reconnectAttempts) {
       this.scheduleReconnect()
     }
@@ -274,7 +274,7 @@ export class GraphQLSubscriptionClient extends EventTarget {
   private scheduleReconnect(): void {
     this.reconnectAttempts++
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts - 1), 8000)
-    
+
     this.reconnectTimer = window.setTimeout(async () => {
       try {
         await this.connect()
@@ -298,7 +298,7 @@ export class GraphQLSubscriptionClient extends EventTarget {
       clearTimeout(this.reconnectTimer)
       this.reconnectTimer = null
     }
-    
+
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer)
       this.heartbeatTimer = null

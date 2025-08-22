@@ -154,7 +154,7 @@ export class TimeSeriesAnalytics {
   processStreamingData(data: QueryMetric[]): StreamingProcessResult {
     const validData = data.filter(d => d.executionTime > 0 && !isNaN(d.executionTime))
     const outliers = data.filter(d => d.executionTime > 1000)
-    
+
     return {
       dataPoints: validData.map(d => ({
         timestamp: d.timestamp,
@@ -199,8 +199,8 @@ export class TimeSeriesAnalytics {
   }
 
   filterByTimeRange(metrics: QueryMetric[], start: Date, end: Date): QueryMetric[] {
-    return metrics.filter(m => 
-      m.timestamp.getTime() >= start.getTime() && 
+    return metrics.filter(m =>
+      m.timestamp.getTime() >= start.getTime() &&
       m.timestamp.getTime() <= end.getTime()
     )
   }
@@ -250,10 +250,10 @@ export class TimeSeriesAnalytics {
 
   detectDeviations(metrics: QueryMetric[], baseline: Baseline): Deviation[] {
     const deviations: Deviation[] = []
-    
+
     for (const metric of metrics) {
       const { mean, upperBound, lowerBound } = baseline.metrics.executionTime
-      
+
       if (metric.executionTime > upperBound) {
         deviations.push({
           type: 'performance_degradation',
@@ -277,9 +277,9 @@ export class TimeSeriesAnalytics {
   comparePeriods(current: QueryMetric[], previous: QueryMetric[]): PeriodComparison {
     const currentMean = current.reduce((sum, m) => sum + m.executionTime, 0) / current.length
     const previousMean = previous.reduce((sum, m) => sum + m.executionTime, 0) / previous.length
-    
+
     const percentageChange = ((currentMean - previousMean) / previousMean) * 100
-    
+
     return {
       performanceChange: {
         executionTime: {
@@ -319,7 +319,7 @@ export class TimeSeriesAnalytics {
 
   detectSeasonality(data: QueryMetric[]): SeasonalityAnalysis {
     const values = data.map(m => m.executionTime)
-    
+
     // Enhanced seasonality detection with better algorithms
     const dailyPattern = this.detectDailyPattern(data)
     const weeklyPattern = this.detectWeeklyPattern(data)
@@ -340,9 +340,9 @@ export class TimeSeriesAnalytics {
   evaluateForecastAccuracy(forecast: ForecastResult, actual: QueryMetric[]): ForecastAccuracy {
     const actualValues = actual.map(m => m.executionTime)
     const predictedValues = forecast.predictions.map(p => p.predictedValue)
-    
+
     const mae = this.calculateMAE(actualValues, predictedValues)
-    
+
     return {
       mae,
       mape: this.calculateMAPE(actualValues, predictedValues),
@@ -358,7 +358,7 @@ export class TimeSeriesAnalytics {
     const threshold = mean + 3 * std
 
     const anomalies: Anomaly[] = []
-    
+
     // Enhanced outlier detection
     values.forEach((value, index) => {
       if (value > threshold) {
@@ -386,11 +386,11 @@ export class TimeSeriesAnalytics {
     for (let i = Math.floor(values.length * 0.2); i < Math.floor(values.length * 0.8); i++) {
       const before = values.slice(Math.max(0, i - 20), i)
       const after = values.slice(i, Math.min(values.length, i + 20))
-      
+
       if (before.length >= 10 && after.length >= 10) {
         const beforeMean = before.reduce((sum, v) => sum + v, 0) / before.length
         const afterMean = after.reduce((sum, v) => sum + v, 0) / after.length
-        
+
         if (Math.abs(afterMean - beforeMean) > std * 1.5) {
           anomalies.push({
             detectionMethod: ['change_point_detection'],
@@ -411,11 +411,11 @@ export class TimeSeriesAnalytics {
 
   detectContextualAnomalies(data: QueryMetric[]): ContextualAnomaly[] {
     const anomalies: ContextualAnomaly[] = []
-    
+
     data.forEach(metric => {
       const hour = metric.timestamp.getHours()
       const isLowTrafficHour = hour < 6 || hour > 22
-      
+
       if (isLowTrafficHour && metric.executionTime > 150) {
         anomalies.push({
           context: {
@@ -433,9 +433,9 @@ export class TimeSeriesAnalytics {
   calculateCorrelationMatrix(data: QueryMetric[]): CorrelationMatrix {
     const executionTimes = data.map(m => m.executionTime)
     const responseSizes = data.map(m => m.responseSize)
-    
+
     const correlation = this.calculateCorrelation(executionTimes, responseSizes)
-    
+
     return {
       matrix: {
         executionTime_responseSize: correlation
@@ -446,7 +446,7 @@ export class TimeSeriesAnalytics {
 
   generateDrillDownReport(data: QueryMetric[], start: Date, end: Date): DrillDownReport {
     const filteredData = this.filterByTimeRange(data, start, end)
-    
+
     return {
       summary: { totalQueries: filteredData.length },
       topQueries: filteredData.slice(0, 10),
@@ -463,12 +463,12 @@ export class TimeSeriesAnalytics {
     if (!this.alertRules) return []
 
     const alerts: StreamAlert[] = []
-    
+
     for (const rule of this.alertRules) {
       const recentData = data.slice(-rule.windowSize)
       const values = recentData.map(m => m[rule.metric as keyof QueryMetric] as number)
-      
-      const shouldAlert = rule.operator === 'greater_than' 
+
+      const shouldAlert = rule.operator === 'greater_than'
         ? values.some(v => v > rule.threshold)
         : false
 
@@ -501,7 +501,7 @@ export class TimeSeriesAnalytics {
     // Simplified aggregation
     const windowMs = windowMinutes * 60 * 1000
     const grouped = new Map<number, DataPoint[]>()
-    
+
     for (const point of data) {
       const windowStart = Math.floor(point.timestamp.getTime() / windowMs) * windowMs
       if (!grouped.has(windowStart)) {
@@ -518,8 +518,8 @@ export class TimeSeriesAnalytics {
 
   private getMedian(values: number[]): number {
     const mid = Math.floor(values.length / 2)
-    return values.length % 2 === 0 
-      ? (values[mid - 1] + values[mid]) / 2 
+    return values.length % 2 === 0
+      ? (values[mid - 1] + values[mid]) / 2
       : values[mid]
   }
 
@@ -537,7 +537,7 @@ export class TimeSeriesAnalytics {
   private detectDailyPattern(data: QueryMetric[]): number {
     // Simplified daily pattern detection
     const hourlyAverages = new Array(24).fill(0).map(() => ({ sum: 0, count: 0 }))
-    
+
     for (const metric of data) {
       const hour = metric.timestamp.getHours()
       hourlyAverages[hour].sum += metric.executionTime
@@ -547,27 +547,27 @@ export class TimeSeriesAnalytics {
     const averages = hourlyAverages.map(h => h.count > 0 ? h.sum / h.count : 0)
     const mean = averages.reduce((sum, a) => sum + a, 0) / 24
     const variance = averages.reduce((sum, a) => sum + (a - mean) ** 2, 0) / 24
-    
+
     return variance > 100 ? 0.8 : 0.3 // Simplified strength calculation
   }
 
   private detectWeeklyPattern(data: QueryMetric[]): number {
     // Simplified weekly pattern detection
     if (data.length < 7 * 24) return 0.1
-    
+
     // Group by day of week and calculate variance
     const dailyAverages = Array(7).fill(0).map(() => ({ sum: 0, count: 0 }))
-    
+
     data.forEach(metric => {
       const dayOfWeek = metric.timestamp.getDay()
       dailyAverages[dayOfWeek].sum += metric.executionTime
       dailyAverages[dayOfWeek].count++
     })
-    
+
     const averages = dailyAverages.map(d => d.count > 0 ? d.sum / d.count : 0)
     const mean = averages.reduce((sum, a) => sum + a, 0) / 7
     const variance = averages.reduce((sum, a) => sum + (a - mean) ** 2, 0) / 7
-    
+
     return variance > 50 ? 0.7 : 0.3 // Return strength based on variance
   }
 
@@ -606,7 +606,7 @@ export class TimeSeriesAnalytics {
 
     const numerator = n * sumXY - sumX * sumY
     const denominator = Math.sqrt((n * sumXX - sumX * sumX) * (n * sumYY - sumY * sumY))
-    
+
     return denominator === 0 ? 0 : numerator / denominator
   }
 }

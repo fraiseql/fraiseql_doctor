@@ -122,11 +122,11 @@ describe('GraphQLInstrumentation', () => {
       expect(execution.variables).toEqual({ userId: '123' })
       expect(execution.responseSize).toBeGreaterThan(0)
       expect(execution.resolverTraces).toHaveLength(2)
-      
+
       const userResolver = execution.resolverTraces.find(r => r.fieldName === 'user')
       expect(userResolver?.duration).toBe(50)
       expect(userResolver?.path).toEqual(['user'])
-      
+
       const postsResolver = execution.resolverTraces.find(r => r.fieldName === 'posts')
       expect(postsResolver?.duration).toBe(80)
       expect(postsResolver?.path).toEqual(['user', 'posts'])
@@ -421,14 +421,14 @@ describe('GraphQLInstrumentation', () => {
       const execution = await instrumentation.executeQuery(nestedQuery, { id: '1' })
 
       expect(execution.resolverTraces).toHaveLength(4)
-      
+
       // Verify nested path structure
-      const profileResolver = execution.resolverTraces.find(r => 
+      const profileResolver = execution.resolverTraces.find(r =>
         r.path.join('.') === 'user.profile'
       )
       expect(profileResolver?.parentType).toBe('User')
-      
-      const metadataResolver = execution.resolverTraces.find(r => 
+
+      const metadataResolver = execution.resolverTraces.find(r =>
         r.path.join('.') === 'user.profile.avatar.metadata'
       )
       expect(metadataResolver?.parentType).toBe('Avatar')

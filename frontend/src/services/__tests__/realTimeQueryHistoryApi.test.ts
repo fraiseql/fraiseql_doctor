@@ -8,7 +8,7 @@ describe('RealTimeQueryHistoryApi', () => {
   beforeEach(() => {
     mockFetch = vi.fn()
     global.fetch = mockFetch
-    
+
     queryHistoryApi = new RealTimeQueryHistoryApi({
       baseUrl: 'https://api.example.com/graphql',
       apiKey: 'test-api-key',
@@ -88,7 +88,7 @@ describe('RealTimeQueryHistoryApi', () => {
       expect(result.queries[0].serverInfo.resolverExecutionTimes['Query.users']).toBe(120)
       expect(result.totalCount).toBe(150)
       expect(result.hasNextPage).toBe(true)
-      
+
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/graphql'),
         expect.objectContaining({
@@ -123,8 +123,8 @@ describe('RealTimeQueryHistoryApi', () => {
 
     it('should implement request timeout handling', async () => {
       vi.useFakeTimers()
-      
-      mockFetch.mockImplementation(() => 
+
+      mockFetch.mockImplementation(() =>
         new Promise(resolve => setTimeout(resolve, 10000))
       )
 
@@ -250,7 +250,7 @@ describe('RealTimeQueryHistoryApi', () => {
   describe('Real-time Data Streaming', () => {
     it('should establish real-time query stream for live monitoring', async () => {
       const streamedQueries: HistoricalQueryData[] = []
-      
+
       const mockEventSource = {
         addEventListener: vi.fn(),
         close: vi.fn(),
@@ -303,7 +303,7 @@ describe('RealTimeQueryHistoryApi', () => {
       // Trigger EventSource message
       const messageCallback = mockEventSource.addEventListener.mock.calls
         .find(call => call[0] === 'message')[1]
-      
+
       messageCallback({
         data: JSON.stringify(mockQueryData)
       })
@@ -315,7 +315,7 @@ describe('RealTimeQueryHistoryApi', () => {
 
     it('should handle stream reconnection on connection loss', async () => {
       const reconnectCallback = vi.fn()
-      
+
       const mockEventSource = {
         addEventListener: vi.fn(),
         close: vi.fn(),
@@ -333,7 +333,7 @@ describe('RealTimeQueryHistoryApi', () => {
       // Simulate connection error
       const errorCallback = mockEventSource.addEventListener.mock.calls
         .find(call => call[0] === 'error')[1]
-      
+
       errorCallback({ type: 'error' })
 
       // Wait for reconnection

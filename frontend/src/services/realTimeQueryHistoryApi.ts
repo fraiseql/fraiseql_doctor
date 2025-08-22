@@ -269,7 +269,7 @@ export class RealTimeQueryHistoryApi {
   async streamLiveQueries(options: LiveQueryStreamOptions): Promise<LiveQueryStream> {
     const streamId = this.generateId()
     const url = `${this.config.baseUrl.replace('http', 'ws')}/stream/queries/${options.endpointId}`
-    
+
     const eventSource = new EventSource(url, {
       headers: {
         'Authorization': `Bearer ${this.config.apiKey}`
@@ -292,7 +292,7 @@ export class RealTimeQueryHistoryApi {
 
     eventSource.addEventListener('error', () => {
       stream.status = 'error'
-      
+
       // Attempt reconnection
       setTimeout(() => {
         if (options.onReconnect) {
@@ -369,7 +369,7 @@ export class RealTimeQueryHistoryApi {
     }
 
     let lastError: Error | null = null
-    
+
     for (let attempt = 0; attempt <= this.retryConfig.maxRetries; attempt++) {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), this.config.timeout)
@@ -386,18 +386,18 @@ export class RealTimeQueryHistoryApi {
         })
 
         clearTimeout(timeoutId)
-        
+
         // Cache successful responses
         if (response.ok) {
           const responseData = await response.clone().json()
           this.setCache(cacheKey, responseData)
         }
-        
+
         return response
       } catch (error) {
         clearTimeout(timeoutId)
         lastError = error instanceof Error ? error : new Error(String(error))
-        
+
         if (error instanceof Error && error.name === 'AbortError') {
           lastError = new Error('Request timeout')
         }

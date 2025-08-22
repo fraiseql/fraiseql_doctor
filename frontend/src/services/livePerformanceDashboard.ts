@@ -43,13 +43,13 @@ export class LivePerformanceDashboard extends EventTarget {
   async initialize(endpointIds: string[]): Promise<void> {
     for (const endpointId of endpointIds) {
       this.endpointData.set(endpointId, [])
-      
+
       // Subscribe to performance metrics
       const perfSubscription = await this.config.subscriptionClient.subscribeToPerformanceMetrics({
         endpointId,
         callback: (data: QueryPerformanceData) => this.handlePerformanceData(data)
       })
-      
+
       // Subscribe to aggregated metrics
       const aggSubscription = await this.config.subscriptionClient.subscribeToAggregatedMetrics({
         endpointId,
@@ -75,7 +75,7 @@ export class LivePerformanceDashboard extends EventTarget {
 
   getCurrentMetrics(endpointId: string): LiveMetrics {
     const queries = this.endpointData.get(endpointId) || []
-    
+
     if (queries.length === 0) {
       return {
         totalQueries: 0,
@@ -107,7 +107,7 @@ export class LivePerformanceDashboard extends EventTarget {
     includeTrends: boolean
   }): Promise<any> {
     const queries = this.endpointData.get(endpointId) || []
-    
+
     if (queries.length < 10) {
       throw new Error('Insufficient data for forecasting')
     }
@@ -126,16 +126,16 @@ export class LivePerformanceDashboard extends EventTarget {
 
   private handlePerformanceData(data: QueryPerformanceData): void {
     const endpointQueries = this.endpointData.get(data.endpointId) || []
-    
+
     // Add new data with data quality validation
     if (this.validateQueryData(data)) {
       endpointQueries.push(data)
-      
+
       // Enforce max data points with intelligent cleanup (keep important samples)
       if (endpointQueries.length > this.config.maxDataPoints) {
         this.performIntelligentCleanup(endpointQueries)
       }
-      
+
       this.endpointData.set(data.endpointId, endpointQueries)
 
       // Process with analytics engine
@@ -202,10 +202,10 @@ export class LivePerformanceDashboard extends EventTarget {
 
   private checkAnomalies(endpointId: string): void {
     const queries = this.endpointData.get(endpointId) || []
-    
+
     if (queries.length >= 20) {
       const anomalies = this.config.analyticsEngine.detectAnomalies(queries)
-      
+
       if (anomalies && anomalies.length > 0) {
         this.dispatchEvent(new CustomEvent('anomaly-detected', {
           detail: {
@@ -220,26 +220,26 @@ export class LivePerformanceDashboard extends EventTarget {
 
   private calculateThroughput(queries: QueryPerformanceData[]): number {
     if (queries.length === 0) return 0
-    
+
     const timeSpan = queries[queries.length - 1].timestamp.getTime() - queries[0].timestamp.getTime()
     const timeSpanMinutes = timeSpan / (1000 * 60)
-    
+
     return timeSpanMinutes > 0 ? queries.length / timeSpanMinutes : 0
   }
 
   private calculateTrend(queries: QueryPerformanceData[]): string {
     if (queries.length < 10) return 'stable'
-    
+
     const recentQueries = queries.slice(-10)
     const olderQueries = queries.slice(-20, -10)
-    
+
     if (olderQueries.length === 0) return 'stable'
-    
+
     const recentAvg = recentQueries.reduce((sum, q) => sum + q.executionTime, 0) / recentQueries.length
     const olderAvg = olderQueries.reduce((sum, q) => sum + q.executionTime, 0) / olderQueries.length
-    
+
     const change = (recentAvg - olderAvg) / olderAvg
-    
+
     if (change > 0.1) return 'degrading'
     if (change < -0.1) return 'improving'
     return 'stable'
@@ -260,9 +260,9 @@ export class LivePerformanceDashboard extends EventTarget {
 
   private validateQueryData(data: QueryPerformanceData): boolean {
     return !!(
-      data.id && 
-      data.endpointId && 
-      typeof data.executionTime === 'number' && 
+      data.id &&
+      data.endpointId &&
+      typeof data.executionTime === 'number' &&
       data.executionTime >= 0 &&
       data.timestamp instanceof Date
     )
@@ -270,14 +270,14 @@ export class LivePerformanceDashboard extends EventTarget {
 
   private performIntelligentCleanup(queries: QueryPerformanceData[]): void {
     const targetSize = Math.floor(this.config.maxDataPoints * 0.8)
-    
+
     // Keep recent queries and important samples (errors, high latency)
     const recent = queries.slice(-Math.floor(targetSize * 0.7))
     const errors = queries.filter(q => q.status === 'error').slice(-10)
     const highLatency = queries
       .filter(q => q.executionTime > this.config.alertThresholds.executionTime.warning)
       .slice(-10)
-    
+
     // Combine and deduplicate
     const important = new Set([...recent, ...errors, ...highLatency])
     queries.splice(0, queries.length, ...Array.from(important))
@@ -310,23 +310,23 @@ export class LivePerformanceDashboard extends EventTarget {
 
   private detectTimeGaps(queries: QueryPerformanceData[]): number {
     if (queries.length < 2) return 0
-    
+
     let gaps = 0
     const expectedInterval = 5000 // 5 seconds
-    
+
     for (let i = 1; i < queries.length; i++) {
       const timeDiff = queries[i].timestamp.getTime() - queries[i-1].timestamp.getTime()
       if (timeDiff > expectedInterval * 3) {
         gaps++
       }
     }
-    
+
     return gaps
   }
 
   private checkThresholdsWithDebounce(data: QueryPerformanceData): void {
     const debounceKey = `${data.endpointId}-${data.executionTime > this.config.alertThresholds.executionTime.critical ? 'critical' : 'warning'}`
-    
+
     // Clear existing debounce timer
     const existingTimer = this.alertDebounceTimers.get(debounceKey)
     if (existingTimer) {
@@ -348,7 +348,7 @@ export class LivePerformanceDashboard extends EventTarget {
     }
 
     this.anomalyCheckScheduled.add(endpointId)
-    
+
     setTimeout(() => {
       this.checkAnomalies(endpointId)
       this.anomalyCheckScheduled.delete(endpointId)

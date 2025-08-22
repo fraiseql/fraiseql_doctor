@@ -34,10 +34,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import ApiEndpointCard from './components/ApiEndpointCard.vue'
 import ApiConfigurationModal from './components/ApiConfigurationModal.vue'
 import type { ApiEndpoint } from '@/types/admin'
+import { useApiHealthUpdates } from '@/composables/useApiHealthUpdates'
 
 const endpoints = ref<ApiEndpoint[]>([
   {
@@ -75,6 +76,9 @@ const endpoints = ref<ApiEndpoint[]>([
 const showConfigModal = ref(false)
 const selectedEndpoint = ref<ApiEndpoint | null>(null)
 
+// Real-time health updates
+const { handleHealthUpdate } = useApiHealthUpdates(endpoints)
+
 const openConfigModal = (endpoint: ApiEndpoint) => {
   selectedEndpoint.value = endpoint
   showConfigModal.value = true
@@ -88,4 +92,9 @@ const handleConfigSave = (config: any) => {
   console.log('Saving config:', config)
   showConfigModal.value = false
 }
+
+// Expose methods for testing
+defineExpose({
+  handleHealthUpdate
+})
 </script>

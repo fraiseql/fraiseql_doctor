@@ -18,7 +18,7 @@ global.WebSocket = vi.fn(() => mockWebSocket) as any
 describe('RealTimeAnalyticsDashboard', () => {
   let wrapper: any
   let mockTimeSeriesAnalytics: any
-  
+
   const createMockMetric = (overrides: Partial<QueryMetric> = {}): QueryMetric => ({
     query: 'test query',
     variables: {},
@@ -83,7 +83,7 @@ describe('RealTimeAnalyticsDashboard', () => {
 
     it('should handle incoming streaming data and update charts', async () => {
       const streamingData = Array.from({ length: 5 }, () => createMockMetric())
-      
+
       wrapper.vm.handleStreamingData(streamingData)
       await nextTick()
 
@@ -95,32 +95,32 @@ describe('RealTimeAnalyticsDashboard', () => {
     it('should maintain connection health and auto-reconnect on failures', async () => {
       // Simulate connection loss
       wrapper.vm.handleConnectionLoss()
-      
+
       expect(wrapper.vm.connectionStatus).toBe('reconnecting')
       expect(wrapper.find('[data-testid="connection-status"]').classes()).toContain('text-yellow-500')
 
       // Wait for reconnection attempt
       await new Promise(resolve => setTimeout(resolve, 1100))
-      
+
       expect(wrapper.vm.reconnectAttempts).toBe(1)
       expect(wrapper.vm.connectionStatus).toBe('connected')
     })
 
     it('should buffer data during disconnection and replay on reconnect', async () => {
       const offlineData = Array.from({ length: 10 }, () => createMockMetric())
-      
+
       wrapper.vm.connectionStatus = 'disconnected'
-      
+
       for (const data of offlineData) {
         wrapper.vm.bufferOfflineData(data)
       }
-      
+
       expect(wrapper.vm.offlineBuffer.length).toBe(10)
-      
+
       // Reconnect and replay
       wrapper.vm.handleReconnection()
       await nextTick()
-      
+
       expect(wrapper.vm.offlineBuffer.length).toBe(0)
       expect(mockTimeSeriesAnalytics.processStreamingData).toHaveBeenCalledWith(offlineData)
     })
@@ -157,7 +157,7 @@ describe('RealTimeAnalyticsDashboard', () => {
       expect(wrapper.find('[data-testid="throughput-trend"]').classes()).toContain('text-green-500')
       expect(wrapper.find('[data-testid="latency-trend"]').classes()).toContain('text-green-500')
       expect(wrapper.find('[data-testid="error-rate-trend"]').classes()).toContain('text-green-500')
-      
+
       expect(wrapper.find('[data-testid="throughput-trend"] svg').attributes('data-icon')).toBe('arrow-up')
       expect(wrapper.find('[data-testid="latency-trend"] svg').attributes('data-icon')).toBe('arrow-down')
     })
@@ -180,7 +180,7 @@ describe('RealTimeAnalyticsDashboard', () => {
 
   describe('Interactive Chart Features', () => {
     it('should support multiple simultaneous metric views', async () => {
-      await wrapper.setProps({ 
+      await wrapper.setProps({
         metrics: ['executionTime', 'responseSize', 'errorRate'],
         chartLayout: 'grid'
       })
@@ -361,19 +361,19 @@ describe('RealTimeAnalyticsDashboard', () => {
       await nextTick()
 
       expect(localStorage.getItem('dashboard-preferences')).toBeTruthy()
-      
+
       wrapper.vm.loadPreferences()
       expect(wrapper.vm.userPreferences).toEqual(userPreferences)
     })
 
     it('should support multiple dashboard themes', async () => {
       await wrapper.setProps({ theme: 'dark' })
-      
+
       expect(wrapper.find('.dashboard-container').classes()).toContain('dark-theme')
       expect(wrapper.vm.chartOptions.plugins.legend.labels.color).toBe('#ffffff')
-      
+
       await wrapper.setProps({ theme: 'light' })
-      
+
       expect(wrapper.find('.dashboard-container').classes()).toContain('light-theme')
       expect(wrapper.vm.chartOptions.plugins.legend.labels.color).toBe('#374151')
     })
@@ -382,7 +382,7 @@ describe('RealTimeAnalyticsDashboard', () => {
   describe('Performance and Optimization', () => {
     it('should implement efficient data buffering for high-frequency updates', async () => {
       const highFrequencyData = Array.from({ length: 1000 }, () => createMockMetric())
-      
+
       // Simulate rapid data ingestion
       for (let i = 0; i < 1000; i++) {
         wrapper.vm.addDataPoint(highFrequencyData[i])
@@ -394,9 +394,9 @@ describe('RealTimeAnalyticsDashboard', () => {
 
     it('should use requestAnimationFrame for smooth visual updates', async () => {
       const rafSpy = vi.spyOn(window, 'requestAnimationFrame')
-      
+
       wrapper.vm.scheduleChartUpdate()
-      
+
       expect(rafSpy).toHaveBeenCalled()
       expect(wrapper.vm.pendingUpdates).toBe(true)
     })

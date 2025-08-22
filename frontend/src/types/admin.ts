@@ -33,3 +33,11 @@ export interface ApiConfiguration {
     errorRate: { warning: number; critical: number }
   }
 }
+
+export interface ApiHealthUpdate {
+  apiId: string
+  isHealthy: boolean
+  responseTime: number
+  errorRate?: number
+  timestamp?: Date
+}

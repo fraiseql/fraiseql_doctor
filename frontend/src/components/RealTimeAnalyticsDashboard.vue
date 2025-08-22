@@ -3,7 +3,7 @@
     <!-- Connection Status -->
     <div class="connection-status mb-4 flex items-center justify-between">
       <div class="flex items-center space-x-2">
-        <div 
+        <div
           class="status-indicator w-3 h-3 rounded-full"
           :class="{
             'bg-green-500': connectionStatus === 'connected',
@@ -13,7 +13,7 @@
           data-testid="connection-status"
         ></div>
         <span class="text-sm font-medium">
-          {{ connectionStatus === 'connected' ? 'Connected' : 
+          {{ connectionStatus === 'connected' ? 'Connected' :
              connectionStatus === 'reconnecting' ? 'Reconnecting...' : 'Disconnected' }}
         </span>
         <span v-if="reconnectAttempts > 0" class="text-xs text-gray-500">
@@ -24,9 +24,9 @@
       <!-- Real-time Toggle -->
       <div class="flex items-center space-x-2">
         <label class="flex items-center">
-          <input 
-            v-model="realTimeEnabled" 
-            type="checkbox" 
+          <input
+            v-model="realTimeEnabled"
+            type="checkbox"
             class="form-checkbox h-4 w-4"
           >
           <span class="ml-2 text-sm">Real-time Updates</span>
@@ -37,7 +37,7 @@
     <!-- KPI Dashboard -->
     <div class="kpi-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <!-- Throughput KPI -->
-      <div 
+      <div
         class="kpi-card p-4 bg-white rounded-lg border-2"
         :class="getKpiStatusClass('throughput')"
         data-testid="throughput-kpi"
@@ -50,38 +50,38 @@
               <span class="text-sm text-gray-500">req/min</span>
             </p>
           </div>
-          <div 
+          <div
             class="trend-indicator"
             :class="getTrendClass('throughput')"
             data-testid="throughput-trend"
           >
-            <svg 
-              class="w-5 h-5" 
-              fill="none" 
-              viewBox="0 0 24 24" 
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
               stroke="currentColor"
               :data-icon="getTrendIcon('throughput')"
             >
-              <path 
+              <path
                 v-if="getTrendIcon('throughput') === 'arrow-up'"
-                stroke-linecap="round" 
-                stroke-linejoin="round" 
-                stroke-width="2" 
-                d="M7 17L17 7M17 7H7M17 7v10" 
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 17L17 7M17 7H7M17 7v10"
               />
-              <path 
+              <path
                 v-else-if="getTrendIcon('throughput') === 'arrow-down'"
-                stroke-linecap="round" 
-                stroke-linejoin="round" 
-                stroke-width="2" 
-                d="M17 7L7 17M7 17h10M7 17V7" 
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M17 7L7 17M7 17h10M7 17V7"
               />
-              <path 
+              <path
                 v-else
-                stroke-linecap="round" 
-                stroke-linejoin="round" 
-                stroke-width="2" 
-                d="M5 12h14" 
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 12h14"
               />
             </svg>
           </div>
@@ -89,7 +89,7 @@
       </div>
 
       <!-- Latency KPI -->
-      <div 
+      <div
         class="kpi-card p-4 bg-white rounded-lg border-2"
         :class="getKpiStatusClass('latency')"
         data-testid="latency-kpi"
@@ -102,32 +102,32 @@
               <span class="text-sm text-gray-500">ms</span>
             </p>
           </div>
-          <div 
+          <div
             class="trend-indicator"
             :class="getTrendClass('latency')"
             data-testid="latency-trend"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path 
+              <path
                 v-if="getTrendIcon('latency') === 'arrow-down'"
-                stroke-linecap="round" 
-                stroke-linejoin="round" 
-                stroke-width="2" 
-                d="M17 7L7 17M7 17h10M7 17V7" 
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M17 7L7 17M7 17h10M7 17V7"
               />
-              <path 
+              <path
                 v-else-if="getTrendIcon('latency') === 'arrow-up'"
-                stroke-linecap="round" 
-                stroke-linejoin="round" 
-                stroke-width="2" 
-                d="M7 17L17 7M17 7H7M17 7v10" 
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 17L17 7M17 7H7M17 7v10"
               />
-              <path 
+              <path
                 v-else
-                stroke-linecap="round" 
-                stroke-linejoin="round" 
-                stroke-width="2" 
-                d="M5 12h14" 
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 12h14"
               />
             </svg>
           </div>
@@ -135,7 +135,7 @@
       </div>
 
       <!-- Error Rate KPI -->
-      <div 
+      <div
         class="kpi-card p-4 bg-white rounded-lg border-2"
         :class="getKpiStatusClass('errorRate')"
         data-testid="error-rate-kpi"
@@ -147,17 +147,17 @@
               {{ ((kpiData.errorRate || 0) * 100).toFixed(1) }}%
             </p>
           </div>
-          <div 
+          <div
             class="trend-indicator"
             :class="getTrendClass('errorRate')"
             data-testid="error-rate-trend"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path 
-                stroke-linecap="round" 
-                stroke-linejoin="round" 
-                stroke-width="2" 
-                d="M5 12h14" 
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 12h14"
               />
             </svg>
           </div>
@@ -165,7 +165,7 @@
       </div>
 
       <!-- P95 Latency KPI -->
-      <div 
+      <div
         class="kpi-card p-4 bg-white rounded-lg border-2"
         data-testid="p95-latency-kpi"
       >
@@ -183,8 +183,8 @@
 
     <!-- Multi-Chart Layout -->
     <div class="charts-container grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
-      <div 
-        v-for="metric in displayMetrics" 
+      <div
+        v-for="metric in displayMetrics"
         :key="metric"
         class="chart-panel bg-white p-4 rounded-lg shadow"
         :data-testid="`metric-chart-${metric}`"
@@ -204,12 +204,12 @@
       <h4 class="font-medium mb-3">Chart Overlays</h4>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <label class="flex items-center">
-          <input 
-            v-model="chartOverlays.movingAverage.enabled" 
-            type="checkbox" 
+          <input
+            v-model="chartOverlays.movingAverage.enabled"
+            type="checkbox"
             class="form-checkbox h-4 w-4"
           >
-          <span 
+          <span
             class="ml-2 text-sm px-2 py-1 rounded"
             :class="chartOverlays.movingAverage.enabled ? 'bg-blue-100' : ''"
             data-testid="overlay-moving-average"
@@ -217,14 +217,14 @@
             Moving Average
           </span>
         </label>
-        
+
         <label class="flex items-center">
-          <input 
-            v-model="chartOverlays.percentileBands.enabled" 
-            type="checkbox" 
+          <input
+            v-model="chartOverlays.percentileBands.enabled"
+            type="checkbox"
             class="form-checkbox h-4 w-4"
           >
-          <span 
+          <span
             class="ml-2 text-sm px-2 py-1 rounded"
             :class="chartOverlays.percentileBands.enabled ? 'bg-blue-100' : ''"
             data-testid="overlay-percentile-bands"
@@ -232,20 +232,20 @@
             Percentile Bands
           </span>
         </label>
-        
+
         <label class="flex items-center">
-          <input 
-            v-model="chartOverlays.anomalyHighlights.enabled" 
-            type="checkbox" 
+          <input
+            v-model="chartOverlays.anomalyHighlights.enabled"
+            type="checkbox"
             class="form-checkbox h-4 w-4"
           >
           <span class="ml-2 text-sm px-2 py-1 rounded">Anomaly Highlights</span>
         </label>
-        
+
         <label class="flex items-center">
-          <input 
-            v-model="chartOverlays.trendLine.enabled" 
-            type="checkbox" 
+          <input
+            v-model="chartOverlays.trendLine.enabled"
+            type="checkbox"
             class="form-checkbox h-4 w-4"
           >
           <span class="ml-2 text-sm px-2 py-1 rounded">Trend Line</span>
@@ -261,7 +261,7 @@
           <span class="text-sm" data-testid="forecast-accuracy">
             Accuracy: {{ (forecastData.modelAccuracy.confidence * 100).toFixed(0) }}%
           </span>
-          <div 
+          <div
             v-if="forecastAlerts.length > 0"
             class="px-2 py-1 bg-orange-100 text-orange-800 rounded text-sm"
             data-testid="forecast-alert-badge"
@@ -282,7 +282,7 @@
     <div v-if="modelMetrics.accuracy" class="model-metrics mb-6 p-4 bg-gray-50 rounded-lg">
       <div class="flex items-center justify-between mb-4">
         <h4 class="font-medium">Model Performance</h4>
-        <div 
+        <div
           v-if="modelMetrics.recommendRetraining"
           class="flex items-center space-x-2 text-orange-500"
           data-testid="retrain-recommendation"
@@ -293,7 +293,7 @@
           <span class="text-sm">Retraining Recommended</span>
         </div>
       </div>
-      
+
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div>
           <p class="text-sm text-gray-500">Model Accuracy</p>
@@ -326,15 +326,15 @@
     <div v-if="currentAnomalies.length > 0" class="anomaly-alerts mb-6">
       <h4 class="font-medium mb-3">Active Anomalies</h4>
       <div class="space-y-2">
-        <div 
-          v-for="anomaly in currentAnomalies" 
+        <div
+          v-for="anomaly in currentAnomalies"
           :key="anomaly.timestamp"
           class="anomaly-alert p-3 bg-red-50 border border-red-200 rounded-lg"
           data-testid="anomaly-alert"
         >
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-3">
-              <div 
+              <div
                 class="w-3 h-3 rounded-full"
                 :class="{
                   'bg-red-500': anomaly.severity === 'high',
@@ -346,12 +346,12 @@
               <div>
                 <p class="font-medium">{{ anomaly.explanation }}</p>
                 <p class="text-sm text-gray-600">
-                  {{ anomaly.metric }}: {{ anomaly.value }} 
+                  {{ anomaly.metric }}: {{ anomaly.value }}
                   (Score: {{ anomaly.anomalyScore.toFixed(2) }})
                 </p>
               </div>
             </div>
-            <button 
+            <button
               @click="investigateAnomaly(anomaly)"
               class="text-sm text-blue-600 hover:text-blue-800"
             >
@@ -365,7 +365,7 @@
     <!-- Investigation Panel -->
     <div v-if="activeInvestigation" class="investigation-panel p-4 bg-gray-50 rounded-lg" data-testid="investigation-panel">
       <h4 class="font-medium mb-3">Anomaly Investigation</h4>
-      
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <h5 class="text-sm font-medium mb-2">Affected Queries</h5>
@@ -375,7 +375,7 @@
             </li>
           </ul>
         </div>
-        
+
         <div>
           <h5 class="text-sm font-medium mb-2">Root Cause Hypotheses</h5>
           <ul class="text-sm text-gray-600" data-testid="root-cause-hypotheses">
@@ -533,7 +533,7 @@ const dashboardLayout = ref([
 // Methods
 function handleStreamingData(data: QueryMetric[]) {
   realtimeBuffer.value.push(...data)
-  
+
   // Update KPIs
   updateKPIs({
     currentThroughput: data.length * 60, // Convert to per minute
@@ -541,7 +541,7 @@ function handleStreamingData(data: QueryMetric[]) {
     errorRate: data.filter(m => m.status === 'error').length / data.length,
     p95Latency: calculatePercentile(data.map(m => m.executionTime), 95)
   })
-  
+
   emit('data-received', data)
 }
 
@@ -553,7 +553,7 @@ function handleConnectionLoss() {
 function handleReconnection() {
   connectionStatus.value = 'connected'
   reconnectAttempts.value = 0
-  
+
   // Replay offline buffer
   if (offlineBuffer.value.length > 0) {
     handleStreamingData([...offlineBuffer.value])
@@ -563,7 +563,7 @@ function handleReconnection() {
 
 function bufferOfflineData(data: QueryMetric) {
   offlineBuffer.value.push(data)
-  
+
   // Limit offline buffer size
   if (offlineBuffer.value.length > 1000) {
     offlineBuffer.value = offlineBuffer.value.slice(-500)
@@ -607,7 +607,7 @@ function updateForecast(data: any) {
 function analyzeForecastAlerts(forecast: any) {
   const alerts = forecast.predictions.filter((p: any) => p.exceedsThreshold)
   forecastAlerts.value = alerts
-  
+
   if (alerts.length > 0) {
     emit('forecast-alert', alerts)
   }
@@ -634,7 +634,7 @@ function investigateAnomaly(anomaly: any) {
 
 function loadAnomalyHistory(history: any[]) {
   anomalyHistory.value = history
-  
+
   // Calculate patterns
   anomalyPatterns.value = {
     dailyFrequency: {},
@@ -663,12 +663,12 @@ function loadPreferences() {
 function addDataPoint(metric: QueryMetric) {
   dataBuffer.value.push(metric)
   totalDataPoints.value++
-  
+
   // Maintain buffer limit
   if (dataBuffer.value.length > 500) {
     dataBuffer.value = dataBuffer.value.slice(-250)
   }
-  
+
   updateQueue.value.push(metric)
   if (updateQueue.value.length > 10) {
     updateQueue.value = updateQueue.value.slice(-5)
@@ -690,7 +690,7 @@ function performMemoryCleanup() {
     dataBuffer.value = dataBuffer.value.slice(-500)
     totalDataPoints.value = dataBuffer.value.length
   }
-  
+
   memoryUsage.value.dataPoints = totalDataPoints.value * 100 // Rough estimate
 }
 
@@ -707,9 +707,9 @@ function getKpiStatusClass(metric: string) {
 function getTrendClass(metric: string) {
   const trend = trendData.value[metric as keyof typeof trendData.value]?.trend
   return {
-    'text-green-500': (metric === 'throughput' && trend === 'increasing') || 
+    'text-green-500': (metric === 'throughput' && trend === 'increasing') ||
                      (metric !== 'throughput' && trend === 'decreasing'),
-    'text-red-500': (metric === 'throughput' && trend === 'decreasing') || 
+    'text-red-500': (metric === 'throughput' && trend === 'decreasing') ||
                     (metric !== 'throughput' && trend === 'increasing'),
     'text-gray-500': trend === 'stable'
   }
@@ -747,17 +747,17 @@ function formatDate(date: Date): string {
 // Lifecycle
 onMounted(() => {
   loadPreferences()
-  
+
   // Simulate WebSocket connection
   wsConnection.value = {} as WebSocket
-  
+
   // Start performance monitoring
   const perfInterval = setInterval(() => {
     updateRate.value = updateQueue.value.length
     updateQueue.value = []
     performMemoryCleanup()
   }, 1000)
-  
+
   // Cleanup on unmount
   onUnmounted(() => {
     clearInterval(perfInterval)

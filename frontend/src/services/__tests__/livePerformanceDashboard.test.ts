@@ -51,7 +51,7 @@ describe('LivePerformanceDashboard', () => {
 
       expect(mockSubscriptionClient.subscribeToPerformanceMetrics).toHaveBeenCalledTimes(2)
       expect(mockSubscriptionClient.subscribeToAggregatedMetrics).toHaveBeenCalledTimes(2)
-      
+
       // Verify endpoint registration
       expect(dashboard.getMonitoredEndpoints()).toEqual(['endpoint-1', 'endpoint-2'])
       expect(dashboard.isInitialized()).toBe(true)
@@ -85,7 +85,7 @@ describe('LivePerformanceDashboard', () => {
       subscriptionCallback(mockPerformanceData)
 
       expect(mockAnalyticsEngine.processStreamingData).toHaveBeenCalledWith([mockPerformanceData])
-      
+
       // Verify data is stored in dashboard
       const currentMetrics = dashboard.getCurrentMetrics('endpoint-1')
       expect(currentMetrics.recentQueries).toContain(mockPerformanceData)
@@ -296,7 +296,7 @@ describe('LivePerformanceDashboard', () => {
 
       const metrics = dashboard.getCurrentMetrics('endpoint-1')
       expect(metrics.recentQueries.length).toBeLessThanOrEqual(1000) // Respects maxDataPoints
-      
+
       // Should keep most recent data
       const latestQuery = metrics.recentQueries[metrics.recentQueries.length - 1]
       expect(latestQuery.id).toBe('query-1199')

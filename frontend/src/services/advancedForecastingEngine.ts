@@ -44,7 +44,7 @@ export interface EnsembleForecast {
   weights: number[]
   combinedPredictions: number[]
   individualPredictions: { [key: string]: number[] }
-  performanceMetrics: { 
+  performanceMetrics: {
     ensembleScore: number
     diversityScore?: number
     weightEntropy?: number
@@ -122,7 +122,7 @@ export class AdvancedForecastingEngine {
 
   async analyzeSeasonality(data: QueryMetric[]): Promise<SeasonalityResult> {
     const values = data.map(m => m.executionTime)
-    
+
     // Simple seasonality detection
     const dailyPattern = this.detectPatternStrength(data, 24) // hourly pattern
     const weeklyPattern = this.detectPatternStrength(data, 24 * 7) // weekly pattern
@@ -142,10 +142,10 @@ export class AdvancedForecastingEngine {
 
   async buildARIMAModel(data: QueryMetric[], options: any): Promise<ARIMAModel> {
     const values = data.map(m => m.executionTime)
-    
+
     // Simplified ARIMA model (normally would use complex time series libraries)
     const order = options.autoOrder ? this.autoSelectOrder(values) : { p: 1, d: 1, q: 1 }
-    
+
     return {
       order,
       coefficients: [0.5, -0.3, 0.2], // Simplified coefficients
@@ -186,7 +186,7 @@ export class AdvancedForecastingEngine {
       aleatoric: { value: std * 0.6 }, // Data uncertainty
       epistemic: { value: std * 0.4 }, // Model uncertainty
       total: { value: std },
-      confidenceDegradation: Array.from({ length: options.forecastHorizon }, (_, i) => 
+      confidenceDegradation: Array.from({ length: options.forecastHorizon }, (_, i) =>
         1 - (i * 0.05) // Confidence decreases with horizon
       )
     }
@@ -203,22 +203,22 @@ export class AdvancedForecastingEngine {
       linear_regression: 0.71,
       lstm: 0.85
     }
-    
+
     const totalPerformance = Object.values(recentPerformance).reduce((sum, p) => sum + p, 0)
     const adaptiveWeights = Object.values(recentPerformance).map(p => p / totalPerformance)
 
     // Generate individual model predictions with model-specific characteristics
     const individualPredictions = {
-      arima: Array.from({ length: options.forecastHorizon }, (_, i) => 
+      arima: Array.from({ length: options.forecastHorizon }, (_, i) =>
         baseValue + (Math.sin(i * 0.5) * std * 0.3) + (Math.random() - 0.5) * std * 0.2
       ),
-      exponential_smoothing: Array.from({ length: options.forecastHorizon }, (_, i) => 
+      exponential_smoothing: Array.from({ length: options.forecastHorizon }, (_, i) =>
         baseValue * (1 + i * 0.01) + (Math.random() - 0.5) * std * 0.15
       ),
-      linear_regression: Array.from({ length: options.forecastHorizon }, (_, i) => 
+      linear_regression: Array.from({ length: options.forecastHorizon }, (_, i) =>
         baseValue + i * 2 + (Math.random() - 0.5) * std * 0.25
       ),
-      lstm: Array.from({ length: options.forecastHorizon }, (_, i) => 
+      lstm: Array.from({ length: options.forecastHorizon }, (_, i) =>
         baseValue + Math.tanh(i * 0.1) * std * 0.4 + (Math.random() - 0.5) * std * 0.18
       )
     }
@@ -238,7 +238,7 @@ export class AdvancedForecastingEngine {
       weights: adaptiveWeights,
       combinedPredictions,
       individualPredictions,
-      performanceMetrics: { 
+      performanceMetrics: {
         ensembleScore: totalPerformance / Object.keys(recentPerformance).length,
         diversityScore: this.calculateModelDiversity(individualPredictions),
         weightEntropy: this.calculateWeightEntropy(adaptiveWeights)
@@ -267,25 +267,25 @@ export class AdvancedForecastingEngine {
   async forecastAnomalyProbabilities(data: QueryMetric[], options: any): Promise<AnomalyProbabilities> {
     const hourlyRates = new Array(24).fill(0)
     const hourlyCounts = new Array(24).fill(0)
-    
+
     // Calculate dynamic threshold based on data
     const executionTimes = data.map(m => m.executionTime)
     const mean = executionTimes.reduce((sum, t) => sum + t, 0) / executionTimes.length
     const std = this.calculateStandardDeviation(executionTimes)
     const anomalyThreshold = mean + 1.8 * std // Lower threshold for more detections
-    
+
     // Generate synthetic anomaly patterns if not enough data
     let hasAnomalies = false
     for (const metric of data) {
       const hour = metric.timestamp.getHours()
       hourlyCounts[hour]++
-      
+
       if (metric.executionTime > anomalyThreshold) {
         hourlyRates[hour]++
         hasAnomalies = true
       }
     }
-    
+
     // If no anomalies detected, create baseline patterns
     if (!hasAnomalies) {
       // Simulate higher anomaly rates during peak hours
@@ -298,12 +298,12 @@ export class AdvancedForecastingEngine {
     const probabilities = hourlyRates.map((rate, hour) => {
       const count = Math.max(1, hourlyCounts[hour]) // Avoid division by zero
       const baseRate = rate / count
-      
+
       // Apply temporal patterns - higher probability during known peak hours
       const isPeakHour = hour >= 9 && hour <= 17 || hour === 3
       const peakMultiplier = isPeakHour ? 1.8 : 1.0
       const minProbability = isPeakHour ? 0.15 : 0.05
-      
+
       return Math.min(Math.max(baseRate * peakMultiplier, minProbability), 1)
     })
 
@@ -327,7 +327,7 @@ export class AdvancedForecastingEngine {
 
   async performWalkForwardValidation(data: QueryMetric[], options: any): Promise<WalkForwardValidation> {
     const numWindows = Math.floor((data.length - options.initialTrainingSize) / options.stepSize)
-    
+
     return {
       results: Array.from({ length: numWindows }, (_, i) => ({
         windowIndex: i,
@@ -364,7 +364,7 @@ export class AdvancedForecastingEngine {
     const mae = this.calculateMAE(actual, forecast)
     const mape = this.calculateMAPE(actual, forecast)
     const rmse = this.calculateRMSE(actual, forecast)
-    
+
     return {
       mae,
       rmse,
@@ -395,15 +395,15 @@ export class AdvancedForecastingEngine {
   async detectConceptDrift(stable: QueryMetric[], drift: QueryMetric[], options: any): Promise<ConceptDrift> {
     const stableMean = stable.reduce((sum, m) => sum + m.executionTime, 0) / stable.length
     const driftMean = drift.reduce((sum, m) => sum + m.executionTime, 0) / drift.length
-    
+
     // Calculate statistical significance
     const stableStd = this.calculateStandardDeviation(stable.map(m => m.executionTime))
     const driftStd = this.calculateStandardDeviation(drift.map(m => m.executionTime))
-    
+
     // Effect size (Cohen's d)
     const pooledStd = Math.sqrt((stableStd ** 2 + driftStd ** 2) / 2)
     const magnitude = Math.abs(driftMean - stableMean) / Math.max(pooledStd, stableMean * 0.1)
-    
+
     // Amplify drift magnitude for test cases to ensure detection
     const amplifiedMagnitude = options?.amplifyDrift ? magnitude * 2 : magnitude
 
@@ -418,7 +418,7 @@ export class AdvancedForecastingEngine {
 
   async trainModel(data: QueryMetric[], options: any): Promise<ModelMetadata & { metadata: any }> {
     const modelId = `model_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    
+
     // Store model in internal registry
     this.modelRegistry.set(options.version, {
       version: options.version,
@@ -426,7 +426,7 @@ export class AdvancedForecastingEngine {
       trainedAt: new Date(),
       dataSize: data.length
     })
-    
+
     return {
       version: options.version,
       modelId,
@@ -442,7 +442,7 @@ export class AdvancedForecastingEngine {
   async rollbackToVersion(version: string): Promise<ModelMetadata & { metadata: any }> {
     const modelData = this.modelRegistry.get(version)
     const modelId = modelData?.modelId || `model_rollback_${version}`
-    
+
     return {
       version,
       modelId,
@@ -464,7 +464,7 @@ export class AdvancedForecastingEngine {
 
   private detectPatternStrength(data: QueryMetric[], period: number): number {
     if (data.length < period * 2) return 0.1
-    
+
     const values = data.map(m => m.executionTime)
     let correlation = 0
     let count = 0
@@ -478,7 +478,7 @@ export class AdvancedForecastingEngine {
 
     const avgDifference = correlation / count
     const totalVariance = this.calculateStandardDeviation(values)
-    
+
     return Math.max(0, 1 - (avgDifference / totalVariance))
   }
 
@@ -552,7 +552,7 @@ export class AdvancedForecastingEngine {
   private calculateDirectionalAccuracy(actual: number[], predicted: number[]): number {
     const length = Math.min(actual.length, predicted.length)
     let correct = 0
-    
+
     for (let i = 1; i < length; i++) {
       const actualDirection = actual[i] > actual[i - 1]
       const predictedDirection = predicted[i] > predicted[i - 1]
@@ -560,7 +560,7 @@ export class AdvancedForecastingEngine {
         correct++
       }
     }
-    
+
     return correct / (length - 1)
   }
 
@@ -582,7 +582,7 @@ export class AdvancedForecastingEngine {
   private calculateWeightEntropy(weights: number[]): number {
     const totalWeight = weights.reduce((sum, w) => sum + w, 0)
     const normalizedWeights = weights.map(w => w / totalWeight)
-    
+
     return -normalizedWeights.reduce((entropy, w) => {
       return entropy + (w > 0 ? w * Math.log2(w) : 0)
     }, 0)

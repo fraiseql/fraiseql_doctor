@@ -28,7 +28,7 @@ vi.mock('chartjs-plugin-zoom', () => ({
 
 describe('InteractiveTimeSeriesChart', () => {
   let wrapper: any
-  
+
   const createMockMetric = (overrides: Partial<QueryMetric> = {}): QueryMetric => ({
     query: 'test query',
     variables: {},
@@ -41,8 +41,8 @@ describe('InteractiveTimeSeriesChart', () => {
     ...overrides
   })
 
-  const mockMetrics = Array.from({ length: 100 }, (_, i) => 
-    createMockMetric({ 
+  const mockMetrics = Array.from({ length: 100 }, (_, i) =>
+    createMockMetric({
       executionTime: 100 + Math.sin(i * 0.1) * 20,
       timestamp: new Date(Date.now() - (100 - i) * 60000)
     })
@@ -72,7 +72,7 @@ describe('InteractiveTimeSeriesChart', () => {
     it('should support multiple resolution modes', async () => {
       await wrapper.setProps({ resolution: 'minute' })
       expect(wrapper.vm.currentResolution).toBe('minute')
-      
+
       await wrapper.setProps({ resolution: 'hour' })
       expect(wrapper.vm.currentResolution).toBe('hour')
     })
@@ -81,7 +81,7 @@ describe('InteractiveTimeSeriesChart', () => {
   describe('Interactive Features', () => {
     it('should handle brush selection for time range filtering', async () => {
       const canvas = wrapper.find('canvas')
-      
+
       // Simulate brush selection
       await canvas.trigger('mousedown', { clientX: 100, clientY: 100 })
       await canvas.trigger('mousemove', { clientX: 200, clientY: 100 })
@@ -115,7 +115,7 @@ describe('InteractiveTimeSeriesChart', () => {
       }
 
       const tooltip = wrapper.vm.generateAdvancedTooltip(tooltipContext)
-      
+
       expect(tooltip).toContain('Execution Time')
       expect(tooltip).toContain('vs Baseline')
       expect(tooltip).toContain('Percentile')
@@ -124,15 +124,15 @@ describe('InteractiveTimeSeriesChart', () => {
 
     it('should support crosshair cursor for precise data inspection', async () => {
       const canvas = wrapper.find('canvas')
-      
+
       await canvas.trigger('mousemove', { clientX: 250, clientY: 150 })
-      
+
       expect(wrapper.vm.crosshairPosition).toEqual({
         x: 250,
         y: 150,
         visible: true
       })
-      
+
       expect(wrapper.find('.crosshair-vertical').isVisible()).toBe(true)
       expect(wrapper.find('.crosshair-horizontal').isVisible()).toBe(true)
     })
@@ -142,28 +142,28 @@ describe('InteractiveTimeSeriesChart', () => {
     it('should handle streaming data updates efficiently', async () => {
       const newMetrics = [
         ...mockMetrics,
-        createMockMetric({ 
+        createMockMetric({
           executionTime: 150,
           timestamp: new Date()
         })
       ]
 
       await wrapper.setProps({ metrics: newMetrics, realTimeUpdates: true })
-      
+
       expect(wrapper.vm.chartData.datasets[0].data).toHaveLength(101)
       expect(wrapper.emitted('data-updated')).toBeTruthy()
     })
 
     it('should maintain smooth animations during real-time updates', async () => {
       wrapper.vm.chartOptions.animation.duration = 750
-      
+
       const streamingMetrics = [...mockMetrics]
       for (let i = 0; i < 10; i++) {
-        streamingMetrics.push(createMockMetric({ 
+        streamingMetrics.push(createMockMetric({
           executionTime: 120 + i * 5,
           timestamp: new Date(Date.now() + i * 1000)
         }))
-        
+
         await wrapper.setProps({ metrics: streamingMetrics })
         await nextTick()
       }
@@ -173,8 +173,8 @@ describe('InteractiveTimeSeriesChart', () => {
 
     it('should automatically adjust time window for streaming data', async () => {
       const initialTimeRange = wrapper.vm.displayTimeRange
-      
-      await wrapper.setProps({ 
+
+      await wrapper.setProps({
         autoTimeWindow: true,
         windowSize: 60 // 60 minutes
       })
@@ -187,7 +187,7 @@ describe('InteractiveTimeSeriesChart', () => {
   describe('Multi-Resolution Support', () => {
     it('should automatically select appropriate resolution based on time range', async () => {
       // Test 1 hour range -> minute resolution
-      await wrapper.setProps({ 
+      await wrapper.setProps({
         timeRange: {
           start: new Date(Date.now() - 60 * 60 * 1000),
           end: new Date()
@@ -195,8 +195,8 @@ describe('InteractiveTimeSeriesChart', () => {
       })
       expect(wrapper.vm.optimalResolution).toBe('minute')
 
-      // Test 1 day range -> 5-minute resolution  
-      await wrapper.setProps({ 
+      // Test 1 day range -> 5-minute resolution
+      await wrapper.setProps({
         timeRange: {
           start: new Date(Date.now() - 24 * 60 * 60 * 1000),
           end: new Date()
@@ -205,7 +205,7 @@ describe('InteractiveTimeSeriesChart', () => {
       expect(wrapper.vm.optimalResolution).toBe('5minute')
 
       // Test 1 week range -> hourly resolution
-      await wrapper.setProps({ 
+      await wrapper.setProps({
         timeRange: {
           start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
           end: new Date()
@@ -216,7 +216,7 @@ describe('InteractiveTimeSeriesChart', () => {
 
     it('should aggregate data points for lower resolutions', () => {
       const hourlyData = wrapper.vm.aggregateToResolution(mockMetrics, 'hour')
-      
+
       expect(hourlyData.length).toBeLessThan(mockMetrics.length)
       expect(hourlyData[0]).toHaveProperty('averageExecutionTime')
       expect(hourlyData[0]).toHaveProperty('minExecutionTime')
@@ -227,7 +227,7 @@ describe('InteractiveTimeSeriesChart', () => {
 
   describe('Statistical Overlays', () => {
     it('should display moving averages with configurable windows', async () => {
-      await wrapper.setProps({ 
+      await wrapper.setProps({
         showMovingAverage: true,
         movingAverageWindow: 20
       })
@@ -235,14 +235,14 @@ describe('InteractiveTimeSeriesChart', () => {
       const movingAverageDataset = wrapper.vm.chartData.datasets.find(
         (d: any) => d.label === 'Moving Average (20 periods)'
       )
-      
+
       expect(movingAverageDataset).toBeDefined()
       expect(movingAverageDataset.borderColor).toBe('#ff6b6b')
       expect(movingAverageDataset.data.length).toBe(mockMetrics.length)
     })
 
     it('should show percentile bands for performance baselines', async () => {
-      await wrapper.setProps({ 
+      await wrapper.setProps({
         showPercentileBands: true,
         percentiles: [25, 75, 95]
       })
@@ -250,24 +250,24 @@ describe('InteractiveTimeSeriesChart', () => {
       const p25Band = wrapper.vm.chartData.datasets.find((d: any) => d.label === 'P25')
       const p75Band = wrapper.vm.chartData.datasets.find((d: any) => d.label === 'P75')
       const p95Band = wrapper.vm.chartData.datasets.find((d: any) => d.label === 'P95')
-      
+
       expect(p25Band).toBeDefined()
       expect(p75Band).toBeDefined()
       expect(p95Band).toBeDefined()
-      
+
       expect(p75Band.fill).toBe('+1') // Fill between P25 and P75
     })
 
     it('should highlight anomalies with visual indicators', async () => {
       const anomalousMetrics = [
         ...mockMetrics,
-        createMockMetric({ 
+        createMockMetric({
           executionTime: 500, // Anomaly
           timestamp: new Date()
         })
       ]
 
-      await wrapper.setProps({ 
+      await wrapper.setProps({
         metrics: anomalousMetrics,
         showAnomalies: true,
         anomalyThreshold: 3 // 3 standard deviations
@@ -276,7 +276,7 @@ describe('InteractiveTimeSeriesChart', () => {
       const anomalyOverlay = wrapper.vm.chartData.datasets.find(
         (d: any) => d.label === 'Anomalies'
       )
-      
+
       expect(anomalyOverlay).toBeDefined()
       expect(anomalyOverlay.pointBackgroundColor).toBe('#ff4757')
       expect(anomalyOverlay.data).toContainEqual(
@@ -287,14 +287,14 @@ describe('InteractiveTimeSeriesChart', () => {
 
   describe('Performance Optimization', () => {
     it('should implement data decimation for large datasets', async () => {
-      const largeDataset = Array.from({ length: 10000 }, (_, i) => 
-        createMockMetric({ 
+      const largeDataset = Array.from({ length: 10000 }, (_, i) =>
+        createMockMetric({
           executionTime: 100 + Math.random() * 50,
           timestamp: new Date(Date.now() - (10000 - i) * 1000)
         })
       )
 
-      await wrapper.setProps({ 
+      await wrapper.setProps({
         metrics: largeDataset,
         maxDataPoints: 1000
       })
@@ -314,7 +314,7 @@ describe('InteractiveTimeSeriesChart', () => {
 
     it('should debounce rapid updates to prevent performance issues', async () => {
       const updateSpy = vi.spyOn(wrapper.vm, 'updateChart')
-      
+
       // Rapid fire updates
       for (let i = 0; i < 10; i++) {
         wrapper.vm.handleDataUpdate([createMockMetric()])
@@ -334,14 +334,14 @@ describe('InteractiveTimeSeriesChart', () => {
       }
 
       const csvData = wrapper.vm.exportToCSV()
-      
+
       expect(csvData).toContain('timestamp,executionTime,responseSize')
       expect(csvData.split('\n').length).toBeGreaterThan(30)
     })
 
     it('should generate statistical summary reports', () => {
       const summary = wrapper.vm.generateStatisticalSummary()
-      
+
       expect(summary).toMatchObject({
         count: expect.any(Number),
         mean: expect.any(Number),
@@ -371,7 +371,7 @@ describe('InteractiveTimeSeriesChart', () => {
 
       expect(wrapper.vm.annotations).toContain(annotation)
       expect(wrapper.emitted('annotation-added')).toBeTruthy()
-      
+
       const annotationOverlay = wrapper.vm.chartOptions.plugins.annotation.annotations
       expect(annotationOverlay).toContain(
         expect.objectContaining({

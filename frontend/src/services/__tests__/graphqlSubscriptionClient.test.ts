@@ -16,7 +16,7 @@ describe('GraphQLSubscriptionClient', () => {
     }
 
     global.WebSocket = vi.fn().mockImplementation(() => mockWebSocket)
-    
+
     subscriptionClient = new GraphQLSubscriptionClient({
       endpoint: 'ws://localhost:4000/graphql',
       reconnectAttempts: 3,
@@ -32,7 +32,7 @@ describe('GraphQLSubscriptionClient', () => {
   describe('Real-time Performance Monitoring', () => {
     it('should establish GraphQL subscription for query performance metrics', async () => {
       const performanceData: QueryPerformanceData[] = []
-      
+
       const subscription = await subscriptionClient.subscribeToPerformanceMetrics({
         endpointId: 'test-endpoint-1',
         callback: (data) => performanceData.push(data)
@@ -47,7 +47,7 @@ describe('GraphQLSubscriptionClient', () => {
 
     it('should receive real-time query execution data via subscription', async () => {
       const receivedData: QueryPerformanceData[] = []
-      
+
       await subscriptionClient.subscribeToPerformanceMetrics({
         endpointId: 'endpoint-1',
         callback: (data) => receivedData.push(data)
@@ -56,7 +56,7 @@ describe('GraphQLSubscriptionClient', () => {
       // Simulate incoming subscription data
       const mockPerformanceData: QueryPerformanceData = {
         id: 'query-123',
-        endpointId: 'endpoint-1', 
+        endpointId: 'endpoint-1',
         operationName: 'GetUsers',
         query: 'query GetUsers { users { id name } }',
         variables: { limit: 10 },
@@ -95,7 +95,7 @@ describe('GraphQLSubscriptionClient', () => {
 
     it('should handle subscription errors gracefully', async () => {
       const errorCallback = vi.fn()
-      
+
       const subscription = await subscriptionClient.subscribeToPerformanceMetrics({
         endpointId: 'endpoint-1',
         callback: vi.fn(),
@@ -236,7 +236,7 @@ describe('GraphQLSubscriptionClient', () => {
 
     it('should implement subscription heartbeat to maintain connection', async () => {
       vi.useFakeTimers()
-      
+
       await subscriptionClient.connect()
 
       // Fast-forward heartbeat interval
@@ -256,7 +256,7 @@ describe('GraphQLSubscriptionClient', () => {
       })
 
       const subscription2 = await subscriptionClient.subscribeToAggregatedMetrics({
-        endpointId: 'endpoint-2', 
+        endpointId: 'endpoint-2',
         timeWindow: '5m',
         callback: vi.fn()
       })
@@ -295,10 +295,10 @@ describe('GraphQLSubscriptionClient', () => {
 
     it('should implement exponential backoff for reconnection attempts', async () => {
       vi.useFakeTimers()
-      
+
       const reconnectDelays: number[] = []
       const originalSetTimeout = global.setTimeout
-      
+
       global.setTimeout = vi.fn().mockImplementation((callback, delay) => {
         reconnectDelays.push(delay)
         return originalSetTimeout(callback, 0) // Execute immediately for testing
@@ -309,7 +309,7 @@ describe('GraphQLSubscriptionClient', () => {
         const closeEvent = new CloseEvent('close', { code: 1006 })
         mockWebSocket.addEventListener.mock.calls
           .find(call => call[0] === 'close')[1](closeEvent)
-        
+
         await new Promise(resolve => setTimeout(resolve, 10))
       }
 

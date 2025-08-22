@@ -142,7 +142,7 @@ export class GraphQLInstrumentation extends EventTarget {
         timestamp: new Date(),
         status: 'error',
         variables: this.config.captureVariables ? (variables || {}) : {},
-        errors: [{ 
+        errors: [{
           message: error instanceof Error ? error.message : 'Unknown error',
           code: 'EXECUTION_ERROR',
           path: []
@@ -159,11 +159,11 @@ export class GraphQLInstrumentation extends EventTarget {
 
   getClientSideMetrics(): ClientSideMetrics {
     const entries = this.performanceObserver?.takeRecords() || []
-    
+
     let totalRequestTime = 0
-    let networkLatency = 0
-    let parseTime = 10
-    let renderTime = 5
+    const networkLatency = 0
+    const parseTime = 10
+    const renderTime = 5
 
     entries.forEach(entry => {
       if (entry.name === 'graphql-query') {
@@ -211,7 +211,7 @@ export class GraphQLInstrumentation extends EventTarget {
 
   private async executeWithoutInstrumentation(query: string, variables?: Record<string, any>): Promise<QueryExecution> {
     const response = await this.client.query({ query, variables })
-    
+
     return {
       operationName: this.extractOperationName(query),
       executionTime: 0,
@@ -229,7 +229,7 @@ export class GraphQLInstrumentation extends EventTarget {
       this.performanceObserver = new PerformanceObserver((list) => {
         // Handle performance entries
       })
-      
+
       this.performanceObserver.observe({ entryTypes: ['measure', 'navigation'] })
     }
   }

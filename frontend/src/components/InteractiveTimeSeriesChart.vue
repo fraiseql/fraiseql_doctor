@@ -3,9 +3,9 @@
     <!-- Chart Canvas -->
     <div class="chart-container relative">
       <canvas ref="chartCanvas" class="w-full h-96"></canvas>
-      
+
       <!-- Crosshair Overlay -->
-      <div 
+      <div
         v-if="crosshairPosition.visible"
         class="absolute pointer-events-none"
         :style="{
@@ -32,27 +32,27 @@
         <!-- Overlay Controls -->
         <div class="flex items-center space-x-2">
           <label class="flex items-center">
-            <input 
-              v-model="showMovingAverage" 
-              type="checkbox" 
+            <input
+              v-model="showMovingAverage"
+              type="checkbox"
               class="form-checkbox h-4 w-4"
             >
             <span class="ml-2 text-sm">Moving Average</span>
           </label>
-          
+
           <label class="flex items-center">
-            <input 
-              v-model="showPercentileBands" 
-              type="checkbox" 
+            <input
+              v-model="showPercentileBands"
+              type="checkbox"
               class="form-checkbox h-4 w-4"
             >
             <span class="ml-2 text-sm">Percentile Bands</span>
           </label>
-          
+
           <label class="flex items-center">
-            <input 
-              v-model="showAnomalies" 
-              type="checkbox" 
+            <input
+              v-model="showAnomalies"
+              type="checkbox"
               class="form-checkbox h-4 w-4"
             >
             <span class="ml-2 text-sm">Anomalies</span>
@@ -62,14 +62,14 @@
 
       <!-- Action Buttons -->
       <div class="flex items-center space-x-2">
-        <button 
+        <button
           @click="resetZoom"
           class="btn btn-sm btn-outline"
         >
           Reset Zoom
         </button>
-        
-        <button 
+
+        <button
           @click="exportToCSV"
           class="btn btn-sm btn-primary"
         >
@@ -140,10 +140,10 @@ const annotations = ref<any[]>([])
 // Computed properties
 const optimalResolution = computed(() => {
   if (!props.timeRange) return 'minute'
-  
+
   const duration = props.timeRange.end.getTime() - props.timeRange.start.getTime()
   const hours = duration / (1000 * 60 * 60)
-  
+
   if (hours <= 1) return 'minute'
   if (hours <= 24) return '5minute'
   if (hours <= 168) return 'hour'
@@ -163,26 +163,26 @@ const displayTimeRange = computed(() => {
 
 const displayData = computed(() => {
   let data = [...props.metrics]
-  
+
   // Apply time range filter
   if (displayTimeRange.value) {
-    data = data.filter(m => 
-      m.timestamp >= displayTimeRange.value!.start && 
+    data = data.filter(m =>
+      m.timestamp >= displayTimeRange.value!.start &&
       m.timestamp <= displayTimeRange.value!.end
     )
   }
-  
+
   // Apply data decimation for large datasets
   if (data.length > props.maxDataPoints) {
     const step = Math.ceil(data.length / props.maxDataPoints)
     data = data.filter((_, index) => index % step === 0)
   }
-  
+
   return data
 })
 
 const decimationRatio = computed(() => {
-  return props.metrics.length > props.maxDataPoints 
+  return props.metrics.length > props.maxDataPoints
     ? Math.ceil(props.metrics.length / props.maxDataPoints)
     : 1
 })
@@ -227,7 +227,7 @@ const chartData = computed(() => {
   // Add percentile bands
   if (showPercentileBands.value) {
     const values = baseData.map(d => d.y).sort((a, b) => a - b)
-    
+
     for (const percentile of props.percentiles) {
       const value = getPercentile(values, percentile)
       datasets.push({
@@ -384,7 +384,7 @@ function handleChartClick(event: any) {
   if (elements && elements.length > 0) {
     const dataIndex = elements[0].index
     const dataPoint = displayData.value[dataIndex]
-    
+
     emit('drill-down', {
       dataPoint,
       timeRange: {
@@ -398,12 +398,12 @@ function handleChartClick(event: any) {
 function generateAdvancedTooltip(context: any): string {
   const dataPoint = context.dataset.data[context.dataIndex]
   const value = dataPoint.y
-  
+
   // Calculate baseline comparison (simplified)
   const allValues = displayData.value.map(m => m[props.metric as keyof QueryMetric] as number)
   const mean = allValues.reduce((sum, v) => sum + v, 0) / allValues.length
   const percentile = getPercentileRank(allValues, value)
-  
+
   return [
     `${getMetricLabel(props.metric)}: ${value.toFixed(2)}`,
     `vs Baseline: ${((value - mean) / mean * 100).toFixed(1)}%`,
@@ -419,10 +419,10 @@ function resetZoom() {
 function exportToCSV(): string {
   const headers = ['timestamp', 'executionTime', 'responseSize']
   const rows = [headers.join(',')]
-  
+
   const dataToExport = selectedTimeRange.value
-    ? displayData.value.filter(m => 
-        m.timestamp >= selectedTimeRange.value!.start && 
+    ? displayData.value.filter(m =>
+        m.timestamp >= selectedTimeRange.value!.start &&
         m.timestamp <= selectedTimeRange.value!.end
       )
     : displayData.value
@@ -436,7 +436,7 @@ function exportToCSV(): string {
   }
 
   const csvContent = rows.join('\n')
-  
+
   // Create download link
   const blob = new Blob([csvContent], { type: 'text/csv' })
   const url = URL.createObjectURL(blob)
@@ -444,14 +444,14 @@ function exportToCSV(): string {
   link.href = url
   link.download = `metrics_${Date.now()}.csv`
   link.click()
-  
+
   return csvContent
 }
 
 function generateStatisticalSummary() {
   const values = displayData.value.map(m => m[props.metric as keyof QueryMetric] as number)
   const sorted = [...values].sort((a, b) => a - b)
-  
+
   const mean = values.reduce((sum, v) => sum + v, 0) / values.length
   const median = getPercentile(sorted, 50)
   const std = Math.sqrt(values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / values.length)
@@ -486,7 +486,7 @@ function addAnnotation(annotation: any) {
       enabled: true
     }
   })
-  
+
   emit('annotation-added', annotation)
   updateChart()
 }
@@ -498,7 +498,7 @@ function setViewport(viewport: { start: number; end: number }) {
 function aggregateToResolution(metrics: QueryMetric[], resolution: string) {
   const windowMs = getResolutionWindow(resolution)
   const grouped = new Map<number, QueryMetric[]>()
-  
+
   for (const metric of metrics) {
     const windowStart = Math.floor(metric.timestamp.getTime() / windowMs) * windowMs
     if (!grouped.has(windowStart)) {
@@ -543,7 +543,7 @@ function getPercentileRank(values: number[], value: number): number {
 function getPercentileColor(percentile: number): string {
   const colors = {
     25: '#10b981',
-    50: '#3b82f6', 
+    50: '#3b82f6',
     75: '#f59e0b',
     90: '#ef4444',
     95: '#dc2626',
