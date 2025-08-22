@@ -5,41 +5,25 @@ import type { GraphQLEndpoint } from '../../types/endpoint'
 import { EndpointStatus } from '../../types/endpoint'
 import type { QueryHistoryEntry } from '../../types/queryHistory'
 
+// Create mock functions that can be accessed in tests
+const mockGetHistory = vi.fn()
+const mockGetStats = vi.fn()
+const mockSearchHistory = vi.fn()
+const mockUpdateQuery = vi.fn()
+const mockDeleteQuery = vi.fn()
+const mockClearHistory = vi.fn()
+const mockExportHistory = vi.fn()
+
 // Mock the service
 vi.mock('../../services/queryHistory', () => ({
   useQueryHistory: () => ({
-    getHistory: vi.fn(() => mockHistory),
-    getStats: vi.fn(() => mockStats),
-    searchHistory: vi.fn((filter) => {
-      let results = mockHistory
-
-      if (filter?.success === true) results = results.filter(h => h.success)
-      if (filter?.success === false) results = results.filter(h => !h.success)
-      if (filter?.endpointId) results = results.filter(h => h.endpointId === filter.endpointId)
-      if (filter?.favorite === true) results = results.filter(h => h.favorite)
-      if (filter?.searchTerm) {
-        results = results.filter(h =>
-          h.query.toLowerCase().includes(filter.searchTerm.toLowerCase()) ||
-          h.operationName?.toLowerCase().includes(filter.searchTerm.toLowerCase())
-        )
-      }
-
-      return results
-    }),
-    updateQuery: vi.fn((id, updates) => ({
-      success: true,
-      entry: { ...mockHistory.find(h => h.id === id)!, ...updates }
-    })),
-    deleteQuery: vi.fn(() => ({ success: true })),
-    clearHistory: vi.fn(),
-    exportHistory: vi.fn(() => ({
-      success: true,
-      result: {
-        data: JSON.stringify(mockHistory),
-        filename: 'query-history-2024-08-21.json',
-        mimeType: 'application/json'
-      }
-    }))
+    getHistory: mockGetHistory,
+    getStats: mockGetStats,
+    searchHistory: mockSearchHistory,
+    updateQuery: mockUpdateQuery,
+    deleteQuery: mockDeleteQuery,
+    clearHistory: mockClearHistory,
+    exportHistory: mockExportHistory
   })
 }))
 
@@ -115,6 +99,43 @@ describe('QueryHistory', () => {
   let wrapper: ReturnType<typeof mount>
 
   beforeEach(() => {
+    // Reset and setup default mock behavior
+    vi.clearAllMocks()
+    
+    // Set up default mock returns
+    mockGetHistory.mockReturnValue(mockHistory)
+    mockGetStats.mockReturnValue(mockStats)
+    mockSearchHistory.mockImplementation((filter) => {
+      let results = mockHistory
+
+      if (filter?.success === true) results = results.filter(h => h.success)
+      if (filter?.success === false) results = results.filter(h => !h.success)
+      if (filter?.endpointId) results = results.filter(h => h.endpointId === filter.endpointId)
+      if (filter?.favorite === true) results = results.filter(h => h.favorite)
+      if (filter?.searchTerm) {
+        results = results.filter(h =>
+          h.query.toLowerCase().includes(filter.searchTerm.toLowerCase()) ||
+          h.operationName?.toLowerCase().includes(filter.searchTerm.toLowerCase())
+        )
+      }
+
+      return results
+    })
+    mockUpdateQuery.mockImplementation((id, updates) => ({
+      success: true,
+      entry: { ...mockHistory.find(h => h.id === id)!, ...updates }
+    }))
+    mockDeleteQuery.mockReturnValue({ success: true })
+    mockClearHistory.mockReturnValue(undefined)
+    mockExportHistory.mockReturnValue({
+      success: true,
+      result: {
+        data: JSON.stringify(mockHistory),
+        filename: 'query-history-2024-08-21.json',
+        mimeType: 'application/json'
+      }
+    })
+
     wrapper = mount(QueryHistory, {
       props: {
         endpoints: mockEndpoints
@@ -259,8 +280,8 @@ describe('QueryHistory', () => {
       })
 
       // Mock the service methods to return large history
-      vi.mocked((wrapperWithLargeHistory.vm as any).queryHistoryService.getHistory).mockReturnValue(largeHistory)
-      vi.mocked((wrapperWithLargeHistory.vm as any).queryHistoryService.searchHistory).mockReturnValue(largeHistory)
+      mockGetHistory.mockReturnValue(largeHistory)
+      mockSearchHistory.mockReturnValue(largeHistory)
     })
 
     it('should show pagination controls when there are many entries', () => {
@@ -402,7 +423,7 @@ describe('QueryHistory', () => {
 
       // Call clearHistory method
       (wrapper.vm as any).queryHistoryService.clearHistory()
-      expect((wrapper.vm as any).queryHistoryService.clearHistory).toHaveBeenCalled()
+      expect(mockClearHistory).toHaveBeenCalled()
     })
 
     it('should have clear button when history exists', () => {
@@ -422,8 +443,8 @@ describe('QueryHistory', () => {
         }
       })
 
-      vi.mocked((emptyWrapper.vm as any).queryHistoryService.getHistory).mockReturnValue([])
-      vi.mocked((emptyWrapper.vm as any).queryHistoryService.searchHistory).mockReturnValue([])
+      mockGetHistory.mockReturnValue([])
+      mockSearchHistory.mockReturnValue([])
 
       (emptyWrapper.vm as any).loadHistory()
 
@@ -448,7 +469,7 @@ describe('QueryHistory', () => {
         }
       })
 
-      vi.mocked((emptyWrapper.vm as any).queryHistoryService.getHistory).mockReturnValue([])
+      mockGetHistory.mockReturnValue([])
       (emptyWrapper.vm as any).loadHistory()
 
       expect((emptyWrapper.vm as any).hasHistory).toBe(false)
