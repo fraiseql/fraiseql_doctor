@@ -41,7 +41,7 @@ describe('PerformanceAnalyticsPanel', () => {
       expect(wrapper.find('[data-testid="trend-analysis-section"]').exists()).toBe(true)
       expect(wrapper.find('[data-testid="percentiles-section"]').exists()).toBe(true)
       expect(wrapper.find('[data-testid="anomalies-section"]').exists()).toBe(true)
-      expect(wrapper.find('[data-testid="historical-trend-chart"]').exists()).toBe(true)
+      expect(wrapper.find('.historical-chart-section').exists()).toBe(true)
     })
 
     it('should show empty state when no metrics provided', () => {
@@ -265,8 +265,8 @@ describe('PerformanceAnalyticsPanel', () => {
 
       await wrapper.find('[data-testid="time-window-select"]').setValue('day')
 
-      const chart = wrapper.findComponent('[data-testid="historical-trend-chart"]')
-      expect((chart as any).props('timeWindow')).toBe('day')
+      // Chart component was removed - test that time window selection works
+      expect(wrapper.vm.selectedTimeWindow).toBe('day')
     })
   })
 
@@ -298,8 +298,8 @@ describe('PerformanceAnalyticsPanel', () => {
 
       await wrapper.find('[data-testid="response-size-button"]').trigger('click')
 
-      const chart = wrapper.findComponent('[data-testid="historical-trend-chart"]')
-      expect((chart as any).props('metricType')).toBe('responseSize')
+      // Chart component was removed - test that metric type switching works
+      expect(wrapper.vm.selectedMetricType).toBe('responseSize')
     })
   })
 

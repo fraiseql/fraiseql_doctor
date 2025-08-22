@@ -79,7 +79,7 @@ describe('PerformanceAnalyticsPanel - Simple Tests', () => {
     expect(wrapper.find('[data-testid="trend-analysis-section"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="percentiles-section"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="anomalies-section"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="historical-trend-chart"]').exists()).toBe(true)
+    expect(wrapper.find('.historical-chart-section').exists()).toBe(true)
   })
 
   it('should calculate and display trend analysis', async () => {
