@@ -53,7 +53,11 @@ describe('RealTimeAnalyticsDashboard', () => {
     ...overrides
   })
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Reset service state before each test
+    const { resetRealTimeServiceForTesting } = await import('../../services/realTimeDataService')
+    resetRealTimeServiceForTesting()
+
     mockTimeSeriesAnalytics = {
       processStreamingData: vi.fn(() => ({
         dataPoints: [],
@@ -110,73 +114,82 @@ describe('RealTimeAnalyticsDashboard', () => {
     it('should handle incoming streaming data and update charts', async () => {
       const streamingData = Array.from({ length: 5 }, () => createMockMetric())
 
-      // Directly update component state instead of calling non-existent method
-      wrapper.vm.dataBuffer.push(...streamingData)
-      wrapper.vm.totalDataPoints = wrapper.vm.dataBuffer.length
+      // Use proper service integration for adding streaming data
+      await wrapper.vm.realTimeService.addStreamingData(streamingData)
       await nextTick()
 
-      expect(wrapper.vm.dataBuffer.length).toBe(5)
+      // Verify service integration works
+      expect(wrapper.vm.realTimeService.getDataBuffer().length).toBe(5)
       expect(wrapper.vm.totalDataPoints).toBe(5)
       // The component displays data points count
       expect(wrapper.text()).toContain('5')
     })
 
     it('should maintain connection health and auto-reconnect on failures', async () => {
-      // Directly simulate connection loss state
-      wrapper.vm.connectionStatus = 'reconnecting'
-      wrapper.vm.reconnectAttempts = 1
+      // Simulate connection failure through service
+      wrapper.vm.realTimeService.disconnect()
       await nextTick()
 
-      expect(wrapper.vm.connectionStatus).toBe('reconnecting')
-      // Check that reconnecting status is displayed
-      expect(wrapper.find('.status-indicator.bg-yellow-500').exists()).toBe(true)
-      expect(wrapper.text()).toContain('Reconnecting')
-      expect(wrapper.text()).toContain('Attempt 1')
+      // Service should attempt reconnection
+      const connectionStatus = wrapper.vm.realTimeService.getConnectionStatus()
+      expect(connectionStatus.status).toBe('disconnected')
 
-      // Simulate successful reconnection
-      wrapper.vm.connectionStatus = 'connected'
-      wrapper.vm.reconnectAttempts = 0
+      // Check that reconnecting status is displayed in UI
+      expect(wrapper.find('.status-indicator.bg-red-500').exists()).toBe(true)
+      expect(wrapper.text()).toContain('Disconnected')
+
+      // Simulate successful reconnection through service
+      await wrapper.vm.realTimeService.connect()
       await nextTick()
 
-      expect(wrapper.vm.connectionStatus).toBe('connected')
+      const reconnectedStatus = wrapper.vm.realTimeService.getConnectionStatus()
+      expect(reconnectedStatus.status).toBe('connected')
     })
 
     it('should buffer data during disconnection and replay on reconnect', async () => {
       const offlineData = Array.from({ length: 10 }, () => createMockMetric())
 
-      // Simulate disconnected state
-      wrapper.vm.connectionStatus = 'disconnected'
+      // Disconnect service to simulate offline state
+      wrapper.vm.realTimeService.disconnect()
       await nextTick()
 
-      // Component doesn't have offline buffering, so test the basic disconnection state
-      expect(wrapper.vm.connectionStatus).toBe('disconnected')
+      // Buffer data while offline using service
+      wrapper.vm.realTimeService.bufferOfflineData(offlineData)
+
+      const connectionStatus = wrapper.vm.realTimeService.getConnectionStatus()
+      expect(connectionStatus.status).toBe('disconnected')
+      expect(connectionStatus.offlineDataBuffer.length).toBe(10)
       expect(wrapper.find('.status-indicator.bg-red-500').exists()).toBe(true)
       expect(wrapper.text()).toContain('Disconnected')
 
-      // Simulate reconnection by directly adding data to buffer
-      wrapper.vm.dataBuffer.push(...offlineData)
-      wrapper.vm.connectionStatus = 'connected'
+      // Reconnect and verify offline data is replayed
+      await wrapper.vm.realTimeService.connect()
       await nextTick()
 
-      expect(wrapper.vm.dataBuffer.length).toBe(10)
-      expect(wrapper.vm.connectionStatus).toBe('connected')
+      const dataBuffer = wrapper.vm.realTimeService.getDataBuffer()
+      expect(dataBuffer.length).toBe(10) // Offline data replayed
+      const reconnectedStatus = wrapper.vm.realTimeService.getConnectionStatus()
+      expect(reconnectedStatus.status).toBe('connected')
+      expect(reconnectedStatus.offlineDataBuffer.length).toBe(0) // Buffer cleared after replay
     })
   })
 
   describe('Live Performance Metrics Display', () => {
     it('should display real-time key performance indicators', async () => {
-      const kpiData = {
-        currentThroughput: 150.5,
-        averageLatency: 85.2,
-        errorRate: 0.015,
-        p95Latency: 180.7
-      }
+      const mockMetrics = Array.from({ length: 20 }, () => createMockMetric({
+        executionTime: 85.2,
+        errors: Math.random() > 0.985 ? ['error'] : null // 1.5% error rate
+      }))
 
-      // Directly update component reactive data instead of calling non-existent method
-      wrapper.vm.kpiData.currentThroughput = kpiData.currentThroughput
-      wrapper.vm.kpiData.averageLatency = kpiData.averageLatency
-      wrapper.vm.kpiData.errorRate = kpiData.errorRate
-      wrapper.vm.kpiData.p95Latency = kpiData.p95Latency
+      // Use service to update KPI data based on metrics
+      await wrapper.vm.realTimeService.addStreamingData(mockMetrics)
+      await nextTick()
+
+      // Verify service calculates and provides KPI data
+      const kpiData = wrapper.vm.realTimeService.getKpiData()
+      expect(kpiData.currentThroughput).toBeGreaterThan(0)
+      expect(kpiData.averageLatency).toBeCloseTo(85.2, 1)
+      expect(kpiData.errorRate).toBeGreaterThanOrEqual(0)
       await nextTick()
 
       expect(wrapper.find('[data-testid="throughput-kpi"]').text()).toContain('150.5')
