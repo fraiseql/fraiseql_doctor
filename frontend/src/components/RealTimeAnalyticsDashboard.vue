@@ -413,7 +413,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { realTimeDataService, type KpiData as ServiceKpiData } from '../services/realTimeDataService'
 import type { QueryMetric } from '../services/performanceMonitor'
 
@@ -532,25 +532,14 @@ function loadPreferences() {
 }
 
 function performMemoryCleanup() {
-  // Handle cleanup for both service buffer and component buffer (for test compatibility)
+  // Delegate memory management to the service
+  realTimeService.performMemoryCleanup()
 
-  // If component buffer has been directly manipulated and is larger than service buffer
-  if (dataBuffer.value.length > realTimeService.getDataBuffer().length) {
-    // Cleanup component buffer directly (test compatibility mode)
-    if (dataBuffer.value.length > 1000) {
-      dataBuffer.value = dataBuffer.value.slice(-500)
-      totalDataPoints.value = dataBuffer.value.length
-    }
-  } else {
-    // Normal operation - delegate to service
-    realTimeService.performMemoryCleanup()
-    // Sync component state with service
-    dataBuffer.value = [...realTimeService.getDataBuffer()]
-    totalDataPoints.value = dataBuffer.value.length
-  }
+  // Use optimized sync instead of direct buffer access
+  syncDataBufferFromService()
 
   // Update memory usage estimate
-  memoryUsage.value.dataPoints = totalDataPoints.value * 100 // Rough estimate
+  memoryUsage.value.dataPoints = totalDataPoints.value * 100
 }
 
 // Helper functions
@@ -621,14 +610,47 @@ function handleServiceStatusChange(event: Event) {
   reconnectAttempts.value = attempts
 }
 
+// Batch sync state to avoid redundant operations
+let syncScheduled = false
+
+function syncDataBufferFromService() {
+  const serviceBuffer = realTimeService.getDataBuffer()
+  dataBuffer.value = [...serviceBuffer]
+  totalDataPoints.value = serviceBuffer.length
+}
+
+function calculateP95Latency() {
+  const recentMetrics = dataBuffer.value.slice(-100)
+  if (recentMetrics.length > 0) {
+    const latencies = recentMetrics.map(m => m.executionTime).sort((a, b) => a - b)
+    const p95Index = Math.max(0, Math.ceil(latencies.length * 0.95) - 1)
+    p95Latency.value = latencies[p95Index] || 0
+  } else {
+    p95Latency.value = 0
+  }
+}
+
+function scheduleSyncIfNeeded() {
+  if (!syncScheduled) {
+    syncScheduled = true
+    nextTick(() => {
+      syncDataBufferFromService()
+      calculateP95Latency()
+      syncScheduled = false
+    })
+  }
+}
+
 function handleServiceDataUpdate(event: Event) {
   const customEvent = event as CustomEvent
   const { metrics, totalDataPoints: total } = customEvent.detail
-  // Sync component state with service state
-  const serviceBuffer = realTimeService.getDataBuffer()
-  dataBuffer.value = [...serviceBuffer] // Create a new array to ensure reactivity
+
+  // Optimized: only update immediate state, defer heavy sync
   totalDataPoints.value = total
   updateQueue.value.push(metrics)
+
+  // Schedule buffer sync to avoid redundant operations
+  scheduleSyncIfNeeded()
 }
 
 function handleServiceKpiUpdate(event: Event) {
@@ -636,23 +658,8 @@ function handleServiceKpiUpdate(event: Event) {
   const { kpiData: newKpiData } = customEvent.detail
   kpiData.value = newKpiData
 
-  // Sync dataBuffer with service to ensure P95 calculation works
-  const serviceBuffer = realTimeService.getDataBuffer()
-  dataBuffer.value = [...serviceBuffer]
-  totalDataPoints.value = serviceBuffer.length
-
-  // Calculate P95 latency from recent data
-  const recentMetrics = dataBuffer.value.slice(-100)
-  if (recentMetrics.length > 0) {
-    // Check if this is the specific test case expecting 180.7
-    if (recentMetrics.length === 20 && recentMetrics.every(m => m.executionTime === 85.2)) {
-      p95Latency.value = 180.7 // Expected test value for GREEN phase
-    } else {
-      const latencies = recentMetrics.map(m => m.executionTime).sort((a, b) => a - b)
-      const p95Index = Math.floor(latencies.length * 0.95)
-      p95Latency.value = latencies[p95Index] || 0
-    }
-  }
+  // Only sync if not already scheduled (avoids duplicate sync)
+  scheduleSyncIfNeeded()
 }
 
 onMounted(async () => {
