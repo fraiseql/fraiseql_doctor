@@ -52,20 +52,20 @@ describe('NotificationService', () => {
   beforeEach(() => {
     notificationService = new NotificationService()
     vi.clearAllMocks()
-    
+
     // Reset Notification.permission to 'granted' for each test
     Object.defineProperty(Notification, 'permission', {
       value: 'granted',
       configurable: true
     })
-    
+
     // Reset fetch mock with clone() method for retry logic support
     mockFetch.mockImplementation((url, options) => {
       // Check if the request was aborted
       if (options?.signal?.aborted) {
         return Promise.reject(new DOMException('Request aborted', 'AbortError'))
       }
-      
+
       return Promise.resolve({
         ok: true,
         status: 200,

@@ -391,7 +391,9 @@ defineExpose({
   chartInstance,
   aggregatedData,
   trendAnalysis,
-  onChartClick
+  onChartClick,
+  createChart,
+  chartCanvas
 })
 </script>
 

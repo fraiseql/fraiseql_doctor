@@ -1,0 +1,335 @@
+
+> fraiseql-doctor-frontend@0.0.1 test
+> vitest
+
+
+ DEV  v1.6.1 /home/lionel/code/fraiseql_doctor/frontend
+
+ ✓ src/services/__tests__/apolloStudioConfig.test.ts  (39 tests) 112ms
+ ✓ src/services/__tests__/queryHistory.test.ts  (31 tests) 210ms
+ ✓ src/components/__tests__/QueryHistoryEntry.test.ts  (46 tests) 295ms
+ ❯ src/components/__tests__/QueryHistory.test.ts  (30 tests | 15 failed) 751ms
+   ❯ src/components/__tests__/QueryHistory.test.ts > QueryHistory > Component Mounting and Basic Display > should display query statistics
+     → expected 'Query History Offline0 queries, 0 suc…' to contain '2 queries, 1 successful'
+   ❯ src/components/__tests__/QueryHistory.test.ts > QueryHistory > History Entry Display > should display history entries
+     → expected +0 to be 2 // Object.is equality
+   ❯ src/components/__tests__/QueryHistory.test.ts > QueryHistory > History Entry Display > should pass correct props to history entries
+     → Cannot read properties of undefined (reading 'props')
+   ❯ src/components/__tests__/QueryHistory.test.ts > QueryHistory > Filtering Functionality > should filter by endpoint
+     → expected [] to have a length of 1 but got +0
+   ❯ src/components/__tests__/QueryHistory.test.ts > QueryHistory > Filtering Functionality > should filter by success status
+     → expected [] to have a length of 1 but got +0
+   ❯ src/components/__tests__/QueryHistory.test.ts > QueryHistory > Filtering Functionality > should filter by search term
+     → expected [] to have a length of 1 but got +0
+   ❯ src/components/__tests__/QueryHistory.test.ts > QueryHistory > Entry Actions > should emit replay-query when entry replay is triggered
+     → Cannot call vm on an empty VueWrapper.
+   ❯ src/components/__tests__/QueryHistory.test.ts > QueryHistory > Entry Actions > should emit save-template when entry save-as-template is triggered
+     → Cannot call vm on an empty VueWrapper.
+   ❯ src/components/__tests__/QueryHistory.test.ts > QueryHistory > Entry Actions > should toggle favorite status when entry favorite is toggled
+     → Cannot call vm on an empty VueWrapper.
+   ❯ src/components/__tests__/QueryHistory.test.ts > QueryHistory > Entry Actions > should delete entry when delete is triggered
+     → Cannot call vm on an empty VueWrapper.
+   ❯ src/components/__tests__/QueryHistory.test.ts > QueryHistory > Export Functionality > should show export modal when export button is clicked
+     → expected false to be true // Object.is equality
+   ❯ src/components/__tests__/QueryHistory.test.ts > QueryHistory > Export Functionality > should handle export functionality
+     → expected undefined to be true // Object.is equality
+   ❯ src/components/__tests__/QueryHistory.test.ts > QueryHistory > Clear History Functionality > should clear all history when confirmed
+     → expected "spy" to be called at least once
+   ❯ src/components/__tests__/QueryHistory.test.ts > QueryHistory > Empty States > should handle empty history state
+     → mockSearchHistory.mockReturnValue(...)(...).loadHistory is not a function
+   ❯ src/components/__tests__/QueryHistory.test.ts > QueryHistory > Empty States > should disable action buttons when no history exists
+     → mockGetHistory.mockReturnValue(...)(...).loadHistory is not a function
+stdout | src/services/queryHistoryHybrid.ts:49:17
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+🔌 Query History API: Offline
+
+ ✓ src/services/__tests__/advancedForecastingEngine.test.ts  (15 tests) 37ms
+ ✓ src/services/__tests__/alertingEngine.test.ts  (14 tests) 73ms
+ ❯ src/services/__tests__/timeSeriesAnalytics.test.ts  (18 tests | 1 failed) 95ms
+   ❯ src/services/__tests__/timeSeriesAnalytics.test.ts > TimeSeriesAnalytics > Interactive Dashboard Features > should generate drill-down reports for selected time periods
+     → expected 50 to be 51 // Object.is equality
+ ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts  (22 tests | 21 failed) 716ms
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Real-time Data Streaming > should establish WebSocket connection for live data
+     → expected '' to contain 'Connected'
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Real-time Data Streaming > should handle incoming streaming data and update charts
+     → wrapper.vm.handleStreamingData is not a function
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Real-time Data Streaming > should maintain connection health and auto-reconnect on failures
+     → wrapper.vm.handleConnectionLoss is not a function
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Real-time Data Streaming > should buffer data during disconnection and replay on reconnect
+     → wrapper.vm.bufferOfflineData is not a function
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Live Performance Metrics Display > should display real-time key performance indicators
+     → wrapper.vm.updateKPIs is not a function
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Live Performance Metrics Display > should show trending indicators for each KPI
+     → wrapper.vm.updateTrends is not a function
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Live Performance Metrics Display > should highlight metrics that exceed thresholds
+     → wrapper.vm.checkThresholds is not a function
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Interactive Chart Features > should allow synchronized zooming across multiple charts
+     → wrapper.vm.synchronizeZoom is not a function
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Interactive Chart Features > should provide chart overlay controls for statistical analysis
+     → wrapper.vm.configureOverlays is not a function
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Predictive Analytics Integration > should display forecast predictions with confidence intervals
+     → wrapper.vm.updateForecast is not a function
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Predictive Analytics Integration > should trigger alerts based on forecast predictions
+     → wrapper.vm.analyzeForecastAlerts is not a function
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Predictive Analytics Integration > should show model performance metrics and retraining indicators
+     → wrapper.vm.updateModelMetrics is not a function
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Anomaly Detection and Alerting > should detect and highlight real-time anomalies
+     → wrapper.vm.handleAnomalyDetection is not a function
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Anomaly Detection and Alerting > should provide anomaly investigation tools
+     → wrapper.vm.investigateAnomaly is not a function
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Anomaly Detection and Alerting > should maintain anomaly history and patterns
+     → wrapper.vm.loadAnomalyHistory is not a function
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Dashboard Customization and Configuration > should support drag-and-drop widget arrangement
+     → wrapper.vm.updateLayout is not a function
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Dashboard Customization and Configuration > should save and restore user preferences
+     → wrapper.vm.savePreferences is not a function
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Dashboard Customization and Configuration > should support multiple dashboard themes
+     → Cannot call classes on an empty DOMWrapper.
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Performance and Optimization > should implement efficient data buffering for high-frequency updates
+     → wrapper.vm.addDataPoint is not a function
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Performance and Optimization > should use requestAnimationFrame for smooth visual updates
+     → wrapper.vm.scheduleChartUpdate is not a function
+   ❯ src/components/__tests__/RealTimeAnalyticsDashboard.test.ts > RealTimeAnalyticsDashboard > Performance and Optimization > should implement memory management for long-running sessions
+     → wrapper.vm.addDataPoint is not a function
+ ❯ src/services/__tests__/notificationService.test.ts  (23 tests | 7 failed) 4130ms
+   ❯ src/services/__tests__/notificationService.test.ts > NotificationService > Browser Notifications > should request notification permission
+     → expected undefined to be 'granted' // Object.is equality
+   ❯ src/services/__tests__/notificationService.test.ts > NotificationService > Browser Notifications > should filter notifications by severity
+     → expected "spy" to be called 1 times, but got 0 times
+   ❯ src/services/__tests__/notificationService.test.ts > NotificationService > Unified Notification Sending > should send notifications via all enabled methods
+     → expected "spy" to be called at least once
+   ❯ src/services/__tests__/notificationService.test.ts > NotificationService > Unified Notification Sending > should only send notifications matching severity filter
+     → expected "spy" to be called 1 times, but got 0 times
+   ❯ src/services/__tests__/notificationService.test.ts > NotificationService > Unified Notification Sending > should emit events for notification success/failure
+     → expected "spy" to be called with arguments: [ ObjectContaining{…} ]
+
+Received: 
+
+
+
+Number of calls: 0
+
+   ❯ src/services/__tests__/notificationService.test.ts > NotificationService > Notification History > should track notification history
+     → expected { alertId: 'alert-1', …(3) } to deeply equal { alertId: 'alert-1', …(4) }
+   ❯ src/services/__tests__/notificationService.test.ts > NotificationService > Do Not Disturb Mode > should allow critical alerts during do not disturb
+     → expected "spy" to be called 1 times, but got 0 times
+ ❯ src/components/__tests__/AlertRuleForm.test.ts  (23 tests | 4 failed) 2162ms
+   ❯ src/components/__tests__/AlertRuleForm.test.ts > AlertRuleForm > Form Submission > should emit create event with rule data
+     → expected undefined to be truthy
+   ❯ src/components/__tests__/AlertRuleForm.test.ts > AlertRuleForm > Form Submission > should emit update event when editing
+     → expected undefined to be truthy
+   ❯ src/components/__tests__/AlertRuleForm.test.ts > AlertRuleForm > Form Reset and Cancel > should reset form when cancel is clicked
+     → expected '500' to be '' // Object.is equality
+   ❯ src/components/__tests__/AlertRuleForm.test.ts > AlertRuleForm > Accessibility > should associate errors with form fields
+     → Cannot call attributes on an empty DOMWrapper.
+ ✓ src/services/__tests__/graphqlInstrumentation.test.ts  (8 tests) 34ms
+ ✓ src/components/__tests__/AlertDashboard.test.ts  (22 tests) 1242ms
+stdout | src/components/__tests__/HistoricalTrendChart.test.ts > HistoricalTrendChart > Component Rendering > should have aggregated data and canvas ref available
+Aggregated data: [
+  {
+    timestamp: 2025-08-22T15:29:24.970Z,
+    avgExecutionTime: 150,
+    avgResponseSize: 1200,
+    count: 1
+  }
+]
+Aggregated data length: 1
+Canvas exists: true
+Canvas element: HTMLCanvasElement {}
+chartCanvas ref via chartCanvas: HTMLCanvasElement {}
+
+stdout | src/components/__tests__/HistoricalTrendChart.test.ts > HistoricalTrendChart > Chart Configuration > should configure chart for execution time metrics
+Chart calls after setProps: 0
+aggregatedData after setProps: 1
+chartInstance after setProps: null
+
+ ❯ src/components/__tests__/HistoricalTrendChart.test.ts  (14 tests | 7 failed) 495ms
+   ❯ src/components/__tests__/HistoricalTrendChart.test.ts > HistoricalTrendChart > Chart Configuration > should configure chart for execution time metrics
+     → expected "spy" to be called at least once
+   ❯ src/components/__tests__/HistoricalTrendChart.test.ts > HistoricalTrendChart > Chart Configuration > should configure chart for response size metrics
+     → expected "spy" to be called with arguments: [ Any<HTMLCanvasElement>, …(1) ]
+
+Received: 
+
+
+
+Number of calls: 0
+
+   ❯ src/components/__tests__/HistoricalTrendChart.test.ts > HistoricalTrendChart > Time Window Handling > should aggregate data by day
+     → expected [ { …(4) } ] to have a length of 2 but got 1
+   ❯ src/components/__tests__/HistoricalTrendChart.test.ts > HistoricalTrendChart > Trend Analysis > should show trend arrow indicators
+     → expected [ 'trend-indicator', 'mb-4', …(1) ] to include 'trend-degrading'
+   ❯ src/components/__tests__/HistoricalTrendChart.test.ts > HistoricalTrendChart > Interactive Features > should support zooming functionality
+     → expected "spy" to be called with arguments: [ Any<HTMLCanvasElement>, …(1) ]
+
+Received: 
+
+
+
+Number of calls: 0
+
+   ❯ src/components/__tests__/HistoricalTrendChart.test.ts > HistoricalTrendChart > Interactive Features > should emit events on data point selection
+     → expected undefined to be truthy
+   ❯ src/components/__tests__/HistoricalTrendChart.test.ts > HistoricalTrendChart > Chart Lifecycle > should update chart when metrics change
+     → expected "spy" to be called at least once
+ ✓ src/services/__tests__/livePerformanceDashboard.test.ts  (9 tests) 346ms
+ ✓ tests/components/Dashboard.test.ts  (10 tests) 255ms
+ ✓ src/components/__tests__/ExportModal.test.ts  (35 tests) 336ms
+ ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts  (21 tests | 21 failed) 185ms
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Chart Initialization > should render chart canvas with proper configuration
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Chart Initialization > should initialize with zoom and pan capabilities
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Chart Initialization > should support multiple resolution modes
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Interactive Features > should handle brush selection for time range filtering
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Interactive Features > should support drill-down on data point selection
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Interactive Features > should show contextual tooltips with statistical information
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Interactive Features > should support crosshair cursor for precise data inspection
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Real-time Data Updates > should handle streaming data updates efficiently
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Real-time Data Updates > should maintain smooth animations during real-time updates
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Real-time Data Updates > should automatically adjust time window for streaming data
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Multi-Resolution Support > should automatically select appropriate resolution based on time range
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Multi-Resolution Support > should aggregate data points for lower resolutions
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Statistical Overlays > should display moving averages with configurable windows
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Statistical Overlays > should show percentile bands for performance baselines
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Statistical Overlays > should highlight anomalies with visual indicators
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Performance Optimization > should implement data decimation for large datasets
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Performance Optimization > should use virtualization for off-screen data points
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Performance Optimization > should debounce rapid updates to prevent performance issues
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Export and Analysis Features > should export selected data range to CSV
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Export and Analysis Features > should generate statistical summary reports
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+   ❯ src/components/__tests__/InteractiveTimeSeriesChart.test.ts > InteractiveTimeSeriesChart > Export and Analysis Features > should support annotation and bookmark features
+     → Function.prototype.apply was called on undefined, which is a undefined and not a function
+ ✓ src/components/__tests__/PerformanceAnalyticsPanel.test.ts  (16 tests) 419ms
+ ✓ src/components/__tests__/ApolloStudioIntegration.test.ts  (18 tests) 306ms
+ ❯ src/services/__tests__/realTimeQueryHistoryApi.test.ts  (8 tests | 7 failed) 30078ms
+   ❯ src/services/__tests__/realTimeQueryHistoryApi.test.ts > RealTimeQueryHistoryApi > Historical Query Data Retrieval > should fetch historical query performance data with pagination
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ❯ src/services/__tests__/realTimeQueryHistoryApi.test.ts > RealTimeQueryHistoryApi > Historical Query Data Retrieval > should implement request timeout handling
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ❯ src/services/__tests__/realTimeQueryHistoryApi.test.ts > RealTimeQueryHistoryApi > Performance Trend Analysis > should calculate performance trends over time periods
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ❯ src/services/__tests__/realTimeQueryHistoryApi.test.ts > RealTimeQueryHistoryApi > Performance Trend Analysis > should identify performance anomalies in historical data
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ❯ src/services/__tests__/realTimeQueryHistoryApi.test.ts > RealTimeQueryHistoryApi > Real-time Data Streaming > should establish real-time query stream for live monitoring
+     → expected "spy" to be called with arguments: [ StringContaining{…} ]
+
+Received: 
+
+  1st spy call:
+
+  Array [
+-   StringContaining "/stream/queries/endpoint-1",
++   "wss://api.example.com/graphql/stream/queries/endpoint-1",
++   Object {
++     "headers": Object {
++       "Authorization": "Bearer test-api-key",
++     },
++   },
+  ]
+
+
+Number of calls: 1
+
+   ❯ src/services/__tests__/realTimeQueryHistoryApi.test.ts > RealTimeQueryHistoryApi > Real-time Data Streaming > should handle stream reconnection on connection loss
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ❯ src/services/__tests__/realTimeQueryHistoryApi.test.ts > RealTimeQueryHistoryApi > Advanced Query Analytics > should analyze query complexity and performance correlation
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ✓ src/components/__tests__/EndpointForm.test.ts  (16 tests) 428ms
+ ✓ src/services/__tests__/performanceAnalytics.test.ts  (11 tests) 37ms
+ ✓ src/components/__tests__/EndpointDetails.test.ts  (16 tests) 284ms
+ ✓ src/components/__tests__/EndpointList.test.ts  (15 tests) 299ms
+ ✓ src/components/admin/__tests__/ApiConfigurationModal.test.ts  (10 tests) 2451ms
+ ✓ src/stores/__tests__/endpoints.test.ts  (14 tests) 1073ms
+ ✓ tests/views/Dashboard.test.ts  (9 tests) 637ms
+ ✓ src/components/__tests__/PerformanceAnalyticsPanel.simple.test.ts  (10 tests) 753ms
+ ✓ src/components/__tests__/PerformanceChart.test.ts  (10 tests) 272ms
+ ❯ src/services/__tests__/graphqlSubscriptionClient.test.ts  (10 tests | 10 failed) 45131ms
+   ❯ src/services/__tests__/graphqlSubscriptionClient.test.ts > GraphQLSubscriptionClient > Real-time Performance Monitoring > should establish GraphQL subscription for query performance metrics
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ❯ src/services/__tests__/graphqlSubscriptionClient.test.ts > GraphQLSubscriptionClient > Real-time Performance Monitoring > should receive real-time query execution data via subscription
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ❯ src/services/__tests__/graphqlSubscriptionClient.test.ts > GraphQLSubscriptionClient > Real-time Performance Monitoring > should handle subscription errors gracefully
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ❯ src/services/__tests__/graphqlSubscriptionClient.test.ts > GraphQLSubscriptionClient > Advanced Query Analytics Subscriptions > should subscribe to aggregated performance metrics by time windows
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ❯ src/services/__tests__/graphqlSubscriptionClient.test.ts > GraphQLSubscriptionClient > Advanced Query Analytics Subscriptions > should subscribe to schema introspection changes
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ❯ src/services/__tests__/graphqlSubscriptionClient.test.ts > GraphQLSubscriptionClient > Connection Management > should automatically reconnect on connection loss
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ❯ src/services/__tests__/graphqlSubscriptionClient.test.ts > GraphQLSubscriptionClient > Connection Management > should implement subscription heartbeat to maintain connection
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ❯ src/services/__tests__/graphqlSubscriptionClient.test.ts > GraphQLSubscriptionClient > Connection Management > should handle subscription cleanup on disconnect
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ❯ src/services/__tests__/graphqlSubscriptionClient.test.ts > GraphQLSubscriptionClient > Error Handling and Resilience > should handle malformed subscription messages
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ❯ src/services/__tests__/graphqlSubscriptionClient.test.ts > GraphQLSubscriptionClient > Error Handling and Resilience > should implement exponential backoff for reconnection attempts
+     → Cannot read properties of undefined (reading '1')
+ ✓ src/services/__tests__/performanceMonitor.test.ts  (7 tests) 36ms

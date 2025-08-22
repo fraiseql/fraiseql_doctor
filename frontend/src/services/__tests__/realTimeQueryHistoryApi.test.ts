@@ -9,14 +9,14 @@ describe('RealTimeQueryHistoryApi', () => {
     // Create fetch mock with proper AbortController support and clone method
     mockFetch = vi.fn()
     global.fetch = mockFetch
-    
+
     // Set up default mock implementation that can be overridden by tests
     mockFetch.mockImplementation((url, options) => {
       // Check if the request was aborted
       if (options?.signal?.aborted) {
         return Promise.reject(new DOMException('Request aborted', 'AbortError'))
       }
-      
+
       // Return a minimal response (tests will override this with mockResolvedValueOnce)
       return Promise.resolve({
         ok: true,

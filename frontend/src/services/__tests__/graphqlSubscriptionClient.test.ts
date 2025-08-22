@@ -52,7 +52,7 @@ describe('GraphQLSubscriptionClient', () => {
 
       // Wait for next tick to allow WebSocket onopen to fire
       await new Promise(resolve => setTimeout(resolve, 1))
-      
+
       const subscription = await subscriptionClient.subscribeToPerformanceMetrics({
         endpointId: 'test-endpoint-1',
         callback: (data) => performanceData.push(data)
@@ -70,7 +70,7 @@ describe('GraphQLSubscriptionClient', () => {
 
       // Wait for WebSocket connection
       await new Promise(resolve => setTimeout(resolve, 1))
-      
+
       await subscriptionClient.subscribeToPerformanceMetrics({
         endpointId: 'endpoint-1',
         callback: (data) => receivedData.push(data)
@@ -129,7 +129,7 @@ describe('GraphQLSubscriptionClient', () => {
 
       // Wait for WebSocket connection
       await new Promise(resolve => setTimeout(resolve, 1))
-      
+
       const subscription = await subscriptionClient.subscribeToPerformanceMetrics({
         endpointId: 'endpoint-1',
         callback: vi.fn(),
@@ -166,7 +166,7 @@ describe('GraphQLSubscriptionClient', () => {
 
       // Wait for WebSocket connection
       await new Promise(resolve => setTimeout(resolve, 1))
-      
+
       await subscriptionClient.subscribeToAggregatedMetrics({
         endpointId: 'endpoint-1',
         timeWindow: '1m', // 1 minute aggregation
@@ -227,7 +227,7 @@ describe('GraphQLSubscriptionClient', () => {
 
       // Wait for WebSocket connection
       await new Promise(resolve => setTimeout(resolve, 1))
-      
+
       await subscriptionClient.subscribeToSchemaChanges({
         endpointId: 'endpoint-1',
         callback: (change) => schemaChanges.push(change)
@@ -311,7 +311,7 @@ describe('GraphQLSubscriptionClient', () => {
     it('should handle subscription cleanup on disconnect', async () => {
       // Wait for WebSocket connection
       await new Promise(resolve => setTimeout(resolve, 5))
-      
+
       // Create one subscription to test cleanup
       await subscriptionClient.subscribeToPerformanceMetrics({
         endpointId: 'endpoint-1',
