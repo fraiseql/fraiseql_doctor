@@ -300,10 +300,10 @@ describe('AlertingEngine', () => {
 
       // First trigger an alert with duration coverage
       const now = Date.now()
-      const badMetrics = Array.from({ length: 3 }, (_, i) =>
+      const badMetrics = Array.from({ length: 5 }, (_, i) =>
         createMockMetric({
           executionTime: 300,
-          timestamp: new Date(now - (60000 - i * 1000)) // Cover the duration window
+          timestamp: new Date(now - (i * 10000)) // Spread metrics over last 50 seconds
         })
       )
       await alertingEngine.evaluateMetrics(badMetrics)
@@ -311,9 +311,12 @@ describe('AlertingEngine', () => {
       expect(alertingEngine.getActiveAlerts()).toHaveLength(1)
       const alertId = alertingEngine.getActiveAlerts()[0].id
 
-      // Then resolve with good metrics
-      const goodMetrics = Array.from({ length: 5 }, () =>
-        createMockMetric({ executionTime: 100 })
+      // Then resolve with good metrics - create recent metrics that are below threshold
+      const goodMetrics = Array.from({ length: 5 }, (_, i) =>
+        createMockMetric({ 
+          executionTime: 100,
+          timestamp: new Date(Date.now() - (i * 5000)) // Recent metrics with good values
+        })
       )
       await alertingEngine.evaluateMetrics(goodMetrics)
 
