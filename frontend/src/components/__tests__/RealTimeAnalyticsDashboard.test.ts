@@ -273,16 +273,28 @@ describe('RealTimeAnalyticsDashboard', () => {
       const charts = wrapper.findAll('[data-testid^="metric-chart-"]')
       expect(charts.length).toBeGreaterThan(0)
 
-      // Test that charts are displayed and interactive elements exist
-      expect(wrapper.find('.charts-container').exists()).toBe(true)
-      await nextTick()
+      // Test global time range synchronization
+      expect(wrapper.vm.globalTimeRange).toBeDefined()
+      expect(wrapper.vm.globalTimeRange.start).toBeDefined()
+      expect(wrapper.vm.globalTimeRange.end).toBeDefined()
 
-      // Charts should be visible and interactive
-      expect(charts.every((chart: any) => chart.isVisible())).toBe(true)
+      // Test synchronization handlers exist
+      expect(typeof wrapper.vm.synchronizeChartZoom).toBe('function')
+      expect(typeof wrapper.vm.handleGlobalTimeRangeChange).toBe('function')
 
-      // Verify chart functionality exists
-      const firstChart = charts[0]
-      expect(firstChart.exists()).toBe(true)
+      // Test that changing global time range affects all charts
+      const newTimeRange = {
+        start: new Date(Date.now() - 3600000),
+        end: new Date()
+      }
+      await wrapper.vm.handleGlobalTimeRangeChange(newTimeRange)
+
+      expect(wrapper.vm.globalTimeRange.start).toEqual(newTimeRange.start)
+      expect(wrapper.vm.globalTimeRange.end).toEqual(newTimeRange.end)
+
+      // Test zoom synchronization
+      await wrapper.vm.synchronizeChartZoom('executionTime', newTimeRange)
+      expect(wrapper.vm.globalTimeRange).toEqual(newTimeRange)
     })
 
     it('should provide chart overlay controls for statistical analysis', async () => {
@@ -430,15 +442,26 @@ describe('RealTimeAnalyticsDashboard', () => {
 
   describe('Dashboard Customization and Configuration', () => {
     it('should support drag-and-drop widget arrangement', async () => {
-      // Component doesn't have drag-and-drop, test that layout elements exist
-      expect(wrapper.find('.kpi-grid').exists()).toBe(true)
-      expect(wrapper.find('.charts-container').exists()).toBe(true)
-      expect(wrapper.find('.anomaly-alerts').exists() || wrapper.vm.currentAnomalies.length === 0).toBe(true)
-      await nextTick()
+      // Test drag-and-drop functionality for dashboard widgets
+      const widgets = wrapper.findAll('[data-draggable="true"]')
+      expect(widgets.length).toBeGreaterThan(0) // Should have draggable widgets
 
-      // Test that layout is responsive
-      expect(wrapper.find('.kpi-grid').classes()).toContain('grid')
-      expect(wrapper.find('.charts-container').classes()).toContain('grid')
+      // Test drag start functionality
+      const firstWidget = widgets[0]
+      expect(firstWidget.attributes('draggable')).toBe('true')
+
+      // Test drop zones exist
+      const dropZones = wrapper.findAll('[data-drop-zone="true"]')
+      expect(dropZones.length).toBeGreaterThan(0)
+
+      // Test drag and drop event handlers exist
+      expect(typeof wrapper.vm.handleDragStart).toBe('function')
+      expect(typeof wrapper.vm.handleDrop).toBe('function')
+      expect(typeof wrapper.vm.handleDragOver).toBe('function')
+
+      // Test widget layout state management
+      expect(wrapper.vm.widgetLayout).toBeDefined()
+      expect(Array.isArray(wrapper.vm.widgetLayout)).toBe(true)
     })
 
     it('should save and restore user preferences', async () => {
@@ -517,15 +540,24 @@ describe('RealTimeAnalyticsDashboard', () => {
       expect(wrapper.vm.updateRate).toBeDefined()
       expect(wrapper.vm.updateQueue).toBeDefined()
 
-      // Test that the component handles updates properly
-      if (typeof wrapper.vm.scheduleChartUpdate === 'function') {
-        wrapper.vm.scheduleChartUpdate()
-        expect(rafSpy).toHaveBeenCalled()
-      }
+      // Test chart update scheduling exists
+      expect(typeof wrapper.vm.scheduleChartUpdate).toBe('function')
 
-      // Simulate adding to update queue
-      wrapper.vm.updateQueue.push({ type: 'kpi-update' })
-      expect(wrapper.vm.updateQueue.length).toBe(1)
+      // Test that chart updates use requestAnimationFrame
+      wrapper.vm.scheduleChartUpdate()
+      expect(rafSpy).toHaveBeenCalled()
+
+      // Test frame throttling exists
+      expect(typeof wrapper.vm.isFramePending).toBe('boolean')
+      expect(wrapper.vm.isFramePending).toBe(true) // Should be pending after scheduling
+
+      // Test batch update processing
+      wrapper.vm.updateQueue.push({ type: 'kpi-update', data: { value: 123 } })
+      wrapper.vm.updateQueue.push({ type: 'chart-data', data: { metrics: [] } })
+
+      // Process queued updates
+      await wrapper.vm.processUpdateQueue()
+      expect(wrapper.vm.updateQueue.length).toBe(0) // Queue should be cleared
 
       rafSpy.mockRestore()
     })
