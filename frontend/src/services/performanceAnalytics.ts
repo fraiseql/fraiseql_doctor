@@ -189,7 +189,9 @@ export class PerformanceAnalytics {
       const value = metric[field]
       const deviationScore = Math.abs(value - mean) / stdDev
 
-      if (deviationScore > 2) { // More than 2 standard deviations
+      // Only flag as anomaly if deviation is significant AND standard deviation is meaningful
+      const isSignificantVariation = stdDev > mean * 0.05 // At least 5% variation
+      if (deviationScore > 2 && isSignificantVariation) { // More than 2 standard deviations with meaningful variation
         let severity: 'low' | 'medium' | 'high'
         if (deviationScore > 3) {
           severity = 'high'
