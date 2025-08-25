@@ -3,10 +3,10 @@
 High-performance async GraphQL client with comprehensive error handling,
 authentication support, and connection management.
 """
-import asyncio
+
 import base64
 import time
-from typing import Any, Optional
+from typing import Any
 
 import aiohttp
 from pydantic import BaseModel
@@ -17,10 +17,10 @@ from fraiseql_doctor.models.endpoint import Endpoint
 class GraphQLResponse(BaseModel):
     """Structured GraphQL response with timing and metadata."""
 
-    data: Optional[dict[str, Any]] = None
-    errors: Optional[list[dict[str, Any]]] = None
+    data: dict[str, Any] | None = None
+    errors: list[dict[str, Any]] | None = None
     response_time_ms: int
-    complexity_score: Optional[int] = None
+    complexity_score: int | None = None
     cached: bool = False
 
 
@@ -30,8 +30,8 @@ class GraphQLClientError(Exception):
     def __init__(
         self,
         message: str,
-        status_code: Optional[int] = None,
-        response_time_ms: Optional[int] = None,
+        status_code: int | None = None,
+        response_time_ms: int | None = None,
     ):
         super().__init__(message)
         self.status_code = status_code
@@ -65,13 +65,14 @@ class FraiseQLClient:
     - Proper timeout and retry handling
     """
 
-    def __init__(self, endpoint: Endpoint, session: Optional[aiohttp.ClientSession] = None):
+    def __init__(self, endpoint: Endpoint, session: aiohttp.ClientSession | None = None):
         """Initialize FraiseQL client.
 
         Args:
         ----
             endpoint: Endpoint configuration with URL, auth, and settings
             session: Optional aiohttp session for connection pooling
+
         """
         self.endpoint = endpoint
         self.session = session
@@ -112,9 +113,9 @@ class FraiseQLClient:
     async def execute_query(
         self,
         query: str,
-        variables: Optional[dict[str, Any]] = None,
-        operation_name: Optional[str] = None,
-        timeout: Optional[int] = None,
+        variables: dict[str, Any] | None = None,
+        operation_name: str | None = None,
+        timeout: int | None = None,
     ) -> GraphQLResponse:
         """Execute a GraphQL query.
 
@@ -135,6 +136,7 @@ class FraiseQLClient:
             AuthenticationError: For auth failures
             GraphQLExecutionError: For GraphQL errors
             GraphQLClientError: For other client errors
+
         """
         start_time = time.time()
 
@@ -176,7 +178,7 @@ class FraiseQLClient:
                             status_code=response.status,
                             response_time_ms=response_time_ms,
                         )
-                    elif response.status >= 400:
+                    if response.status >= 400:
                         error_text = await response.text()
                         raise GraphQLClientError(
                             f"HTTP {response.status}: {error_text}",
@@ -198,7 +200,7 @@ class FraiseQLClient:
                         cached = response_data["extensions"].get("cached", False)
 
                     # Handle GraphQL errors
-                    if "errors" in response_data and response_data["errors"]:
+                    if response_data.get("errors"):
                         errors = response_data["errors"]
                         error_messages = [error.get("message", "Unknown error") for error in errors]
                         raise GraphQLExecutionError(
@@ -219,7 +221,7 @@ class FraiseQLClient:
                 if close_session:
                     await session.close()
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             response_time_ms = int((time.time() - start_time) * 1000)
             raise NetworkError(
                 f"Request timeout after {request_timeout}s", response_time_ms=response_time_ms
@@ -235,10 +237,7 @@ class FraiseQLClient:
                 e, (GraphQLClientError, NetworkError, AuthenticationError, GraphQLExecutionError)
             ):
                 raise
-            else:
-                raise GraphQLClientError(
-                    f"Unexpected error: {e!s}", response_time_ms=response_time_ms
-                )
+            raise GraphQLClientError(f"Unexpected error: {e!s}", response_time_ms=response_time_ms)
 
     async def __aenter__(self):
         """Async context manager entry."""

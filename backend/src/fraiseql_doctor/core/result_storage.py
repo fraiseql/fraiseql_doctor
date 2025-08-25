@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional, Protocol, Union
+from typing import Any, Protocol
 from uuid import UUID, uuid4
 
 import aiofiles
@@ -33,16 +33,16 @@ logger = logging.getLogger(__name__)
 class ResultSearchFilter:
     """Search filter for query results."""
 
-    query_id: Optional[UUID] = None
-    query_ids: Optional[list[UUID]] = None  # Support multiple query IDs
-    execution_ids: Optional[list[UUID]] = None  # Support multiple execution IDs
-    result_type: Optional[str] = None
-    min_execution_time: Optional[int] = None
-    max_execution_time: Optional[int] = None
-    min_size_bytes: Optional[int] = None  # Add missing fields used in tests
-    max_size_bytes: Optional[int] = None
-    created_after: Optional[datetime] = None
-    created_before: Optional[datetime] = None
+    query_id: UUID | None = None
+    query_ids: list[UUID] | None = None  # Support multiple query IDs
+    execution_ids: list[UUID] | None = None  # Support multiple execution IDs
+    result_type: str | None = None
+    min_execution_time: int | None = None
+    max_execution_time: int | None = None
+    min_size_bytes: int | None = None  # Add missing fields used in tests
+    max_size_bytes: int | None = None
+    created_after: datetime | None = None
+    created_before: datetime | None = None
     limit: int = 100
     offset: int = 0
 
@@ -88,8 +88,8 @@ class StorageConfig:
     cache_threshold_kb: int = 10
     enable_streaming: bool = True
     chunk_size_kb: int = 64
-    file_base_path: Optional[Path] = None
-    s3_bucket: Optional[str] = None
+    file_base_path: Path | None = None
+    s3_bucket: str | None = None
     redis_prefix: str = "fraiseql_results"
 
 
@@ -113,7 +113,7 @@ class StorageBackendInterface(Protocol):
         """Store data with key and metadata."""
         ...
 
-    async def retrieve(self, key: str) -> Optional[bytes]:
+    async def retrieve(self, key: str) -> bytes | None:
         """Retrieve data by key."""
         ...
 
@@ -158,7 +158,7 @@ class DatabaseStorageBackend:
             logger.error(f"Failed to store data in database: {e}")
             return False
 
-    async def retrieve(self, key: str) -> Optional[bytes]:
+    async def retrieve(self, key: str) -> bytes | None:
         """Retrieve data from database."""
         try:
             result = await self.db_session.execute(
@@ -260,7 +260,7 @@ class FileSystemStorageBackend:
             logger.error(f"Failed to store data to file system: {e}")
             return False
 
-    async def retrieve(self, key: str) -> Optional[bytes]:
+    async def retrieve(self, key: str) -> bytes | None:
         """Retrieve data from file system."""
         try:
             file_path = self._get_file_path(key)
@@ -306,7 +306,7 @@ class FileSystemStorageBackend:
             keys = []
 
             for metadata_file in self.metadata_path.glob("*.json"):
-                async with aiofiles.open(metadata_file, "r") as f:
+                async with aiofiles.open(metadata_file) as f:
                     content = await f.read()
                     metadata = json.loads(content)
                     original_key = metadata.get("original_key", "")
@@ -351,12 +351,11 @@ class ResultStorageManager:
         """Create storage backend based on configuration."""
         if self.config.backend == StorageBackend.DATABASE:
             return DatabaseStorageBackend(self.db_session)
-        elif self.config.backend == StorageBackend.FILE_SYSTEM:
+        if self.config.backend == StorageBackend.FILE_SYSTEM:
             if not self.config.file_base_path:
                 raise ValueError("file_base_path required for file system backend")
             return FileSystemStorageBackend(self.config.file_base_path)
-        else:
-            raise ValueError(f"Unsupported storage backend: {self.config.backend}")
+        raise ValueError(f"Unsupported storage backend: {self.config.backend}")
 
     # Core Storage Operations
 
@@ -365,7 +364,7 @@ class ResultStorageManager:
         execution_id: UUID,
         query_id: UUID,
         result_data: dict[str, Any],
-        metadata: Optional[dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> str:
         """Store query result with automatic compression and serialization.
 
@@ -379,6 +378,7 @@ class ResultStorageManager:
         Returns:
         -------
             Storage key for the result
+
         """
         storage_key = f"result:{execution_id}"
         start_time = datetime.now(UTC)
@@ -437,7 +437,7 @@ class ResultStorageManager:
 
     async def retrieve_result(
         self, storage_key: str, stream: bool = False
-    ) -> Optional[Union[dict[str, Any], AsyncIterator[dict[str, Any]]]]:
+    ) -> dict[str, Any] | AsyncIterator[dict[str, Any]] | None:
         """Retrieve query result with automatic decompression and deserialization.
 
         Args:
@@ -448,6 +448,7 @@ class ResultStorageManager:
         Returns:
         -------
             Deserialized result data or async iterator for streaming
+
         """
         start_time = datetime.now(UTC)
 
@@ -466,9 +467,8 @@ class ResultStorageManager:
 
                     self._update_retrieval_metrics(start_time, cache_hit=True)
                     return result_data
-                else:
-                    # Remove expired cache entry
-                    del self._cache[storage_key]
+                # Remove expired cache entry
+                del self._cache[storage_key]
 
             self._cache_misses += 1
 
@@ -530,7 +530,7 @@ class ResultStorageManager:
         """Serialize data based on configuration."""
         if self.config.serialization == SerializationFormat.JSON:
             return json.dumps(data, default=str).encode("utf-8")
-        elif self.config.serialization == SerializationFormat.PICKLE:
+        if self.config.serialization == SerializationFormat.PICKLE:
             # Issue security warning for pickle usage
             warnings.warn(
                 "Pickle serialization is enabled. This can be unsafe with untrusted data. "
@@ -539,7 +539,7 @@ class ResultStorageManager:
                 stacklevel=2,
             )
             return pickle.dumps(data)
-        elif self.config.serialization == SerializationFormat.MSGPACK:
+        if self.config.serialization == SerializationFormat.MSGPACK:
             try:
                 import msgpack
 
@@ -553,7 +553,7 @@ class ResultStorageManager:
         """Deserialize data based on configuration."""
         if self.config.serialization == SerializationFormat.JSON:
             return json.loads(data.decode("utf-8"))
-        elif self.config.serialization == SerializationFormat.PICKLE:
+        if self.config.serialization == SerializationFormat.PICKLE:
             # Issue security warning and perform basic validation
             warnings.warn(
                 "Pickle deserialization is being used. This can execute arbitrary code "
@@ -565,7 +565,7 @@ class ResultStorageManager:
             if not data.startswith(b"\x80"):
                 raise ValueError("Data does not appear to be valid pickle format")
             return pickle.loads(data)
-        elif self.config.serialization == SerializationFormat.MSGPACK:
+        if self.config.serialization == SerializationFormat.MSGPACK:
             try:
                 import msgpack
 
@@ -579,19 +579,17 @@ class ResultStorageManager:
         """Compress data based on configuration."""
         if self.config.compression == CompressionType.NONE:
             return data
-        elif self.config.compression == CompressionType.GZIP:
+        if self.config.compression == CompressionType.GZIP:
             return gzip.compress(data)
-        else:
-            raise ValueError(f"Unsupported compression type: {self.config.compression}")
+        raise ValueError(f"Unsupported compression type: {self.config.compression}")
 
     async def _decompress_data(self, data: bytes) -> bytes:
         """Decompress data based on configuration."""
         if self.config.compression == CompressionType.NONE:
             return data
-        elif self.config.compression == CompressionType.GZIP:
+        if self.config.compression == CompressionType.GZIP:
             return gzip.decompress(data)
-        else:
-            raise ValueError(f"Unsupported compression type: {self.config.compression}")
+        raise ValueError(f"Unsupported compression type: {self.config.compression}")
 
     async def _stream_deserialize(self, data: bytes) -> AsyncIterator[dict[str, Any]]:
         """Stream deserialize large data in chunks."""

@@ -1,4 +1,5 @@
 """Test database migrations work correctly."""
+
 from sqlalchemy import text
 
 from alembic import command

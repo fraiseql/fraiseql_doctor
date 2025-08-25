@@ -2,12 +2,14 @@
 
 Tests following TDD approach for GraphQL client functionality.
 """
+
 import asyncio
 from unittest.mock import Mock
 
 import aiohttp
 import aioresponses
 import pytest
+
 from fraiseql_doctor.models.endpoint import Endpoint
 from fraiseql_doctor.services.fraiseql_client import (
     AuthenticationError,
@@ -113,7 +115,7 @@ class TestAuthHeaderBuilding:
 class TestGraphQLExecution:
     """Test GraphQL query execution."""
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_execute_simple_query(self, sample_endpoint):
         """Test executing a simple GraphQL query."""
         expected_response = {
@@ -138,7 +140,7 @@ class TestGraphQLExecution:
             assert response.complexity_score == 5
             assert response.response_time_ms > 0
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_execute_query_with_variables(self, sample_endpoint):
         """Test executing query with variables."""
         query = "query GetUser($id: ID!) { user(id: $id) { id name } }"
@@ -171,7 +173,7 @@ class TestGraphQLExecution:
 class TestErrorHandling:
     """Test error handling for various failure scenarios."""
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_network_error_handling(self, sample_endpoint):
         """Test handling of network connectivity errors."""
         with aioresponses.aioresponses() as m:
@@ -187,7 +189,7 @@ class TestErrorHandling:
             assert "network error" in str(exc_info.value).lower()
             assert exc_info.value.status_code is None
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_timeout_error_handling(self, sample_endpoint):
         """Test handling of request timeouts."""
         with aioresponses.aioresponses() as m:
@@ -200,7 +202,7 @@ class TestErrorHandling:
 
             assert "timeout" in str(exc_info.value).lower()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_http_error_handling(self, sample_endpoint):
         """Test handling of HTTP error status codes."""
         with aioresponses.aioresponses() as m:
@@ -213,7 +215,7 @@ class TestErrorHandling:
 
             assert exc_info.value.status_code == 500
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_authentication_error_handling(self, sample_endpoint):
         """Test handling of authentication errors."""
         with aioresponses.aioresponses() as m:
@@ -226,7 +228,7 @@ class TestErrorHandling:
 
             assert exc_info.value.status_code == 401
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_graphql_error_handling(self, sample_endpoint):
         """Test handling of GraphQL execution errors."""
         error_response = {
@@ -255,7 +257,7 @@ class TestErrorHandling:
 class TestSessionManagement:
     """Test HTTP session management and connection pooling."""
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_session_reuse(self, sample_endpoint):
         """Test that custom session is reused across requests."""
         expected_response = {"data": {"test": "value"}}
@@ -275,7 +277,7 @@ class TestSessionManagement:
                 total_requests = sum(len(request_list) for request_list in m.requests.values())
                 assert total_requests == 2
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_session_cleanup(self, sample_endpoint):
         """Test that sessions are properly cleaned up."""
         expected_response = {"data": {"test": "value"}}
@@ -293,7 +295,7 @@ class TestSessionManagement:
 class TestConcurrentExecution:
     """Test concurrent query execution."""
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_concurrent_queries(self, sample_endpoint):
         """Test executing multiple queries concurrently."""
         responses = [
@@ -325,7 +327,7 @@ class TestConcurrentExecution:
 
 
 # Fixtures for testing
-@pytest.fixture()
+@pytest.fixture
 def sample_endpoint():
     """Create a sample endpoint for testing."""
     return Endpoint(

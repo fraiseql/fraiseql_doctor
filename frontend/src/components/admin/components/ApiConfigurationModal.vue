@@ -377,7 +377,7 @@ const handleSave = () => {
 const handleSaveWithValidation = () => {
   // Always trigger validation to show errors
   validateForm()
-  
+
   // Only proceed with save if valid
   if (isValid.value) {
     handleSave()

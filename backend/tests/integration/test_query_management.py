@@ -12,6 +12,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
+
 from fraiseql_doctor.core.database.models import Endpoint
 from fraiseql_doctor.core.database.schemas import (
     QueryCollectionCreate,
@@ -38,7 +39,7 @@ from fraiseql_doctor.core.result_storage import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 async def test_db_session():
     """Real test database session for testing - more reliable than mocks."""
     from tests.fixtures.real_services import TestDatabaseSession
@@ -46,7 +47,7 @@ async def test_db_session():
     return TestDatabaseSession()
 
 
-@pytest.fixture()
+@pytest.fixture
 def complexity_analyzer():
     """Create real test complexity analyzer instance."""
     from tests.fixtures.real_services import TestComplexityAnalyzer
@@ -54,13 +55,13 @@ def complexity_analyzer():
     return TestComplexityAnalyzer()
 
 
-@pytest.fixture()
+@pytest.fixture
 async def query_collection_manager(test_db_session, complexity_analyzer):
     """Create query collection manager instance with real implementations."""
     return QueryCollectionManager(test_db_session, complexity_analyzer)
 
 
-@pytest.fixture()
+@pytest.fixture
 def test_client():
     """Create real test GraphQL client."""
     from tests.fixtures.real_services import TestGraphQLClient
@@ -72,7 +73,7 @@ def test_client():
     return client
 
 
-@pytest.fixture()
+@pytest.fixture
 def test_client_factory(test_client):
     """Create real test client factory."""
 
@@ -82,7 +83,7 @@ def test_client_factory(test_client):
     return factory
 
 
-@pytest.fixture()
+@pytest.fixture
 async def execution_manager(test_db_session, test_client_factory, query_collection_manager):
     """Create query execution manager instance with real implementations."""
     config = ExecutionConfig(timeout_seconds=30, max_retries=2, max_concurrent=5, batch_size=10)
@@ -91,7 +92,7 @@ async def execution_manager(test_db_session, test_client_factory, query_collecti
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 async def result_storage_manager(test_db_session, tmp_path):
     """Create result storage manager instance with real implementations."""
     config = StorageConfig(
@@ -103,7 +104,7 @@ async def result_storage_manager(test_db_session, tmp_path):
     return ResultStorageManager(test_db_session, config)
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_endpoint():
     """Create sample endpoint for testing."""
     return Endpoint(
@@ -115,7 +116,7 @@ def sample_endpoint():
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_queries():
     """Create sample GraphQL queries for testing."""
     return [
@@ -649,7 +650,7 @@ class TestEndToEndIntegration:
         assert True  # Test passes if no exceptions are raised
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestErrorHandlingIntegration:
     """Test error handling across integrated components."""
 

@@ -10,7 +10,7 @@ Provides comprehensive management of GraphQL queries including:
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
 from ..models.query import Query
@@ -48,22 +48,22 @@ class QueryCollectionMetrics:
     total_executions: int = 0
     success_rate: float = 0.0
     avg_execution_time: float = 0.0
-    last_executed: Optional[datetime] = None
+    last_executed: datetime | None = None
 
 
 @dataclass
 class QuerySearchFilter:
     """Advanced search and filtering options for queries."""
 
-    text: Optional[str] = None
-    status: Optional[QueryStatus] = None
-    priority: Optional[QueryPriority] = None
-    collection_ids: Optional[list[UUID]] = None
-    complexity_min: Optional[float] = None
-    complexity_max: Optional[float] = None
-    created_after: Optional[datetime] = None
-    created_before: Optional[datetime] = None
-    tags: Optional[set[str]] = None
+    text: str | None = None
+    status: QueryStatus | None = None
+    priority: QueryPriority | None = None
+    collection_ids: list[UUID] | None = None
+    complexity_min: float | None = None
+    complexity_max: float | None = None
+    created_after: datetime | None = None
+    created_before: datetime | None = None
+    tags: set[str] | None = None
     limit: int = 100
     offset: int = 0
 
@@ -104,6 +104,7 @@ class QueryCollectionManager:
         Raises:
         ------
             ValueError: If collection name already exists or validation fails
+
         """
         # Check for duplicate names
         existing = await self.get_collection_by_name(schema.name)
@@ -115,7 +116,7 @@ class QueryCollectionManager:
             pk_query_collection=uuid4(),
             name=schema.name,
             description=schema.description,
-            tags={tag: True for tag in schema.tags} if schema.tags else {},
+            tags=dict.fromkeys(schema.tags, True) if schema.tags else {},
             is_active=schema.is_active,
             created_by=schema.created_by,
             collection_metadata=schema.metadata,
@@ -138,7 +139,7 @@ class QueryCollectionManager:
         self._cache[collection.pk_query_collection] = collection
         return collection
 
-    async def get_collection(self, collection_id: UUID) -> Optional[QueryCollection]:
+    async def get_collection(self, collection_id: UUID) -> QueryCollection | None:
         """Get collection by ID with caching."""
         if collection_id in self._cache:
             return self._cache[collection_id]
@@ -149,7 +150,7 @@ class QueryCollectionManager:
 
         return collection
 
-    async def get_collection_by_name(self, name: str) -> Optional[QueryCollection]:
+    async def get_collection_by_name(self, name: str) -> QueryCollection | None:
         """Get collection by name."""
         result = await self.db_session.execute(
             "SELECT * FROM query_collections WHERE name = $1", [name]
@@ -164,7 +165,7 @@ class QueryCollectionManager:
 
     async def update_collection(
         self, collection_id: UUID, schema: QueryCollectionUpdate
-    ) -> Optional[QueryCollection]:
+    ) -> QueryCollection | None:
         """Update existing collection."""
         collection = await self.get_collection(collection_id)
         if not collection:
@@ -207,6 +208,7 @@ class QueryCollectionManager:
         Returns:
         -------
             True if deleted successfully
+
         """
         collection = await self.get_collection(collection_id)
         if not collection:
@@ -258,7 +260,7 @@ class QueryCollectionManager:
 
     async def add_query(
         self, collection_id: UUID, schema: QueryCreate, validate: bool = True
-    ) -> Optional[Query]:
+    ) -> Query | None:
         """Add a new query to a collection."""
         collection = await self.get_collection(collection_id)
         if not collection:
@@ -315,7 +317,7 @@ class QueryCollectionManager:
 
         return query
 
-    async def get_query(self, query_id: UUID) -> Optional[Query]:
+    async def get_query(self, query_id: UUID) -> Query | None:
         """Get query by ID with caching."""
         if query_id in self._query_cache:
             return self._query_cache[query_id]
@@ -328,7 +330,7 @@ class QueryCollectionManager:
 
     async def update_query(
         self, query_id: UUID, schema: QueryUpdate, validate: bool = True
-    ) -> Optional[Query]:
+    ) -> Query | None:
         """Update existing query with optional validation."""
         query = await self.get_query(query_id)
         if not query:
@@ -549,7 +551,7 @@ class QueryCollectionManager:
             avg_complexity_score=avg_complexity,
         )
 
-    async def get_collection_metrics(self, collection_id: UUID) -> Optional[QueryCollectionMetrics]:
+    async def get_collection_metrics(self, collection_id: UUID) -> QueryCollectionMetrics | None:
         """Get metrics for a specific collection."""
         collection = await self.get_collection(collection_id)
         if not collection:

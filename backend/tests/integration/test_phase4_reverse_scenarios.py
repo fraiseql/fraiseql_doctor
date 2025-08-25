@@ -19,6 +19,7 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
+
 from fraiseql_doctor.core.database.schemas import QueryCollectionCreate, QueryCreate
 from fraiseql_doctor.core.execution_manager import (
     BatchMode,
@@ -39,7 +40,7 @@ from fraiseql_doctor.core.result_storage import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 async def test_db_session():
     """Real test database session for reverse scenario testing - more reliable than mocks."""
     from tests.fixtures.real_services import TestDatabaseSession
@@ -47,7 +48,7 @@ async def test_db_session():
     return TestDatabaseSession()
 
 
-@pytest.fixture()
+@pytest.fixture
 def complexity_analyzer():
     """Create real test complexity analyzer instance."""
     from tests.fixtures.real_services import TestComplexityAnalyzer
@@ -55,13 +56,13 @@ def complexity_analyzer():
     return TestComplexityAnalyzer()
 
 
-@pytest.fixture()
+@pytest.fixture
 async def collection_manager(test_db_session, complexity_analyzer):
     """Create query collection manager instance with real implementations."""
     return QueryCollectionManager(test_db_session, complexity_analyzer)
 
 
-@pytest.fixture()
+@pytest.fixture
 def unstable_client():
     """Create unstable test client that fails with realistic patterns."""
     from tests.fixtures.real_services import TestGraphQLClient
@@ -73,7 +74,7 @@ def unstable_client():
     return client
 
 
-@pytest.fixture()
+@pytest.fixture
 def unstable_client_factory(unstable_client):
     """Create unstable client factory."""
 
@@ -83,7 +84,7 @@ def unstable_client_factory(unstable_client):
     return factory
 
 
-@pytest.fixture()
+@pytest.fixture
 async def execution_manager_unstable(test_db_session, unstable_client_factory, collection_manager):
     """Create execution manager with unstable client using real implementations."""
     config = ExecutionConfig(
@@ -97,7 +98,7 @@ async def execution_manager_unstable(test_db_session, unstable_client_factory, c
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 async def limited_storage_manager(test_db_session, tmp_path):
     """Create storage manager with strict limits using real implementations."""
     storage_path = tmp_path / "limited_storage"
@@ -300,7 +301,7 @@ class TestResourceExhaustion:
             # Due to resource limits, not all should succeed
             assert failed > 0
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             # Expected behavior under overload
             pass
 
@@ -730,7 +731,7 @@ class TestCleanupAndMaintenance:
             await limited_storage_manager.cleanup_expired_results()
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestExtremeConcurrency:
     """Test extreme concurrency scenarios."""
 
@@ -773,7 +774,7 @@ class TestExtremeConcurrency:
         assert successful > 0
 
 
-@pytest.mark.slow()
+@pytest.mark.slow
 class TestLongRunningOperations:
     """Test long-running operations and stability."""
 
@@ -810,7 +811,7 @@ class TestLongRunningOperations:
             # Should handle the batch even with many failures
             assert batch_result.total_queries == 100
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             # Expected behavior for very long operations
             pass
 
