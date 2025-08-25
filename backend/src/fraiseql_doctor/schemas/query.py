@@ -1,6 +1,7 @@
 """Query-related Pydantic schemas for validation."""
+
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -10,10 +11,10 @@ class QueryCreate(BaseModel):
     """Schema for creating a new query."""
 
     name: str = Field(..., min_length=1, max_length=255, description="Query name")
-    description: Optional[str] = Field(None, description="Query description")
+    description: str | None = Field(None, description="Query description")
     query_text: str = Field(..., min_length=1, description="GraphQL query text")
     variables: dict[str, Any] = Field(default_factory=dict, description="Query variables")
-    expected_complexity_score: Optional[int] = Field(
+    expected_complexity_score: int | None = Field(
         None, ge=0, description="Expected complexity score"
     )
     tags: list[str] = Field(default_factory=list, description="Query tags")
@@ -49,14 +50,14 @@ class QueryCreate(BaseModel):
 class QueryUpdate(BaseModel):
     """Schema for updating an existing query."""
 
-    name: Optional[str] = Field(None, min_length=1, max_length=255)
-    description: Optional[str] = None
-    query_text: Optional[str] = Field(None, min_length=1)
-    variables: Optional[dict[str, Any]] = None
-    expected_complexity_score: Optional[int] = Field(None, ge=0)
-    tags: Optional[list[str]] = None
-    is_active: Optional[bool] = None
-    query_metadata: Optional[dict[str, Any]] = None
+    name: str | None = Field(None, min_length=1, max_length=255)
+    description: str | None = None
+    query_text: str | None = Field(None, min_length=1)
+    variables: dict[str, Any] | None = None
+    expected_complexity_score: int | None = Field(None, ge=0)
+    tags: list[str] | None = None
+    is_active: bool | None = None
+    query_metadata: dict[str, Any] | None = None
 
     @field_validator("name")
     @classmethod
@@ -83,7 +84,7 @@ class QueryCollectionCreate(BaseModel):
     """Schema for creating a new query collection."""
 
     name: str = Field(..., min_length=1, max_length=255, description="Collection name")
-    description: Optional[str] = Field(None, description="Collection description")
+    description: str | None = Field(None, description="Collection description")
     tags: list[str] = Field(default_factory=list, description="Collection tags")
     created_by: str = Field(..., min_length=1, description="Creator identifier")
     is_active: bool = Field(default=True, description="Whether the collection is active")
@@ -110,10 +111,10 @@ class QueryCollectionCreate(BaseModel):
 class QueryCollectionUpdate(BaseModel):
     """Schema for updating an existing query collection."""
 
-    name: Optional[str] = Field(None, min_length=1, max_length=255)
-    description: Optional[str] = None
-    tags: Optional[list[str]] = None
-    metadata: Optional[dict[str, Any]] = None
+    name: str | None = Field(None, min_length=1, max_length=255)
+    description: str | None = None
+    tags: list[str] | None = None
+    metadata: dict[str, Any] | None = None
 
     @field_validator("name")
     @classmethod
@@ -129,13 +130,13 @@ class QueryResponse(BaseModel):
 
     pk_query: UUID
     name: str
-    description: Optional[str]
+    description: str | None
     query_text: str
     variables: dict[str, Any]
-    expected_complexity_score: Optional[int]
+    expected_complexity_score: int | None
     tags: list[str]
     is_active: bool
-    created_by: Optional[str]
+    created_by: str | None
     query_metadata: dict[str, Any]
     created_at: datetime
     updated_at: datetime

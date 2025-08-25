@@ -1,6 +1,7 @@
 """Endpoint-related Pydantic schemas for validation."""
+
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -48,22 +49,22 @@ class EndpointCreate(BaseModel):
         """Validate authentication type."""
         allowed_types = ["none", "bearer", "basic", "api_key", "oauth2"]
         if v not in allowed_types:
-            raise ValueError(f'Auth type must be one of: {", ".join(allowed_types)}')
+            raise ValueError(f"Auth type must be one of: {', '.join(allowed_types)}")
         return v
 
 
 class EndpointUpdate(BaseModel):
     """Schema for updating an existing endpoint."""
 
-    name: Optional[str] = Field(None, min_length=1, max_length=255)
-    url: Optional[str] = None
-    auth_type: Optional[str] = None
-    auth_config: Optional[dict[str, Any]] = None
-    headers: Optional[dict[str, Any]] = None
-    timeout_seconds: Optional[int] = Field(None, ge=1, le=300)
-    max_retries: Optional[int] = Field(None, ge=0, le=10)
-    retry_delay_seconds: Optional[int] = Field(None, ge=0, le=60)
-    is_active: Optional[bool] = None
+    name: str | None = Field(None, min_length=1, max_length=255)
+    url: str | None = None
+    auth_type: str | None = None
+    auth_config: dict[str, Any] | None = None
+    headers: dict[str, Any] | None = None
+    timeout_seconds: int | None = Field(None, ge=1, le=300)
+    max_retries: int | None = Field(None, ge=0, le=10)
+    retry_delay_seconds: int | None = Field(None, ge=0, le=60)
+    is_active: bool | None = None
 
     @field_validator("name")
     @classmethod
@@ -95,7 +96,7 @@ class EndpointUpdate(BaseModel):
         if v is not None:
             allowed_types = ["none", "bearer", "basic", "api_key", "oauth2"]
             if v not in allowed_types:
-                raise ValueError(f'Auth type must be one of: {", ".join(allowed_types)}')
+                raise ValueError(f"Auth type must be one of: {', '.join(allowed_types)}")
         return v
 
 
@@ -112,7 +113,7 @@ class EndpointResponse(BaseModel):
     max_retries: int
     retry_delay_seconds: int
     is_active: bool
-    last_health_check: Optional[datetime]
+    last_health_check: datetime | None
     created_at: datetime
     updated_at: datetime
 

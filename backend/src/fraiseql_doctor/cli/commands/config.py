@@ -3,7 +3,6 @@
 import json
 import time
 from pathlib import Path
-from typing import Optional
 
 import typer
 import yaml
@@ -45,10 +44,8 @@ config_app = typer.Typer(name="config", help="Configuration management")
 
 @config_app.command("init")
 def init_config(
-    database_url: Optional[str] = typer.Option(
-        None, "--database-url", help="PostgreSQL database URL"
-    ),
-    config_file: Optional[Path] = typer.Option(None, "--config", help="Config file to create"),
+    database_url: str | None = typer.Option(None, "--database-url", help="PostgreSQL database URL"),
+    config_file: Path | None = typer.Option(None, "--config", help="Config file to create"),
     force: bool = typer.Option(False, "--force", help="Overwrite existing config"),
     interactive: bool = typer.Option(
         True, "--interactive/--no-interactive", help="Interactive configuration"
@@ -200,7 +197,7 @@ def init_config(
 
 @config_app.command("show")
 def show_config(
-    section: Optional[str] = typer.Option(None, "--section", help="Show specific section only"),
+    section: str | None = typer.Option(None, "--section", help="Show specific section only"),
     format: str = typer.Option("yaml", "--format", help="Output format: yaml, json"),
     show_sensitive: bool = typer.Option(False, "--show-sensitive", help="Show sensitive values"),
 ):
@@ -264,7 +261,7 @@ def show_config(
 
 @config_app.command("validate")
 def validate_config(
-    config_file: Optional[Path] = typer.Option(None, "--config", help="Config file to validate"),
+    config_file: Path | None = typer.Option(None, "--config", help="Config file to validate"),
     fix_permissions: bool = typer.Option(False, "--fix-permissions", help="Fix file permissions"),
 ):
     """Validate configuration file and settings."""
@@ -363,10 +360,10 @@ def validate_config(
 
 @config_app.command("update")
 def update_config(
-    database_url: Optional[str] = typer.Option(None, "--database-url", help="Update database URL"),
-    timeout: Optional[int] = typer.Option(None, "--default-timeout", help="Update default timeout"),
-    log_level: Optional[str] = typer.Option(None, "--log-level", help="Update log level"),
-    config_file: Optional[Path] = typer.Option(None, "--config", help="Config file to update"),
+    database_url: str | None = typer.Option(None, "--database-url", help="Update database URL"),
+    timeout: int | None = typer.Option(None, "--default-timeout", help="Update default timeout"),
+    log_level: str | None = typer.Option(None, "--log-level", help="Update log level"),
+    config_file: Path | None = typer.Option(None, "--config", help="Config file to update"),
 ):
     """Update configuration settings."""
     if not any([database_url, timeout, log_level]):
