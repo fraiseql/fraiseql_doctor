@@ -16,6 +16,7 @@ Set up testing framework and infrastructure before any application code.
 ```python
 # tests/conftest.py - Created FIRST
 """Test configuration and shared fixtures."""
+
 import pytest
 import asyncio
 import tempfile
@@ -26,6 +27,7 @@ from sqlalchemy.orm import sessionmaker
 # Test database URL - use real PostgreSQL for integration tests
 TEST_DATABASE_URL = "postgresql+asyncpg://test:test@localhost/fraiseql_doctor_test"
 
+
 @pytest.fixture(scope="session")
 def event_loop():
     """Create event loop for async tests."""
@@ -33,24 +35,20 @@ def event_loop():
     yield loop
     loop.close()
 
+
 @pytest.fixture(scope="session")
 async def test_engine():
     """Create test database engine."""
-    engine = create_async_engine(
-        TEST_DATABASE_URL,
-        echo=False,
-        pool_pre_ping=True
-    )
+    engine = create_async_engine(TEST_DATABASE_URL, echo=False, pool_pre_ping=True)
     yield engine
     await engine.dispose()
+
 
 @pytest.fixture
 async def db_session(test_engine) -> AsyncSession:
     """Provide database session with automatic rollback."""
     async_session = sessionmaker(
-        test_engine,
-        class_=AsyncSession,
-        expire_on_commit=False
+        test_engine, class_=AsyncSession, expire_on_commit=False
     )
 
     async with async_session() as session:
@@ -63,8 +61,10 @@ async def db_session(test_engine) -> AsyncSession:
 ```python
 # tests/test_project_structure.py - Write FIRST to define requirements
 """Test that project structure meets requirements."""
+
 import pytest
 from pathlib import Path
+
 
 def test_project_structure_exists():
     """Test that all required directories exist."""
@@ -82,11 +82,12 @@ def test_project_structure_exists():
         "tests/fixtures",
         "docs",
         "scripts",
-        "alembic"
+        "alembic",
     ]
 
     for dir_path in required_dirs:
         assert (base_path / dir_path).exists(), f"Directory {dir_path} must exist"
+
 
 def test_configuration_files_exist():
     """Test that all configuration files exist."""
@@ -98,11 +99,12 @@ def test_configuration_files_exist():
         "Makefile",
         ".env.example",
         ".gitignore",
-        ".pre-commit-config.yaml"
+        ".pre-commit-config.yaml",
     ]
 
     for file_path in required_files:
         assert (base_path / file_path).exists(), f"File {file_path} must exist"
+
 
 def test_package_structure():
     """Test that package structure is importable."""
@@ -123,9 +125,11 @@ Write failing tests that define core behavior BEFORE implementation.
 ```python
 # tests/test_cli_basic.py - Write FIRST
 """Test basic CLI functionality."""
+
 import pytest
 from typer.testing import CliRunner
 from fraiseql_doctor.cli.main import app
+
 
 def test_cli_app_exists():
     """Test that CLI app can be imported and instantiated."""
@@ -135,6 +139,7 @@ def test_cli_app_exists():
     assert result.exit_code == 0
     assert "fraiseql-doctor" in result.stdout.lower()
 
+
 def test_version_command():
     """Test version command works."""
     runner = CliRunner()
@@ -142,6 +147,7 @@ def test_version_command():
 
     assert result.exit_code == 0
     assert "0.1.0" in result.stdout
+
 
 def test_subcommands_exist():
     """Test that required subcommands exist."""
@@ -157,8 +163,10 @@ def test_subcommands_exist():
 ```python
 # tests/test_database_connection.py - Write FIRST
 """Test database connectivity and basic operations."""
+
 import pytest
 from fraiseql_doctor.core.database import get_database_session
+
 
 async def test_database_connection(test_engine):
     """Test that database connection works."""
@@ -166,6 +174,7 @@ async def test_database_connection(test_engine):
         result = await conn.execute("SELECT 1 as test_value")
         row = result.fetchone()
         assert row[0] == 1
+
 
 async def test_database_session_creation(db_session):
     """Test that database sessions can be created."""
@@ -193,22 +202,23 @@ touch src/fraiseql_doctor/{cli,core,models,services,utils}/__init__.py
 ```python
 # src/fraiseql_doctor/cli/main.py - Minimal implementation
 """FraiseQL Doctor CLI application."""
+
 import typer
 from typing import Optional
 
 app = typer.Typer(
     name="fraiseql-doctor",
-    help="Health monitoring and query execution tool for FraiseQL/GraphQL endpoints"
+    help="Health monitoring and query execution tool for FraiseQL/GraphQL endpoints",
 )
 
+
 @app.callback()
-def main(
-    version: bool = typer.Option(False, "--version", help="Show version")
-):
+def main(version: bool = typer.Option(False, "--version", help="Show version")):
     """FraiseQL Doctor main CLI."""
     if version:
         typer.echo("FraiseQL Doctor v0.1.0")
         raise typer.Exit()
+
 
 # Placeholder subcommand groups
 query_app = typer.Typer(name="query", help="Manage queries")
@@ -229,20 +239,18 @@ if __name__ == "__main__":
 ```python
 # src/fraiseql_doctor/core/database.py - Minimal implementation
 """Database connection and session management."""
+
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from fraiseql_doctor.core.config import get_settings
+
 
 async def get_database_session() -> AsyncSession:
     """Get database session."""
     settings = get_settings()
     engine = create_async_engine(settings.database_url)
 
-    async_session = sessionmaker(
-        engine,
-        class_=AsyncSession,
-        expire_on_commit=False
-    )
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with async_session() as session:
         yield session
@@ -446,6 +454,7 @@ Improve the foundation while keeping tests green.
 ```python
 # tests/conftest.py - Enhanced version
 """Enhanced test configuration with better fixtures."""
+
 import pytest
 import asyncio
 import tempfile
@@ -454,13 +463,14 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from fraiseql_doctor.models.base import Base
 
+
 @pytest.fixture(scope="session")
 async def test_engine():
     """Create test database engine with proper setup/teardown."""
     engine = create_async_engine(
         "postgresql+asyncpg://test:test@localhost/fraiseql_doctor_test",
         echo=False,
-        pool_pre_ping=True
+        pool_pre_ping=True,
     )
 
     # Create all tables for testing
@@ -474,19 +484,19 @@ async def test_engine():
         await conn.run_sync(Base.metadata.drop_all)
     await engine.dispose()
 
+
 @pytest.fixture
 async def db_session(test_engine) -> AsyncSession:
     """Provide database session with transaction rollback."""
     async_session = sessionmaker(
-        test_engine,
-        class_=AsyncSession,
-        expire_on_commit=False
+        test_engine, class_=AsyncSession, expire_on_commit=False
     )
 
     async with async_session() as session:
         transaction = await session.begin()
         yield session
         await transaction.rollback()
+
 
 @pytest.fixture
 def temp_config_dir():

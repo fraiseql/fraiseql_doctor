@@ -75,7 +75,7 @@ describe('PerformanceAnalytics', () => {
       // Create timestamps that clearly fall in different hours
       const baseTime = new Date('2024-01-01T12:00:00Z') // Noon
       const hourBefore = new Date('2024-01-01T11:30:00Z') // 11:30 AM (previous hour)
-      
+
       const metrics: QueryMetric[] = [
         createMockMetric({ executionTime: 100, timestamp: hourBefore }),
         createMockMetric({ executionTime: 120, timestamp: new Date('2024-01-01T11:45:00Z') }), // Same hour as first

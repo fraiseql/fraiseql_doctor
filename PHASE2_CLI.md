@@ -44,35 +44,52 @@ from rich.table import Table
 
 query_app = typer.Typer(name="query", help="Manage GraphQL queries")
 
+
 @query_app.command("create")
 def create_query(
     name: str = typer.Option(..., "--name", "-n", help="Query name"),
     file: Optional[Path] = typer.Option(None, "--file", "-f", help="GraphQL file path"),
     endpoint: str = typer.Option(..., "--endpoint", "-e", help="Target endpoint"),
-    description: Optional[str] = typer.Option(None, "--description", help="Query description"),
+    description: Optional[str] = typer.Option(
+        None, "--description", help="Query description"
+    ),
     tags: Optional[List[str]] = typer.Option(None, "--tag", help="Query tags"),
 ):
     """Create a new GraphQL query."""
     # Implementation using core.query_collection module
     pass
 
+
 @query_app.command("list")
 def list_queries(
-    endpoint: Optional[str] = typer.Option(None, "--endpoint", "-e", help="Filter by endpoint"),
+    endpoint: Optional[str] = typer.Option(
+        None, "--endpoint", "-e", help="Filter by endpoint"
+    ),
     status: Optional[str] = typer.Option(None, "--status", help="Filter by status"),
-    format: str = typer.Option("table", "--format", help="Output format: table, json, csv"),
+    format: str = typer.Option(
+        "table", "--format", help="Output format: table, json, csv"
+    ),
     tags: Optional[List[str]] = typer.Option(None, "--tag", help="Filter by tags"),
 ):
     """List all queries with optional filtering."""
     pass
 
+
 @query_app.command("execute")
 def execute_query(
     name: str = typer.Option(..., "--name", "-n", help="Query name to execute"),
-    variables: Optional[Path] = typer.Option(None, "--variables", "-v", help="JSON/YAML variables file"),
-    endpoint: Optional[str] = typer.Option(None, "--endpoint", "-e", help="Override endpoint"),
-    output: Optional[Path] = typer.Option(None, "--output", "-o", help="Save results to file"),
-    format: str = typer.Option("json", "--format", help="Output format: json, table, raw"),
+    variables: Optional[Path] = typer.Option(
+        None, "--variables", "-v", help="JSON/YAML variables file"
+    ),
+    endpoint: Optional[str] = typer.Option(
+        None, "--endpoint", "-e", help="Override endpoint"
+    ),
+    output: Optional[Path] = typer.Option(
+        None, "--output", "-o", help="Save results to file"
+    ),
+    format: str = typer.Option(
+        "json", "--format", help="Output format: json, table, raw"
+    ),
 ):
     """Execute a GraphQL query."""
     pass
@@ -96,15 +113,24 @@ fraiseql-doctor endpoint remove --name "Production API" --confirm
 def add_endpoint(
     name: str = typer.Option(..., "--name", "-n", help="Endpoint name"),
     url: str = typer.Option(..., "--url", "-u", help="GraphQL endpoint URL"),
-    auth: Optional[str] = typer.Option(None, "--auth", help="Auth type: bearer, apikey, basic"),
+    auth: Optional[str] = typer.Option(
+        None, "--auth", help="Auth type: bearer, apikey, basic"
+    ),
     token: Optional[str] = typer.Option(None, "--token", help="Auth token/key"),
-    username: Optional[str] = typer.Option(None, "--username", help="Basic auth username"),
-    password: Optional[str] = typer.Option(None, "--password", help="Basic auth password"),
+    username: Optional[str] = typer.Option(
+        None, "--username", help="Basic auth username"
+    ),
+    password: Optional[str] = typer.Option(
+        None, "--password", help="Basic auth password"
+    ),
     timeout: int = typer.Option(30, "--timeout", help="Request timeout in seconds"),
-    headers: Optional[List[str]] = typer.Option(None, "--header", help="Custom headers (key:value)"),
+    headers: Optional[List[str]] = typer.Option(
+        None, "--header", help="Custom headers (key:value)"
+    ),
 ):
     """Add a new GraphQL endpoint."""
     pass
+
 
 @endpoint_app.command("test")
 def test_endpoint(
@@ -133,23 +159,33 @@ fraiseql-doctor health dashboard --port 8080 --host 0.0.0.0
 ```python
 @health_app.command("check")
 def health_check(
-    endpoint: Optional[str] = typer.Option(None, "--endpoint", "-e", help="Specific endpoint"),
-    query: Optional[str] = typer.Option(None, "--query", "-q", help="Health check query name"),
+    endpoint: Optional[str] = typer.Option(
+        None, "--endpoint", "-e", help="Specific endpoint"
+    ),
+    query: Optional[str] = typer.Option(
+        None, "--query", "-q", help="Health check query name"
+    ),
     timeout: int = typer.Option(10, "--timeout", help="Health check timeout"),
     format: str = typer.Option("table", "--format", help="Output format"),
 ):
     """Perform health check on endpoints."""
     pass
 
+
 @health_app.command("monitor")
 def monitor_health(
-    continuous: bool = typer.Option(False, "--continuous", "-c", help="Continuous monitoring"),
+    continuous: bool = typer.Option(
+        False, "--continuous", "-c", help="Continuous monitoring"
+    ),
     interval: str = typer.Option("30s", "--interval", "-i", help="Check interval"),
-    endpoints: List[str] = typer.Option(["all"], "--endpoint", help="Endpoints to monitor"),
+    endpoints: List[str] = typer.Option(
+        ["all"], "--endpoint", help="Endpoints to monitor"
+    ),
     alerts: bool = typer.Option(False, "--alerts", help="Enable alerting"),
 ):
     """Monitor endpoint health continuously."""
     pass
+
 
 @health_app.command("dashboard")
 def health_dashboard(
@@ -194,6 +230,7 @@ tabulate = ">=0.9.0"       # Table formatting alternatives
 ```python
 # src/fraiseql_doctor/cli/utils/file_handlers.py
 
+
 class GraphQLFileHandler:
     @staticmethod
     def parse_graphql_file(file_path: Path) -> str:
@@ -205,6 +242,7 @@ class GraphQLFileHandler:
         """Validate GraphQL query syntax."""
         pass
 
+
 class VariableFileHandler:
     @staticmethod
     def load_variables(file_path: Path) -> dict:
@@ -215,6 +253,7 @@ class VariableFileHandler:
     def validate_variables(variables: dict, query: str) -> bool:
         """Validate variables match query requirements."""
         pass
+
 
 class ExportHandler:
     @staticmethod
@@ -281,12 +320,19 @@ tests/cli/
 # Example test pattern for CLI commands
 def test_query_create_command(cli_runner, mock_database):
     """Test query creation via CLI."""
-    result = cli_runner.invoke(app, [
-        'query', 'create',
-        '--name', 'Test Query',
-        '--file', 'test_query.graphql',
-        '--endpoint', 'test-endpoint'
-    ])
+    result = cli_runner.invoke(
+        app,
+        [
+            "query",
+            "create",
+            "--name",
+            "Test Query",
+            "--file",
+            "test_query.graphql",
+            "--endpoint",
+            "test-endpoint",
+        ],
+    )
 
     assert result.exit_code == 0
     assert "Query 'Test Query' created successfully" in result.output

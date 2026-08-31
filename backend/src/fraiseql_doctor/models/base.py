@@ -1,4 +1,5 @@
 """Base SQLAlchemy model with common functionality."""
+
 from datetime import datetime
 from typing import Any
 from uuid import UUID
