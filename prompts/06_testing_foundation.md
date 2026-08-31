@@ -16,6 +16,7 @@ Establish comprehensive testing as the FOUNDATION for all development phases, pr
 ```python
 # tests/fixtures/production_like.py - Advanced test infrastructure
 """Production-like test environment setup."""
+
 import pytest
 import asyncio
 import contextlib
@@ -45,11 +46,11 @@ class ProductionLikeEnvironment:
             environment={
                 "POSTGRES_DB": "fraiseql_doctor_test",
                 "POSTGRES_USER": "test",
-                "POSTGRES_PASSWORD": "test"
+                "POSTGRES_PASSWORD": "test",
             },
             ports={"5432": None},
             detach=True,
-            remove=True
+            remove=True,
         )
 
         # Wait for database to be ready
@@ -87,7 +88,7 @@ class ProductionLikeEnvironment:
                     port=port,
                     database="fraiseql_doctor_test",
                     user="test",
-                    password="test"
+                    password="test",
                 )
                 await conn.close()
                 return
@@ -95,6 +96,7 @@ class ProductionLikeEnvironment:
                 await asyncio.sleep(1)
 
         raise RuntimeError("Database failed to start within timeout")
+
 
 @pytest.fixture(scope="session")
 async def production_env():
@@ -106,13 +108,12 @@ async def production_env():
 
     await env.stop()
 
+
 @pytest.fixture
 async def prod_db_session(production_env) -> AsyncSession:
     """Production-like database session."""
     async_session = sessionmaker(
-        production_env.engine,
-        class_=AsyncSession,
-        expire_on_commit=False
+        production_env.engine, class_=AsyncSession, expire_on_commit=False
     )
 
     async with async_session() as session:
@@ -125,6 +126,7 @@ async def prod_db_session(production_env) -> AsyncSession:
 ```python
 # tests/fixtures/advanced_mocks.py - Sophisticated mocking patterns
 """Advanced mocking patterns for comprehensive testing."""
+
 import pytest
 from unittest.mock import AsyncMock, Mock, patch
 import aioresponses
@@ -141,24 +143,24 @@ class GraphQLEndpointSimulator:
 
     def add_scenario(self, name: str, query_pattern: str, response: Dict[str, Any]):
         """Add a response scenario for specific query patterns."""
-        self.scenarios[name] = {
-            'pattern': query_pattern,
-            'response': response
-        }
+        self.scenarios[name] = {"pattern": query_pattern, "response": response}
 
-    def get_response(self, query: str, variables: Dict[str, Any] = None) -> Dict[str, Any]:
+    def get_response(
+        self, query: str, variables: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """Get response based on query pattern matching."""
-        self.call_history.append({'query': query, 'variables': variables})
+        self.call_history.append({"query": query, "variables": variables})
 
         for scenario in self.scenarios.values():
-            if scenario['pattern'] in query:
-                return scenario['response']
+            if scenario["pattern"] in query:
+                return scenario["response"]
 
         # Default response
         return {
-            'data': None,
-            'errors': [{'message': f'Unknown query pattern in: {query[:50]}...'}]
+            "data": None,
+            "errors": [{"message": f"Unknown query pattern in: {query[:50]}..."}],
         }
+
 
 @pytest.fixture
 def graphql_simulator():
@@ -166,50 +168,57 @@ def graphql_simulator():
     simulator = GraphQLEndpointSimulator()
 
     # Add common scenarios
-    simulator.add_scenario('user_query', 'user', {
-        'data': {
-            'user': {
-                'id': '123',
-                'name': 'Test User',
-                'email': 'test@example.com'
+    simulator.add_scenario(
+        "user_query",
+        "user",
+        {
+            "data": {
+                "user": {"id": "123", "name": "Test User", "email": "test@example.com"}
             }
-        }
-    })
+        },
+    )
 
-    simulator.add_scenario('introspection', '__schema', {
-        'data': {
-            '__schema': {
-                'queryType': {'name': 'Query'},
-                'mutationType': {'name': 'Mutation'},
-                'subscriptionType': None
+    simulator.add_scenario(
+        "introspection",
+        "__schema",
+        {
+            "data": {
+                "__schema": {
+                    "queryType": {"name": "Query"},
+                    "mutationType": {"name": "Mutation"},
+                    "subscriptionType": None,
+                }
             }
-        }
-    })
+        },
+    )
 
     return simulator
+
 
 @pytest.fixture
 def mock_aiohttp_with_simulator(graphql_simulator):
     """Mock aiohttp with GraphQL simulator responses."""
     with aioresponses.aioresponses() as m:
+
         def request_callback(url, **kwargs):
             """Handle GraphQL requests with simulator."""
-            request_data = kwargs.get('json', {})
-            query = request_data.get('query', '')
-            variables = request_data.get('variables', {})
+            request_data = kwargs.get("json", {})
+            query = request_data.get("query", "")
+            variables = request_data.get("variables", {})
 
             response = graphql_simulator.get_response(query, variables)
 
             return aioresponses.CallbackResult(
                 status=200,
                 payload=response,
-                headers={'Content-Type': 'application/json'}
+                headers={"Content-Type": "application/json"},
             )
 
         # Mock all GraphQL endpoints
-        m.post(url_matcher=lambda url: 'graphql' in str(url), callback=request_callback)
+        m.post(url_matcher=lambda url: "graphql" in str(url), callback=request_callback)
 
         yield m, graphql_simulator
+
 
 class PerformanceMonitor:
     """Monitor performance during tests."""
@@ -221,6 +230,7 @@ class PerformanceMonitor:
     async def measure(self, operation_name: str):
         """Measure operation performance."""
         import time
+
         start_time = time.time()
 
         try:
@@ -229,26 +239,29 @@ class PerformanceMonitor:
             end_time = time.time()
             duration = (end_time - start_time) * 1000  # Convert to ms
 
-            self.measurements.append({
-                'operation': operation_name,
-                'duration_ms': duration,
-                'timestamp': start_time
-            })
+            self.measurements.append(
+                {
+                    "operation": operation_name,
+                    "duration_ms": duration,
+                    "timestamp": start_time,
+                }
+            )
 
     def get_stats(self) -> Dict[str, Any]:
         """Get performance statistics."""
         if not self.measurements:
             return {}
 
-        durations = [m['duration_ms'] for m in self.measurements]
+        durations = [m["duration_ms"] for m in self.measurements]
 
         return {
-            'count': len(durations),
-            'avg_ms': sum(durations) / len(durations),
-            'min_ms': min(durations),
-            'max_ms': max(durations),
-            'total_ms': sum(durations)
+            "count": len(durations),
+            "avg_ms": sum(durations) / len(durations),
+            "min_ms": min(durations),
+            "max_ms": max(durations),
+            "total_ms": sum(durations),
         }
+
 
 @pytest.fixture
 def performance_monitor():
@@ -262,6 +275,7 @@ def performance_monitor():
 ```python
 # tests/integration/test_complete_workflows.py - Complete workflow testing
 """Test complete end-to-end workflows."""
+
 import pytest
 import asyncio
 from uuid import uuid4
@@ -275,35 +289,31 @@ from fraiseql_doctor.schemas.query import QueryCreate
 
 @pytest.mark.integration
 async def test_complete_monitoring_workflow(
-    prod_db_session,
-    mock_aiohttp_with_simulator,
-    performance_monitor
+    prod_db_session, mock_aiohttp_with_simulator, performance_monitor
 ):
     """Test complete monitoring workflow from setup to reporting."""
     mock_session, simulator = mock_aiohttp_with_simulator
 
     # Add complex response scenarios
-    simulator.add_scenario('complex_user', 'userProfile', {
-        'data': {
-            'user': {
-                'id': '123',
-                'name': 'John Doe',
-                'email': 'john@example.com',
-                'profile': {
-                    'bio': 'Software engineer',
-                    'avatar': 'https://example.com/avatar.jpg',
-                    'settings': {
-                        'notifications': True,
-                        'privacy': 'private'
-                    }
+    simulator.add_scenario(
+        "complex_user",
+        "userProfile",
+        {
+            "data": {
+                "user": {
+                    "id": "123",
+                    "name": "John Doe",
+                    "email": "john@example.com",
+                    "profile": {
+                        "bio": "Software engineer",
+                        "avatar": "https://example.com/avatar.jpg",
+                        "settings": {"notifications": True, "privacy": "private"},
+                    },
                 }
-            }
+            },
+            "extensions": {"complexity": {"score": 45}, "tracing": {"duration": 120}},
         },
-        'extensions': {
-            'complexity': {'score': 45},
-            'tracing': {'duration': 120}
-        }
-    })
+    )
 
     # Step 1: Setup endpoint
     endpoint = Endpoint(
@@ -312,13 +322,14 @@ async def test_complete_monitoring_workflow(
         auth_type="bearer",
         auth_config={"token": "prod-token-123"},
         timeout_seconds=30,
-        max_retries=3
+        max_retries=3,
     )
     prod_db_session.add(endpoint)
     await prod_db_session.commit()
 
     # Step 2: Create comprehensive query
     from fraiseql_doctor.services.validation import QueryValidator
+
     validator = QueryValidator()
     query_service = QueryService(prod_db_session, validator)
 
@@ -344,7 +355,7 @@ async def test_complete_monitoring_workflow(
         """,
         variables={"userId": "123", "includeSettings": True},
         tags=["user", "profile", "production", "complex"],
-        created_by="integration-test"
+        created_by="integration-test",
     )
 
     with performance_monitor.measure("query_creation"):
@@ -353,9 +364,11 @@ async def test_complete_monitoring_workflow(
     # Step 3: Execute query with performance monitoring
     def client_factory(endpoint):
         from fraiseql_doctor.services.fraiseql_client import FraiseQLClient
+
         return FraiseQLClient(endpoint)
 
     from fraiseql_doctor.services.metrics import MetricsCollector
+
     metrics = MetricsCollector()
     execution_service = ExecutionService(prod_db_session, client_factory, metrics)
 
@@ -364,7 +377,7 @@ async def test_complete_monitoring_workflow(
             query_id=query.pk_query,
             endpoint_id=endpoint.pk_endpoint,
             variables={"userId": "456", "includeSettings": False},
-            timeout=30
+            timeout=30,
         )
 
     # Step 4: Health monitoring
@@ -399,32 +412,33 @@ async def test_complete_monitoring_workflow(
     assert stored_execution.actual_complexity_score == 45
     assert stored_execution.response_data["user"]["name"] == "John Doe"
 
+
 @pytest.mark.integration
 async def test_multi_endpoint_query_execution(
-    prod_db_session,
-    mock_aiohttp_with_simulator,
-    performance_monitor
+    prod_db_session, mock_aiohttp_with_simulator, performance_monitor
 ):
     """Test executing same query across multiple endpoints."""
     mock_session, simulator = mock_aiohttp_with_simulator
 
     # Create multiple endpoints with different response times
     endpoints = []
-    for i, (name, delay) in enumerate([
-        ("fast-api", 50),
-        ("medium-api", 150),
-        ("slow-api", 300)
-    ]):
-        simulator.add_scenario(f'endpoint_{i}', 'testQuery', {
-            'data': {'result': f'response from {name}'},
-            'extensions': {'tracing': {'duration': delay}}
-        })
+    for i, (name, delay) in enumerate(
+        [("fast-api", 50), ("medium-api", 150), ("slow-api", 300)]
+    ):
+        simulator.add_scenario(
+            f"endpoint_{i}",
+            "testQuery",
+            {
+                "data": {"result": f"response from {name}"},
+                "extensions": {"tracing": {"duration": delay}},
+            },
+        )
 
         endpoint = Endpoint(
             name=name,
             url=f"https://{name}.example.com/graphql",
             auth_type="none",
-            timeout_seconds=10
+            timeout_seconds=10,
         )
         endpoints.append(endpoint)
         prod_db_session.add(endpoint)
@@ -435,24 +449,29 @@ async def test_multi_endpoint_query_execution(
     validator = QueryValidator()
     query_service = QueryService(prod_db_session, validator)
 
-    query = await query_service.create_query(QueryCreate(
-        name="multi-endpoint-test",
-        query_text="query { testQuery }",
-        created_by="integration-test"
-    ))
+    query = await query_service.create_query(
+        QueryCreate(
+            name="multi-endpoint-test",
+            query_text="query { testQuery }",
+            created_by="integration-test",
+        )
+    )
 
     # Execute across all endpoints concurrently
     def client_factory(endpoint):
         from fraiseql_doctor.services.fraiseql_client import FraiseQLClient
+
         return FraiseQLClient(endpoint)
 
-    execution_service = ExecutionService(prod_db_session, client_factory, MetricsCollector())
+    execution_service = ExecutionService(
+        prod_db_session, client_factory, MetricsCollector()
+    )
 
     executions = [
         {
             "query_id": query.pk_query,
             "endpoint_id": endpoint.pk_endpoint,
-            "variables": {}
+            "variables": {},
         }
         for endpoint in endpoints
     ]
@@ -469,11 +488,10 @@ async def test_multi_endpoint_query_execution(
     # Should be faster than sequential execution (sum of delays)
     assert perf_stats["max_ms"] < 600  # Much less than 500ms total
 
+
 @pytest.mark.integration
 async def test_failure_recovery_workflow(
-    prod_db_session,
-    mock_aiohttp_with_simulator,
-    performance_monitor
+    prod_db_session, mock_aiohttp_with_simulator, performance_monitor
 ):
     """Test system behavior during failures and recovery."""
     mock_session, simulator = mock_aiohttp_with_simulator
@@ -484,7 +502,7 @@ async def test_failure_recovery_workflow(
         url="https://unreliable.example.com/graphql",
         auth_type="none",
         max_retries=3,
-        retry_delay_seconds=1
+        retry_delay_seconds=1,
     )
     prod_db_session.add(endpoint)
     await prod_db_session.commit()
@@ -493,46 +511,51 @@ async def test_failure_recovery_workflow(
     validator = QueryValidator()
     query_service = QueryService(prod_db_session, validator)
 
-    query = await query_service.create_query(QueryCreate(
-        name="failure-test",
-        query_text="query { failureTest }",
-        created_by="integration-test"
-    ))
+    query = await query_service.create_query(
+        QueryCreate(
+            name="failure-test",
+            query_text="query { failureTest }",
+            created_by="integration-test",
+        )
+    )
 
     # Setup failure then success scenario
     call_count = 0
+
     def failure_then_success(url, **kwargs):
         nonlocal call_count
         call_count += 1
 
         if call_count <= 2:
             # First two calls fail
-            return aioresponses.CallbackResult(status=500, payload={'error': 'Server error'})
+            return aioresponses.CallbackResult(
+                status=500, payload={"error": "Server error"}
+            )
         else:
             # Third call succeeds
             return aioresponses.CallbackResult(
-                status=200,
-                payload={'data': {'failureTest': 'recovered!'}}
+                status=200, payload={"data": {"failureTest": "recovered!"}}
             )
 
     # Replace the mock with failure scenario
     mock_session.clear()
     mock_session.post(
-        "https://unreliable.example.com/graphql",
-        callback=failure_then_success
+        "https://unreliable.example.com/graphql", callback=failure_then_success
     )
 
     # Execute with retry logic
     def client_factory(endpoint):
         from fraiseql_doctor.services.fraiseql_client import FraiseQLClient
+
         return FraiseQLClient(endpoint)
 
-    execution_service = ExecutionService(prod_db_session, client_factory, MetricsCollector())
+    execution_service = ExecutionService(
+        prod_db_session, client_factory, MetricsCollector()
+    )
 
     with performance_monitor.measure("failure_recovery"):
         result = await execution_service.execute_query(
-            query_id=query.pk_query,
-            endpoint_id=endpoint.pk_endpoint
+            query_id=query.pk_query, endpoint_id=endpoint.pk_endpoint
         )
 
     # Should eventually succeed after retries
@@ -548,6 +571,7 @@ async def test_failure_recovery_workflow(
 ```python
 # tests/performance/test_load_scenarios.py - Load and stress testing
 """Load and stress testing scenarios."""
+
 import pytest
 import asyncio
 import time
@@ -558,24 +582,26 @@ import statistics
 @pytest.mark.performance
 @pytest.mark.slow
 async def test_concurrent_query_load(
-    prod_db_session,
-    mock_aiohttp_with_simulator,
-    performance_monitor
+    prod_db_session, mock_aiohttp_with_simulator, performance_monitor
 ):
     """Test system under high concurrent query load."""
     mock_session, simulator = mock_aiohttp_with_simulator
 
     # Setup load test scenario
-    simulator.add_scenario('load_test', 'loadQuery', {
-        'data': {'result': 'load test response'},
-        'extensions': {'tracing': {'duration': 100}}
-    })
+    simulator.add_scenario(
+        "load_test",
+        "loadQuery",
+        {
+            "data": {"result": "load test response"},
+            "extensions": {"tracing": {"duration": 100}},
+        },
+    )
 
     # Create endpoint and query
     endpoint = Endpoint(
         name="load-test-api",
         url="https://loadtest.example.com/graphql",
-        auth_type="none"
+        auth_type="none",
     )
     prod_db_session.add(endpoint)
     await prod_db_session.commit()
@@ -583,24 +609,28 @@ async def test_concurrent_query_load(
     validator = QueryValidator()
     query_service = QueryService(prod_db_session, validator)
 
-    query = await query_service.create_query(QueryCreate(
-        name="load-test-query",
-        query_text="query { loadQuery }",
-        created_by="load-test"
-    ))
+    query = await query_service.create_query(
+        QueryCreate(
+            name="load-test-query",
+            query_text="query { loadQuery }",
+            created_by="load-test",
+        )
+    )
 
     # Execute high concurrent load
     def client_factory(endpoint):
         from fraiseql_doctor.services.fraiseql_client import FraiseQLClient
+
         return FraiseQLClient(endpoint)
 
-    execution_service = ExecutionService(prod_db_session, client_factory, MetricsCollector())
+    execution_service = ExecutionService(
+        prod_db_session, client_factory, MetricsCollector()
+    )
 
     async def single_execution():
         """Single query execution."""
         return await execution_service.execute_query(
-            query_id=query.pk_query,
-            endpoint_id=endpoint.pk_endpoint
+            query_id=query.pk_query, endpoint_id=endpoint.pk_endpoint
         )
 
     # Test different concurrency levels
@@ -622,26 +652,24 @@ async def test_concurrent_query_load(
             failed = [r for r in execution_results if isinstance(r, Exception)]
 
             results[concurrency] = {
-                'total_time': end_time - start_time,
-                'successful': len(successful),
-                'failed': len(failed),
-                'success_rate': len(successful) / concurrency * 100,
-                'throughput': concurrency / (end_time - start_time)
+                "total_time": end_time - start_time,
+                "successful": len(successful),
+                "failed": len(failed),
+                "success_rate": len(successful) / concurrency * 100,
+                "throughput": concurrency / (end_time - start_time),
             }
 
     # Verify performance requirements
     for concurrency, result in results.items():
-        assert result['success_rate'] >= 95.0  # 95% success rate minimum
-        assert result['total_time'] < 10.0     # Complete within 10 seconds
+        assert result["success_rate"] >= 95.0  # 95% success rate minimum
+        assert result["total_time"] < 10.0  # Complete within 10 seconds
 
         if concurrency <= 50:
-            assert result['success_rate'] == 100.0  # Perfect success for moderate load
+            assert result["success_rate"] == 100.0  # Perfect success for moderate load
+
 
 @pytest.mark.performance
-async def test_memory_usage_under_load(
-    prod_db_session,
-    mock_aiohttp_with_simulator
-):
+async def test_memory_usage_under_load(prod_db_session, mock_aiohttp_with_simulator):
     """Test memory usage remains stable under load."""
     import psutil
     import os
@@ -653,29 +681,29 @@ async def test_memory_usage_under_load(
 
     # Create large response scenario
     large_response = {
-        'data': {
-            'users': [
+        "data": {
+            "users": [
                 {
-                    'id': f'user_{i}',
-                    'name': f'User {i}',
-                    'email': f'user{i}@example.com',
-                    'profile': {
-                        'bio': 'A' * 1000,  # 1KB bio
-                        'preferences': {f'pref_{j}': f'value_{j}' for j in range(100)}
-                    }
+                    "id": f"user_{i}",
+                    "name": f"User {i}",
+                    "email": f"user{i}@example.com",
+                    "profile": {
+                        "bio": "A" * 1000,  # 1KB bio
+                        "preferences": {f"pref_{j}": f"value_{j}" for j in range(100)},
+                    },
                 }
                 for i in range(100)  # 100 users per response
             ]
         }
     }
 
-    simulator.add_scenario('memory_test', 'largeQuery', large_response)
+    simulator.add_scenario("memory_test", "largeQuery", large_response)
 
     # Setup test environment
     endpoint = Endpoint(
         name="memory-test-api",
         url="https://memorytest.example.com/graphql",
-        auth_type="none"
+        auth_type="none",
     )
     prod_db_session.add(endpoint)
     await prod_db_session.commit()
@@ -683,25 +711,29 @@ async def test_memory_usage_under_load(
     validator = QueryValidator()
     query_service = QueryService(prod_db_session, validator)
 
-    query = await query_service.create_query(QueryCreate(
-        name="memory-test-query",
-        query_text="query { largeQuery }",
-        created_by="memory-test"
-    ))
+    query = await query_service.create_query(
+        QueryCreate(
+            name="memory-test-query",
+            query_text="query { largeQuery }",
+            created_by="memory-test",
+        )
+    )
 
     # Execute many requests to test memory stability
     def client_factory(endpoint):
         from fraiseql_doctor.services.fraiseql_client import FraiseQLClient
+
         return FraiseQLClient(endpoint)
 
-    execution_service = ExecutionService(prod_db_session, client_factory, MetricsCollector())
+    execution_service = ExecutionService(
+        prod_db_session, client_factory, MetricsCollector()
+    )
 
     memory_measurements = []
 
     for i in range(50):  # 50 large requests
         await execution_service.execute_query(
-            query_id=query.pk_query,
-            endpoint_id=endpoint.pk_endpoint
+            query_id=query.pk_query, endpoint_id=endpoint.pk_endpoint
         )
 
         # Measure memory every 10 requests
@@ -718,16 +750,13 @@ async def test_memory_usage_under_load(
     # Memory should be relatively stable (no major leaks)
     if len(memory_measurements) > 2:
         memory_trend = statistics.linear_regression(
-            range(len(memory_measurements)),
-            memory_measurements
+            range(len(memory_measurements)), memory_measurements
         ).slope
         assert abs(memory_trend) < 5  # Less than 5MB/measurement growth
 
+
 @pytest.mark.performance
-async def test_database_performance_under_load(
-    prod_db_session,
-    performance_monitor
-):
+async def test_database_performance_under_load(prod_db_session, performance_monitor):
     """Test database performance under high write load."""
     from fraiseql_doctor.models.query import Query
     from fraiseql_doctor.models.execution import Execution
@@ -745,7 +774,7 @@ async def test_database_performance_under_load(
                 query_text=f"query PerfTest{i} {{ test{i} }}",
                 tags=["performance", f"batch-{i // 10}"],
                 created_by="performance-test",
-                expected_complexity_score=10 + (i % 20)
+                expected_complexity_score=10 + (i % 20),
             )
             queries.append(query)
 
@@ -764,7 +793,7 @@ async def test_database_performance_under_load(
                     response_time_ms=50 + (j * 10),
                     actual_complexity_score=15 + j,
                     response_data={"test": f"result-{j}"},
-                    variables_used={"var": f"value-{j}"}
+                    variables_used={"var": f"value-{j}"},
                 )
                 executions.append(execution)
 
@@ -779,9 +808,9 @@ async def test_database_performance_under_load(
         stmt = (
             select(
                 Query.created_by,
-                func.count(Query.pk_query).label('query_count'),
-                func.avg(Query.expected_complexity_score).label('avg_complexity'),
-                func.count(Execution.pk_execution).label('execution_count')
+                func.count(Query.pk_query).label("query_count"),
+                func.avg(Query.expected_complexity_score).label("avg_complexity"),
+                func.count(Execution.pk_execution).label("execution_count"),
             )
             .join(Execution, Query.pk_query == Execution.fk_query, isouter=True)
             .where(Query.created_by == "performance-test")
@@ -799,8 +828,9 @@ async def test_database_performance_under_load(
 
     # Bulk operations should be efficient
     creation_times = [
-        m['duration_ms'] for m in performance_monitor.measurements
-        if 'bulk' in m['operation']
+        m["duration_ms"]
+        for m in performance_monitor.measurements
+        if "bulk" in m["operation"]
     ]
 
     for duration in creation_times:
@@ -808,8 +838,9 @@ async def test_database_performance_under_load(
 
     # Complex queries should be fast
     query_times = [
-        m['duration_ms'] for m in performance_monitor.measurements
-        if 'query_performance' in m['operation']
+        m["duration_ms"]
+        for m in performance_monitor.measurements
+        if "query_performance" in m["operation"]
     ]
 
     for duration in query_times:
@@ -980,6 +1011,7 @@ jobs:
 ```python
 # tests/quality/test_metrics_and_reporting.py - Quality metrics validation
 """Quality metrics and reporting validation."""
+
 import pytest
 import subprocess
 import json
@@ -990,9 +1022,11 @@ from pathlib import Path
 def test_code_coverage_requirements():
     """Test that code coverage meets requirements."""
     # Run coverage analysis
-    result = subprocess.run([
-        "uv", "run", "pytest", "--cov=src", "--cov-report=xml", "--cov-report=term"
-    ], capture_output=True, text=True)
+    result = subprocess.run(
+        ["uv", "run", "pytest", "--cov=src", "--cov-report=xml", "--cov-report=term"],
+        capture_output=True,
+        text=True,
+    )
 
     assert result.returncode == 0, f"Coverage analysis failed: {result.stderr}"
 
@@ -1004,72 +1038,98 @@ def test_code_coverage_requirements():
     root = tree.getroot()
 
     # Extract overall coverage percentage
-    coverage_percent = float(root.attrib.get('line-rate', 0)) * 100
+    coverage_percent = float(root.attrib.get("line-rate", 0)) * 100
 
     # Coverage requirements
-    assert coverage_percent >= 85.0, f"Coverage {coverage_percent:.1f}% below 85% requirement"
+    assert coverage_percent >= 85.0, (
+        f"Coverage {coverage_percent:.1f}% below 85% requirement"
+    )
 
     # Check specific module coverage
-    for package in root.findall('.//package'):
-        package_name = package.attrib.get('name', '')
-        package_coverage = float(package.attrib.get('line-rate', 0)) * 100
+    for package in root.findall(".//package"):
+        package_name = package.attrib.get("name", "")
+        package_coverage = float(package.attrib.get("line-rate", 0)) * 100
 
-        if 'core' in package_name or 'services' in package_name:
-            assert package_coverage >= 90.0, f"Core module {package_name} coverage {package_coverage:.1f}% below 90%"
+        if "core" in package_name or "services" in package_name:
+            assert package_coverage >= 90.0, (
+                f"Core module {package_name} coverage {package_coverage:.1f}% below 90%"
+            )
+
 
 def test_code_quality_metrics():
     """Test that code quality metrics meet standards."""
     # Run ruff for code quality
-    result = subprocess.run([
-        "uv", "run", "ruff", "check", "src/", "--format", "json"
-    ], capture_output=True, text=True)
+    result = subprocess.run(
+        ["uv", "run", "ruff", "check", "src/", "--format", "json"],
+        capture_output=True,
+        text=True,
+    )
 
     if result.stdout:
         issues = json.loads(result.stdout)
 
         # Categorize issues by severity
-        errors = [issue for issue in issues if issue.get('type') == 'error']
-        warnings = [issue for issue in issues if issue.get('type') == 'warning']
+        errors = [issue for issue in issues if issue.get("type") == "error"]
+        warnings = [issue for issue in issues if issue.get("type") == "warning"]
 
         # Quality requirements
         assert len(errors) == 0, f"Found {len(errors)} code quality errors"
         assert len(warnings) <= 5, f"Found {len(warnings)} warnings, maximum 5 allowed"
 
+
 def test_type_checking_completeness():
     """Test that type checking is comprehensive."""
-    result = subprocess.run([
-        "uv", "run", "mypy", "src/", "--strict", "--show-error-codes"
-    ], capture_output=True, text=True)
+    result = subprocess.run(
+        ["uv", "run", "mypy", "src/", "--strict", "--show-error-codes"],
+        capture_output=True,
+        text=True,
+    )
 
     # Count type errors
-    error_lines = [line for line in result.stdout.split('\n') if 'error:' in line]
+    error_lines = [line for line in result.stdout.split("\n") if "error:" in line]
 
     # Type checking requirements
     assert len(error_lines) == 0, f"Found {len(error_lines)} type checking errors"
 
+
 def test_security_baseline():
     """Test security baseline requirements."""
     # Run bandit security scan
-    result = subprocess.run([
-        "bandit", "-r", "src/", "-f", "json"
-    ], capture_output=True, text=True)
+    result = subprocess.run(
+        ["bandit", "-r", "src/", "-f", "json"], capture_output=True, text=True
+    )
 
     if result.stdout:
         scan_results = json.loads(result.stdout)
 
         # Security requirements
-        high_severity = [issue for issue in scan_results.get('results', [])
-                        if issue.get('issue_severity') == 'HIGH']
+        high_severity = [
+            issue
+            for issue in scan_results.get("results", [])
+            if issue.get("issue_severity") == "HIGH"
+        ]
 
-        assert len(high_severity) == 0, f"Found {len(high_severity)} high severity security issues"
+        assert len(high_severity) == 0, (
+            f"Found {len(high_severity)} high severity security issues"
+        )
+
 
 def test_performance_baseline():
     """Test that performance meets baseline requirements."""
     # Run performance benchmarks
-    result = subprocess.run([
-        "uv", "run", "pytest", "tests/performance/", "-m", "performance",
-        "--benchmark-json=benchmark.json"
-    ], capture_output=True, text=True)
+    result = subprocess.run(
+        [
+            "uv",
+            "run",
+            "pytest",
+            "tests/performance/",
+            "-m",
+            "performance",
+            "--benchmark-json=benchmark.json",
+        ],
+        capture_output=True,
+        text=True,
+    )
 
     assert result.returncode == 0, "Performance tests failed"
 
@@ -1080,25 +1140,33 @@ def test_performance_baseline():
             benchmarks = json.load(f)
 
         # Performance requirements
-        for benchmark in benchmarks.get('benchmarks', []):
-            stats = benchmark.get('stats', {})
-            mean_time = stats.get('mean', float('inf'))
+        for benchmark in benchmarks.get("benchmarks", []):
+            stats = benchmark.get("stats", {})
+            mean_time = stats.get("mean", float("inf"))
 
             # Database operations should be fast
-            if 'database' in benchmark['name'].lower():
-                assert mean_time < 0.1, f"Database operation {benchmark['name']} too slow: {mean_time:.3f}s"
+            if "database" in benchmark["name"].lower():
+                assert mean_time < 0.1, (
+                    f"Database operation {benchmark['name']} too slow: {mean_time:.3f}s"
+                )
 
             # HTTP operations should be reasonable
-            if 'http' in benchmark['name'].lower():
-                assert mean_time < 1.0, f"HTTP operation {benchmark['name']} too slow: {mean_time:.3f}s"
+            if "http" in benchmark["name"].lower():
+                assert mean_time < 1.0, (
+                    f"HTTP operation {benchmark['name']} too slow: {mean_time:.3f}s"
+                )
+
 
 @pytest.mark.slow
 def test_stress_test_baseline():
     """Test system behavior under stress conditions."""
     # Run stress tests
-    result = subprocess.run([
-        "uv", "run", "pytest", "tests/performance/", "-m", "stress", "-v"
-    ], capture_output=True, text=True, timeout=300)  # 5 minute timeout
+    result = subprocess.run(
+        ["uv", "run", "pytest", "tests/performance/", "-m", "stress", "-v"],
+        capture_output=True,
+        text=True,
+        timeout=300,
+    )  # 5 minute timeout
 
     # Stress tests should pass without crashing
     assert result.returncode == 0, f"Stress tests failed: {result.stderr}"

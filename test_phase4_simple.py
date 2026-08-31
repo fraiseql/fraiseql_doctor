@@ -2,8 +2,8 @@
 Simple test to verify Phase 4 components can be imported and basic functionality works.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, "/home/lionel/code/fraiseql_doctor/src")
 
@@ -16,29 +16,29 @@ def test_imports():
         # Test query collection import
         from fraiseql_doctor.core.query_collection import (
             QueryCollectionManager,
-            QueryStatus,
             QueryPriority,
             QuerySearchFilter,
+            QueryStatus,
         )
 
         print("✅ QueryCollectionManager imported successfully")
 
         # Test execution manager import
         from fraiseql_doctor.core.execution_manager import (
-            QueryExecutionManager,
-            ExecutionStatus,
             BatchMode,
             ExecutionConfig,
+            ExecutionStatus,
+            QueryExecutionManager,
         )
 
         print("✅ QueryExecutionManager imported successfully")
 
         # Test result storage import
         from fraiseql_doctor.core.result_storage import (
-            ResultStorageManager,
-            StorageConfig,
-            StorageBackend,
             CompressionType,
+            ResultStorageManager,
+            StorageBackend,
+            StorageConfig,
         )
 
         print("✅ ResultStorageManager imported successfully")
@@ -55,9 +55,9 @@ def test_basic_functionality():
     print("🧪 Testing basic functionality...")
 
     try:
-        from fraiseql_doctor.core.query_collection import QueryStatus, QueryPriority
-        from fraiseql_doctor.core.execution_manager import ExecutionStatus, BatchMode
-        from fraiseql_doctor.core.result_storage import StorageBackend, CompressionType
+        from fraiseql_doctor.core.execution_manager import BatchMode, ExecutionStatus
+        from fraiseql_doctor.core.query_collection import QueryPriority, QueryStatus
+        from fraiseql_doctor.core.result_storage import CompressionType, StorageBackend
 
         # Test enums work
         assert QueryStatus.ACTIVE == QueryStatus.ACTIVE
@@ -94,13 +94,14 @@ def test_dataclass_structures():
     print("🧪 Testing dataclass structures...")
 
     try:
+        from datetime import datetime, timezone
+        from uuid import uuid4
+
         from fraiseql_doctor.core.execution_manager import (
             ExecutionResult,
             ExecutionStatus,
         )
         from fraiseql_doctor.core.result_storage import StorageMetrics
-        from datetime import datetime, timezone
-        from uuid import uuid4
 
         # Test ExecutionResult
         result = ExecutionResult(
@@ -191,7 +192,7 @@ def main():
     print("\n📊 Verification Summary:")
     print(f"✅ Passed: {passed}")
     print(f"❌ Failed: {failed}")
-    print(f"📈 Success Rate: {passed/(passed+failed)*100:.1f}%")
+    print(f"📈 Success Rate: {passed / (passed + failed) * 100:.1f}%")
 
     if failed == 0:
         print("\n🎉 ALL PHASE 4 COMPONENTS VERIFIED!")

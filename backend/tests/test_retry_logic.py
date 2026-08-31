@@ -2,11 +2,13 @@
 
 Tests the retry mechanisms, exponential backoff, and circuit breaker patterns.
 """
+
 import asyncio
 import time
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+
 from fraiseql_doctor.models.endpoint import Endpoint
 from fraiseql_doctor.services.fraiseql_client import (
     AuthenticationError,
@@ -182,7 +184,7 @@ class TestRetryableClient:
             client=self.mock_client, retry_config=self.retry_config
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_successful_execution(self):
         """Test successful query execution without retries."""
         expected_response = GraphQLResponse(data={"test": "success"}, response_time_ms=100)
@@ -193,7 +195,7 @@ class TestRetryableClient:
         assert response == expected_response
         assert self.mock_client.execute_query.call_count == 1
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_retry_on_network_error(self):
         """Test retry behavior on network errors."""
         # First two calls fail, third succeeds
@@ -213,7 +215,7 @@ class TestRetryableClient:
         # Should have waited for delays (0.1s + 0.2s = 0.3s minimum)
         assert end_time - start_time >= 0.3
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_no_retry_on_auth_error_by_default(self):
         """Test that auth errors are not retried by default."""
         self.mock_client.execute_query.side_effect = AuthenticationError(
@@ -226,7 +228,7 @@ class TestRetryableClient:
         # Should not retry auth errors
         assert self.mock_client.execute_query.call_count == 1
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_retry_on_auth_error_when_configured(self):
         """Test auth error retry when explicitly configured."""
         config = RetryConfig(max_retries=2, retry_on_auth_error=True, base_delay=0.1)
@@ -243,7 +245,7 @@ class TestRetryableClient:
         assert response.data == {"test": "success"}
         assert self.mock_client.execute_query.call_count == 3
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_no_retry_on_client_error(self):
         """Test that 4xx client errors are not retried."""
         self.mock_client.execute_query.side_effect = GraphQLClientError(
@@ -256,7 +258,7 @@ class TestRetryableClient:
         # Should not retry client errors
         assert self.mock_client.execute_query.call_count == 1
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_retry_on_server_error(self):
         """Test retry behavior on 5xx server errors."""
         self.mock_client.execute_query.side_effect = [
@@ -269,7 +271,7 @@ class TestRetryableClient:
         assert response.data == {"test": "success"}
         assert self.mock_client.execute_query.call_count == 2
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_max_retries_exhausted(self):
         """Test behavior when max retries are exhausted."""
         self.mock_client.execute_query.side_effect = NetworkError("Connection failed")
@@ -280,7 +282,7 @@ class TestRetryableClient:
         # Should try initial + max_retries (1 + 2 = 3)
         assert self.mock_client.execute_query.call_count == 3
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_exponential_backoff(self):
         """Test exponential backoff delay calculation."""
         config = RetryConfig(max_retries=3, base_delay=0.1, exponential_base=2.0, jitter=False)
@@ -295,7 +297,7 @@ class TestRetryableClient:
         assert delay_1 == 0.2
         assert delay_2 == 0.4
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_max_delay_cap(self):
         """Test that delay is capped at max_delay."""
         config = RetryConfig(base_delay=10.0, max_delay=5.0, exponential_base=2.0, jitter=False)
@@ -305,7 +307,7 @@ class TestRetryableClient:
         delay = client._calculate_delay(10, config)
         assert delay == 5.0
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_jitter_variation(self):
         """Test that jitter adds randomness to delays."""
         config = RetryConfig(base_delay=1.0, exponential_base=2.0, jitter=True)
@@ -342,7 +344,7 @@ class TestCircuitBreakerIntegration:
             circuit_breaker_config=self.circuit_config,
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_circuit_breaker_opens_on_failures(self):
         """Test that circuit breaker opens after failure threshold."""
         self.mock_client.execute_query.side_effect = NetworkError("Connection failed")
@@ -365,7 +367,7 @@ class TestCircuitBreakerIntegration:
 
         assert "Circuit breaker is OPEN" in str(exc_info.value)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_circuit_breaker_recovery(self):
         """Test circuit breaker recovery after timeout."""
         self.mock_client.execute_query.side_effect = NetworkError("Connection failed")
@@ -394,7 +396,7 @@ class TestCircuitBreakerIntegration:
         status = self.retryable_client.get_circuit_breaker_status()
         assert status["state"] == "closed"
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_circuit_breaker_reset(self):
         """Test manual circuit breaker reset."""
         self.mock_client.execute_query.side_effect = NetworkError("Connection failed")
@@ -466,7 +468,7 @@ class TestRetryableClientCreation:
 class TestAsyncContextManager:
     """Test async context manager functionality."""
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_context_manager(self):
         """Test async context manager usage."""
         mock_client = Mock(spec=FraiseQLClient)
