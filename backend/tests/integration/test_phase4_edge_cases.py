@@ -19,6 +19,7 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
+
 from fraiseql_doctor.core.database.schemas import QueryCollectionCreate, QueryCreate
 from fraiseql_doctor.core.query_collection import (
     QueryCollectionManager,
@@ -32,7 +33,7 @@ from fraiseql_doctor.core.result_storage import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 async def test_db_session():
     """Real test database session for edge case testing - more reliable than mocks."""
     from tests.fixtures.real_services import TestDatabaseSession
@@ -40,7 +41,7 @@ async def test_db_session():
     return TestDatabaseSession()
 
 
-@pytest.fixture()
+@pytest.fixture
 def complexity_analyzer():
     """Create real test complexity analyzer instance."""
     from tests.fixtures.real_services import TestComplexityAnalyzer
@@ -48,7 +49,7 @@ def complexity_analyzer():
     return TestComplexityAnalyzer()
 
 
-@pytest.fixture()
+@pytest.fixture
 async def collection_manager(test_db_session, complexity_analyzer):
     """Create query collection manager instance with real implementations."""
     return QueryCollectionManager(test_db_session, complexity_analyzer)
@@ -579,7 +580,7 @@ class TestNetworkProtocolEdgeCases:
                 )
 
 
-@pytest.fixture()
+@pytest.fixture
 async def limited_storage_manager(test_db_session, tmp_path):
     """Create storage manager with strict limits for testing using real implementations."""
     storage_path = tmp_path / "edge_case_storage"

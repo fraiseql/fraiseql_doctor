@@ -8,4 +8,4 @@ from .health_check import HealthCheck
 from .query import Query
 from .schedule import Schedule
 
-__all__ = ["Base", "Query", "Endpoint", "Execution", "HealthCheck", "Schedule"]
+__all__ = ["Base", "Endpoint", "Execution", "HealthCheck", "Query", "Schedule"]

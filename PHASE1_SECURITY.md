@@ -55,6 +55,7 @@ if random.random() < self.failure_rate:
 **Required fix:**
 ```python
 import secrets
+
 secure_random = secrets.SystemRandom()
 delay = delay * (0.5 + secure_random.random() * 0.5)
 ```
