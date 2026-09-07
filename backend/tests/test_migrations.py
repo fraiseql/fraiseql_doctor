@@ -1,8 +1,9 @@
 """Test database migrations work correctly."""
+
+from alembic.config import Config
 from sqlalchemy import text
 
 from alembic import command
-from alembic.config import Config
 
 
 async def test_migration_up_and_down(fresh_db_session):

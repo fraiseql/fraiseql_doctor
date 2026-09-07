@@ -982,6 +982,7 @@ class Endpoint(Base):
     url: str
     # ... other fields
 
+
 class HealthCheck(Base):
     endpoint_id: UUID
     status: str
