@@ -19,6 +19,7 @@ from uuid import uuid4
 
 import psutil
 import pytest
+
 from fraiseql_doctor.core.database.schemas import QueryCreate
 from fraiseql_doctor.core.execution_manager import (
     BatchMode,
@@ -33,7 +34,7 @@ from fraiseql_doctor.core.result_storage import ResultStorageManager, StorageBac
 from fraiseql_doctor.services.complexity import QueryComplexityAnalyzer
 
 
-@pytest.fixture()
+@pytest.fixture
 def memory_monitor():
     """Monitor memory usage during tests."""
     process = psutil.Process()
@@ -54,7 +55,7 @@ def memory_monitor():
     return MemoryMonitor()
 
 
-@pytest.fixture()
+@pytest.fixture
 async def failing_db_session():
     """Real test database session that fails in specific patterns - more reliable than mocks."""
     from tests.fixtures.real_services import TestDatabaseSession
@@ -64,7 +65,7 @@ async def failing_db_session():
     return session
 
 
-@pytest.fixture()
+@pytest.fixture
 def circuit_breaker():
     """Simple circuit breaker for testing."""
 
@@ -465,7 +466,7 @@ class TestResourceLeakDetection:
             # Should complete successfully
             assert stop_task.done()
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             assert False, "Execution manager stop() took too long - may indicate cleanup issues"
 
         # Additional verification: manager should be in stopped state
@@ -547,7 +548,7 @@ class TestDeadlockPrevention:
                 asyncio.gather(operation_forward(), operation_reverse()), timeout=2.0
             )
             deadlock_detected = False
-        except asyncio.TimeoutError:
+        except TimeoutError:
             deadlock_detected = True
 
         end_time = time.time()
