@@ -1,7 +1,7 @@
 """Pydantic schemas for execution/query history API responses."""
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -38,12 +38,12 @@ class ExecutionResponse(BaseModel):
     query: ExecutionQueryInfo
     endpoint: ExecutionEndpointInfo
     timestamp: datetime = Field(..., description="Execution start time")
-    execution_time: Optional[int] = Field(None, description="Response time in milliseconds")
+    execution_time: int | None = Field(None, description="Response time in milliseconds")
     success: bool = Field(..., description="Whether execution was successful")
     status: str = Field(..., description="Execution status (success, error, timeout, etc.)")
-    status_code: Optional[int] = Field(None, description="HTTP status code if available")
-    error: Optional[str] = Field(None, description="Error message if failed")
-    result: Optional[dict[str, Any]] = Field(None, description="Query result data")
+    status_code: int | None = Field(None, description="HTTP status code if available")
+    error: str | None = Field(None, description="Error message if failed")
+    result: dict[str, Any] | None = Field(None, description="Query result data")
     variables: dict[str, Any] = Field(default_factory=dict, description="Variables used")
     tags: list[str] = Field(default_factory=list, description="Query tags")
     favorite: bool = Field(False, description="Whether query is favorited")
@@ -114,12 +114,12 @@ class ExecutionStatsResponse(BaseModel):
 class QueryHistoryFilter(BaseModel):
     """Filter parameters for query history."""
 
-    endpoint_id: Optional[str] = None
-    success: Optional[bool] = None
-    search_term: Optional[str] = None
-    favorite: Optional[bool] = None
-    from_date: Optional[datetime] = None
-    to_date: Optional[datetime] = None
+    endpoint_id: str | None = None
+    success: bool | None = None
+    search_term: str | None = None
+    favorite: bool | None = None
+    from_date: datetime | None = None
+    to_date: datetime | None = None
 
 
 class QueryHistoryExportOptions(BaseModel):
@@ -128,4 +128,4 @@ class QueryHistoryExportOptions(BaseModel):
     format: str = Field(..., description="Export format (json, csv, graphql)")
     include_results: bool = Field(True, description="Include query results in export")
     include_variables: bool = Field(True, description="Include variables in export")
-    filter: Optional[QueryHistoryFilter] = None
+    filter: QueryHistoryFilter | None = None

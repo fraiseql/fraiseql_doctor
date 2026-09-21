@@ -3,7 +3,6 @@
 import json
 import sys
 from pathlib import Path
-from typing import Optional
 from uuid import UUID, uuid4
 
 import typer
@@ -120,13 +119,13 @@ def get_query_manager():
 @query_app.command("create")
 def create_query(
     name: str = typer.Option(..., "--name", "-n", help="Query name"),
-    file: Optional[Path] = typer.Option(None, "--file", "-f", help="GraphQL file path"),
-    endpoint: Optional[str] = typer.Option(None, "--endpoint", "-e", help="Target endpoint"),
-    description: Optional[str] = typer.Option(None, "--description", help="Query description"),
-    variables_file: Optional[Path] = typer.Option(
+    file: Path | None = typer.Option(None, "--file", "-f", help="GraphQL file path"),
+    endpoint: str | None = typer.Option(None, "--endpoint", "-e", help="Target endpoint"),
+    description: str | None = typer.Option(None, "--description", help="Query description"),
+    variables_file: Path | None = typer.Option(
         None, "--variables", "-v", help="Variables JSON/YAML file"
     ),
-    tags: Optional[list[str]] = typer.Option(None, "--tag", help="Query tags"),
+    tags: list[str] | None = typer.Option(None, "--tag", help="Query tags"),
     priority: str = typer.Option(
         "medium", "--priority", help="Priority: low, medium, high, critical"
     ),
@@ -191,14 +190,14 @@ def create_query(
 
 @query_app.command("list")
 def list_queries(
-    endpoint: Optional[str] = typer.Option(None, "--endpoint", "-e", help="Filter by endpoint"),
-    status: Optional[str] = typer.Option(None, "--status", help="Filter by status"),
-    priority: Optional[str] = typer.Option(None, "--priority", help="Filter by priority"),
-    tags: Optional[list[str]] = typer.Option(None, "--tag", help="Filter by tags"),
+    endpoint: str | None = typer.Option(None, "--endpoint", "-e", help="Filter by endpoint"),
+    status: str | None = typer.Option(None, "--status", help="Filter by status"),
+    priority: str | None = typer.Option(None, "--priority", help="Filter by priority"),
+    tags: list[str] | None = typer.Option(None, "--tag", help="Filter by tags"),
     limit: int = typer.Option(50, "--limit", help="Limit results"),
     offset: int = typer.Option(0, "--offset", help="Offset results"),
     format: str = typer.Option("table", "--format", help="Output format: table, json, csv"),
-    search: Optional[str] = typer.Option(None, "--search", "-s", help="Search query text"),
+    search: str | None = typer.Option(None, "--search", "-s", help="Search query text"),
 ):
     """List all queries with optional filtering."""
     try:
@@ -242,8 +241,8 @@ def list_queries(
 
 @query_app.command("show")
 def show_query(
-    query_id: Optional[str] = typer.Option(None, "--id", help="Query ID"),
-    name: Optional[str] = typer.Option(None, "--name", "-n", help="Query name"),
+    query_id: str | None = typer.Option(None, "--id", help="Query ID"),
+    name: str | None = typer.Option(None, "--name", "-n", help="Query name"),
     format: str = typer.Option("pretty", "--format", help="Output format: pretty, json, raw"),
 ):
     """Show detailed information about a query."""
@@ -287,14 +286,12 @@ def show_query(
 
 @query_app.command("execute")
 def execute_query(
-    query_id: Optional[str] = typer.Option(None, "--id", help="Query ID"),
-    name: Optional[str] = typer.Option(None, "--name", "-n", help="Query name"),
-    endpoint: Optional[str] = typer.Option(None, "--endpoint", "-e", help="Endpoint name or URL"),
-    variables_file: Optional[Path] = typer.Option(None, "--variables", "-v", help="Variables file"),
-    variables_json: Optional[str] = typer.Option(
-        None, "--var-json", help="Variables as JSON string"
-    ),
-    output: Optional[Path] = typer.Option(None, "--output", "-o", help="Save results to file"),
+    query_id: str | None = typer.Option(None, "--id", help="Query ID"),
+    name: str | None = typer.Option(None, "--name", "-n", help="Query name"),
+    endpoint: str | None = typer.Option(None, "--endpoint", "-e", help="Endpoint name or URL"),
+    variables_file: Path | None = typer.Option(None, "--variables", "-v", help="Variables file"),
+    variables_json: str | None = typer.Option(None, "--var-json", help="Variables as JSON string"),
+    output: Path | None = typer.Option(None, "--output", "-o", help="Save results to file"),
     format: str = typer.Option("json", "--format", help="Output format: json, table, raw"),
     timeout: int = typer.Option(30, "--timeout", help="Timeout in seconds"),
 ):
@@ -349,11 +346,11 @@ def execute_query(
 
 @query_app.command("update")
 def update_query(
-    query_id: Optional[str] = typer.Option(None, "--id", help="Query ID"),
-    name: Optional[str] = typer.Option(None, "--name", "-n", help="Query name to update"),
-    new_name: Optional[str] = typer.Option(None, "--new-name", help="New query name"),
-    file: Optional[Path] = typer.Option(None, "--file", "-f", help="New GraphQL file"),
-    description: Optional[str] = typer.Option(None, "--description", help="New description"),
+    query_id: str | None = typer.Option(None, "--id", help="Query ID"),
+    name: str | None = typer.Option(None, "--name", "-n", help="Query name to update"),
+    new_name: str | None = typer.Option(None, "--new-name", help="New query name"),
+    file: Path | None = typer.Option(None, "--file", "-f", help="New GraphQL file"),
+    description: str | None = typer.Option(None, "--description", help="New description"),
     validate: bool = typer.Option(True, "--validate/--no-validate", help="Validate GraphQL syntax"),
 ):
     """Update an existing query."""
@@ -411,8 +408,8 @@ def update_query(
 
 @query_app.command("delete")
 def delete_query(
-    query_id: Optional[str] = typer.Option(None, "--id", help="Query ID"),
-    name: Optional[str] = typer.Option(None, "--name", "-n", help="Query name"),
+    query_id: str | None = typer.Option(None, "--id", help="Query ID"),
+    name: str | None = typer.Option(None, "--name", "-n", help="Query name"),
     confirm: bool = typer.Option(False, "--confirm", help="Skip confirmation prompt"),
 ):
     """Delete a query."""
@@ -466,8 +463,8 @@ def delete_query(
 
 @query_app.command("validate")
 def validate_queries(
-    query_id: Optional[str] = typer.Option(None, "--id", help="Validate specific query"),
-    collection_id: Optional[str] = typer.Option(None, "--collection", help="Validate collection"),
+    query_id: str | None = typer.Option(None, "--id", help="Validate specific query"),
+    collection_id: str | None = typer.Option(None, "--collection", help="Validate collection"),
     fix_issues: bool = typer.Option(False, "--fix", help="Attempt to fix validation issues"),
 ):
     """Validate GraphQL query syntax."""

@@ -2,6 +2,7 @@
 
 Tests the complexity analysis functionality and optimization recommendations.
 """
+
 from fraiseql_doctor.services.complexity import (
     ComplexityLevel,
     ComplexityMetrics,
