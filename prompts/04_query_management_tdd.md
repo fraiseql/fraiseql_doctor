@@ -13,6 +13,7 @@ Define business behavior through failing tests that specify exact requirements.
 ```python
 # tests/test_query_service.py - Write FIRST
 """Test query service business logic and validation."""
+
 import pytest
 from uuid import uuid4
 from datetime import datetime, timedelta
@@ -24,20 +25,26 @@ from fraiseql_doctor.models.query import Query
 from fraiseql_doctor.core.exceptions import (
     QueryNotFoundError,
     QueryValidationError,
-    DuplicateQueryError
+    DuplicateQueryError,
 )
+
 
 async def test_create_query_with_comprehensive_validation(db_session):
     """Test creating query with full business validation."""
     # Mock validator for this test
     from unittest.mock import AsyncMock
+
     validator = AsyncMock()
-    validator.validate_query.return_value = type('ValidationResult', (), {
-        'is_valid': True,
-        'complexity_score': 42,
-        'errors': [],
-        'recommendations': ['Use fragments for reusability']
-    })()
+    validator.validate_query.return_value = type(
+        "ValidationResult",
+        (),
+        {
+            "is_valid": True,
+            "complexity_score": 42,
+            "errors": [],
+            "recommendations": ["Use fragments for reusability"],
+        },
+    )()
 
     service = QueryService(db_session, validator)
 
@@ -63,7 +70,7 @@ async def test_create_query_with_comprehensive_validation(db_session):
         """,
         variables={"userId": "user-123"},
         tags=["user", "profile", "production"],
-        created_by="api-team"
+        created_by="api-team",
     )
 
     result = await service.create_query(query_data)
@@ -77,8 +84,7 @@ async def test_create_query_with_comprehensive_validation(db_session):
 
     # Validator was called with correct parameters
     validator.validate_query.assert_called_once_with(
-        query_data.query_text,
-        query_data.variables
+        query_data.query_text, query_data.variables
     )
 
     # Query exists in database
@@ -89,21 +95,21 @@ async def test_create_query_with_comprehensive_validation(db_session):
     assert saved_query.name == "user-profile-query"
     assert saved_query.metadata["validation"]["complexity_score"] == 42
 
+
 async def test_create_query_duplicate_name_validation(db_session):
     """Test that duplicate query names are properly rejected."""
     from unittest.mock import AsyncMock
+
     validator = AsyncMock()
-    validator.validate_query.return_value = type('ValidationResult', (), {
-        'is_valid': True, 'complexity_score': 10, 'errors': []
-    })()
+    validator.validate_query.return_value = type(
+        "ValidationResult", (), {"is_valid": True, "complexity_score": 10, "errors": []}
+    )()
 
     service = QueryService(db_session, validator)
 
     # Create first query
     first_query = QueryCreate(
-        name="duplicate-test",
-        query_text="query { test1 }",
-        created_by="test"
+        name="duplicate-test", query_text="query { test1 }", created_by="test"
     )
     await service.create_query(first_query)
 
@@ -111,7 +117,7 @@ async def test_create_query_duplicate_name_validation(db_session):
     second_query = QueryCreate(
         name="duplicate-test",  # Same name!
         query_text="query { test2 }",
-        created_by="test"
+        created_by="test",
     )
 
     with pytest.raises(DuplicateQueryError) as exc_info:
@@ -120,22 +126,31 @@ async def test_create_query_duplicate_name_validation(db_session):
     assert "duplicate-test" in str(exc_info.value)
     assert "already exists" in str(exc_info.value)
 
+
 async def test_create_query_validation_failure(db_session):
     """Test query creation fails when GraphQL validation fails."""
     from unittest.mock import AsyncMock
+
     validator = AsyncMock()
-    validator.validate_query.return_value = type('ValidationResult', (), {
-        'is_valid': False,
-        'complexity_score': None,
-        'errors': ['Syntax error: Unexpected token "invalid"', 'Field "nonexistent" not found']
-    })()
+    validator.validate_query.return_value = type(
+        "ValidationResult",
+        (),
+        {
+            "is_valid": False,
+            "complexity_score": None,
+            "errors": [
+                'Syntax error: Unexpected token "invalid"',
+                'Field "nonexistent" not found',
+            ],
+        },
+    )()
 
     service = QueryService(db_session, validator)
 
     invalid_query = QueryCreate(
         name="invalid-query",
         query_text="query { invalid syntax here }",
-        created_by="test"
+        created_by="test",
     )
 
     with pytest.raises(QueryValidationError) as exc_info:
@@ -144,30 +159,30 @@ async def test_create_query_validation_failure(db_session):
     assert "Query validation failed" in str(exc_info.value)
     assert "Syntax error" in str(exc_info.value)
 
+
 async def test_update_query_revalidation_logic(db_session):
     """Test that updating query text triggers revalidation."""
     from unittest.mock import AsyncMock
+
     validator = AsyncMock()
 
     # Initial validation
-    validator.validate_query.return_value = type('ValidationResult', (), {
-        'is_valid': True, 'complexity_score': 20, 'errors': []
-    })()
+    validator.validate_query.return_value = type(
+        "ValidationResult", (), {"is_valid": True, "complexity_score": 20, "errors": []}
+    )()
 
     service = QueryService(db_session, validator)
 
     # Create query
     query_data = QueryCreate(
-        name="update-test",
-        query_text="query { user { id } }",
-        created_by="test"
+        name="update-test", query_text="query { user { id } }", created_by="test"
     )
     query = await service.create_query(query_data)
 
     # Update validation (different complexity)
-    validator.validate_query.return_value = type('ValidationResult', (), {
-        'is_valid': True, 'complexity_score': 35, 'errors': []
-    })()
+    validator.validate_query.return_value = type(
+        "ValidationResult", (), {"is_valid": True, "complexity_score": 35, "errors": []}
+    )()
 
     # Update query text
     update_data = QueryUpdate(
@@ -183,21 +198,32 @@ async def test_update_query_revalidation_logic(db_session):
     # Metadata should be updated
     assert updated_query.metadata["validation"]["complexity_score"] == 35
 
+
 async def test_query_search_and_filtering(db_session):
     """Test comprehensive query search and filtering capabilities."""
     from unittest.mock import AsyncMock
+
     validator = AsyncMock()
-    validator.validate_query.return_value = type('ValidationResult', (), {
-        'is_valid': True, 'complexity_score': 10, 'errors': []
-    })()
+    validator.validate_query.return_value = type(
+        "ValidationResult", (), {"is_valid": True, "complexity_score": 10, "errors": []}
+    )()
 
     service = QueryService(db_session, validator)
 
     # Create test queries with different attributes
     test_queries = [
-        QueryCreate(name="user-query", tags=["user", "production"], created_by="team-a"),
-        QueryCreate(name="order-query", tags=["order", "production"], created_by="team-b"),
-        QueryCreate(name="admin-query", tags=["admin", "internal"], created_by="team-a", is_active=False),
+        QueryCreate(
+            name="user-query", tags=["user", "production"], created_by="team-a"
+        ),
+        QueryCreate(
+            name="order-query", tags=["order", "production"], created_by="team-b"
+        ),
+        QueryCreate(
+            name="admin-query",
+            tags=["admin", "internal"],
+            created_by="team-a",
+            is_active=False,
+        ),
         QueryCreate(name="test-query", tags=["test"], created_by="team-a"),
     ]
 
@@ -222,20 +248,21 @@ async def test_query_search_and_filtering(db_session):
 
     # Test combined filtering
     team_a_production = await service.list_queries(
-        tags=["production"],
-        created_by="team-a"
+        tags=["production"], created_by="team-a"
     )
     assert len(team_a_production) == 1
     assert team_a_production[0].name == "user-query"
+
 
 async def test_query_performance_statistics(db_session):
     """Test query performance statistics calculation."""
     # This test defines requirements for performance tracking
     from unittest.mock import AsyncMock
+
     validator = AsyncMock()
-    validator.validate_query.return_value = type('ValidationResult', (), {
-        'is_valid': True, 'complexity_score': 10, 'errors': []
-    })()
+    validator.validate_query.return_value = type(
+        "ValidationResult", (), {"is_valid": True, "complexity_score": 10, "errors": []}
+    )()
 
     service = QueryService(db_session, validator)
 
@@ -243,7 +270,7 @@ async def test_query_performance_statistics(db_session):
     query_data = QueryCreate(
         name="perf-test-query",
         query_text="query { performance_test }",
-        created_by="test"
+        created_by="test",
     )
     query = await service.create_query(query_data)
 
@@ -264,6 +291,7 @@ async def test_query_performance_statistics(db_session):
 ```python
 # tests/test_execution_service.py - Write FIRST
 """Test query execution service business logic."""
+
 import pytest
 from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
@@ -273,17 +301,24 @@ from fraiseql_doctor.services.execution import ExecutionService
 from fraiseql_doctor.models.execution import Execution
 from fraiseql_doctor.core.exceptions import ExecutionError
 
-async def test_execute_query_complete_workflow(db_session, sample_query, sample_endpoint):
+
+async def test_execute_query_complete_workflow(
+    db_session, sample_query, sample_endpoint
+):
     """Test complete query execution workflow with metrics."""
     # Mock dependencies
     mock_client = AsyncMock()
-    mock_client.execute_query.return_value = type('GraphQLResponse', (), {
-        'data': {"user": {"id": "123", "name": "Test User"}},
-        'errors': None,
-        'response_time_ms': 150,
-        'complexity_score': 25,
-        'extensions': {"tracing": {"duration": 145}}
-    })()
+    mock_client.execute_query.return_value = type(
+        "GraphQLResponse",
+        (),
+        {
+            "data": {"user": {"id": "123", "name": "Test User"}},
+            "errors": None,
+            "response_time_ms": 150,
+            "complexity_score": 25,
+            "extensions": {"tracing": {"duration": 145}},
+        },
+    )()
 
     def client_factory(endpoint):
         return mock_client
@@ -298,7 +333,7 @@ async def test_execute_query_complete_workflow(db_session, sample_query, sample_
         query_id=sample_query.pk_query,
         endpoint_id=sample_endpoint.pk_endpoint,
         variables={"userId": "123"},
-        timeout=30
+        timeout=30,
     )
 
     # Verify business logic execution
@@ -309,6 +344,7 @@ async def test_execute_query_complete_workflow(db_session, sample_query, sample_
 
     # Verify execution record was created
     from sqlalchemy import select
+
     exec_result = await db_session.execute(
         select(Execution).where(Execution.fk_query == sample_query.pk_query)
     )
@@ -326,15 +362,22 @@ async def test_execute_query_complete_workflow(db_session, sample_query, sample_
     assert recorded_metrics.query_id == str(sample_query.pk_query)
     assert recorded_metrics.success is True
 
-async def test_execute_query_with_graphql_errors(db_session, sample_query, sample_endpoint):
+
+async def test_execute_query_with_graphql_errors(
+    db_session, sample_query, sample_endpoint
+):
     """Test execution handling of GraphQL errors."""
     mock_client = AsyncMock()
-    mock_client.execute_query.return_value = type('GraphQLResponse', (), {
-        'data': None,
-        'errors': [{"message": "Field not found", "path": ["user"]}],
-        'response_time_ms': 75,
-        'complexity_score': None
-    })()
+    mock_client.execute_query.return_value = type(
+        "GraphQLResponse",
+        (),
+        {
+            "data": None,
+            "errors": [{"message": "Field not found", "path": ["user"]}],
+            "response_time_ms": 75,
+            "complexity_score": None,
+        },
+    )()
 
     def client_factory(endpoint):
         return mock_client
@@ -342,8 +385,7 @@ async def test_execute_query_with_graphql_errors(db_session, sample_query, sampl
     service = ExecutionService(db_session, Mock(), Mock())
 
     result = await service.execute_query(
-        query_id=sample_query.pk_query,
-        endpoint_id=sample_endpoint.pk_endpoint
+        query_id=sample_query.pk_query, endpoint_id=sample_endpoint.pk_endpoint
     )
 
     # Should handle GraphQL errors gracefully
@@ -353,6 +395,7 @@ async def test_execute_query_with_graphql_errors(db_session, sample_query, sampl
 
     # Execution record should reflect error
     from sqlalchemy import select
+
     exec_result = await db_session.execute(
         select(Execution).where(Execution.fk_query == sample_query.pk_query)
     )
@@ -362,7 +405,10 @@ async def test_execute_query_with_graphql_errors(db_session, sample_query, sampl
     assert execution.error_code == "GRAPHQL_ERROR"
     assert "Field not found" in execution.error_message
 
-async def test_execute_query_inactive_resources(db_session, sample_query, sample_endpoint):
+
+async def test_execute_query_inactive_resources(
+    db_session, sample_query, sample_endpoint
+):
     """Test execution fails appropriately for inactive queries/endpoints."""
     # Make query inactive
     sample_query.is_active = False
@@ -372,21 +418,27 @@ async def test_execute_query_inactive_resources(db_session, sample_query, sample
 
     with pytest.raises(ExecutionError) as exc_info:
         await service.execute_query(
-            query_id=sample_query.pk_query,
-            endpoint_id=sample_endpoint.pk_endpoint
+            query_id=sample_query.pk_query, endpoint_id=sample_endpoint.pk_endpoint
         )
 
     assert "not active" in str(exc_info.value)
 
-async def test_execute_batch_queries_concurrency(db_session, sample_query, sample_endpoint):
+
+async def test_execute_batch_queries_concurrency(
+    db_session, sample_query, sample_endpoint
+):
     """Test batch execution handles concurrency correctly."""
     mock_client = AsyncMock()
-    mock_client.execute_query.return_value = type('GraphQLResponse', (), {
-        'data': {"success": True},
-        'errors': None,
-        'response_time_ms': 100,
-        'complexity_score': 10
-    })()
+    mock_client.execute_query.return_value = type(
+        "GraphQLResponse",
+        (),
+        {
+            "data": {"success": True},
+            "errors": None,
+            "response_time_ms": 100,
+            "complexity_score": 10,
+        },
+    )()
 
     def client_factory(endpoint):
         return mock_client
@@ -398,7 +450,7 @@ async def test_execute_batch_queries_concurrency(db_session, sample_query, sampl
         {
             "query_id": sample_query.pk_query,
             "endpoint_id": sample_endpoint.pk_endpoint,
-            "variables": {"batch": i}
+            "variables": {"batch": i},
         }
         for i in range(5)
     ]
@@ -412,6 +464,7 @@ async def test_execute_batch_queries_concurrency(db_session, sample_query, sampl
     # Verify concurrent execution (mock was called 5 times)
     assert mock_client.execute_query.call_count == 5
 
+
 async def test_execution_error_handling(db_session, sample_query, sample_endpoint):
     """Test execution service error handling and recovery."""
     mock_client = AsyncMock()
@@ -424,14 +477,14 @@ async def test_execution_error_handling(db_session, sample_query, sample_endpoin
 
     with pytest.raises(ExecutionError) as exc_info:
         await service.execute_query(
-            query_id=sample_query.pk_query,
-            endpoint_id=sample_endpoint.pk_endpoint
+            query_id=sample_query.pk_query, endpoint_id=sample_endpoint.pk_endpoint
         )
 
     assert "Network error" in str(exc_info.value)
 
     # Execution record should capture the error
     from sqlalchemy import select
+
     exec_result = await db_session.execute(
         select(Execution).where(Execution.fk_query == sample_query.pk_query)
     )
@@ -446,6 +499,7 @@ async def test_execution_error_handling(db_session, sample_query, sample_endpoin
 ```python
 # tests/test_health_service.py - Write FIRST
 """Test health monitoring service business logic."""
+
 import pytest
 from unittest.mock import AsyncMock
 from datetime import datetime, timedelta
@@ -453,27 +507,29 @@ from datetime import datetime, timedelta
 from fraiseql_doctor.services.health import HealthCheckService
 from fraiseql_doctor.models.health_check import HealthCheck
 
+
 async def test_comprehensive_endpoint_health_check(db_session, sample_endpoint):
     """Test comprehensive health check including introspection."""
     # Mock GraphQL client with introspection response
     mock_client = AsyncMock()
-    mock_client.execute_query.return_value = type('GraphQLResponse', (), {
-        'data': {
-            "__schema": {
-                "queryType": {"name": "Query"},
-                "mutationType": {"name": "Mutation"},
-                "subscriptionType": None
-            }
+    mock_client.execute_query.return_value = type(
+        "GraphQLResponse",
+        (),
+        {
+            "data": {
+                "__schema": {
+                    "queryType": {"name": "Query"},
+                    "mutationType": {"name": "Mutation"},
+                    "subscriptionType": None,
+                }
+            },
+            "errors": None,
+            "response_time_ms": 85,
+            "extensions": {"version": "1.2.3", "caching": {"enabled": True}},
+            "complexity_score": 5,
+            "cached": False,
         },
-        'errors': None,
-        'response_time_ms': 85,
-        'extensions': {
-            "version": "1.2.3",
-            "caching": {"enabled": True}
-        },
-        'complexity_score': 5,
-        'cached': False
-    })()
+    )()
 
     def client_factory(endpoint):
         return mock_client
@@ -490,8 +546,11 @@ async def test_comprehensive_endpoint_health_check(db_session, sample_endpoint):
 
     # Verify health check was recorded in database
     from sqlalchemy import select
+
     health_result = await db_session.execute(
-        select(HealthCheck).where(HealthCheck.fk_endpoint == sample_endpoint.pk_endpoint)
+        select(HealthCheck).where(
+            HealthCheck.fk_endpoint == sample_endpoint.pk_endpoint
+        )
     )
     health_check = health_result.scalar_one()
 
@@ -504,6 +563,7 @@ async def test_comprehensive_endpoint_health_check(db_session, sample_endpoint):
     # Verify endpoint last_health_check was updated
     await db_session.refresh(sample_endpoint)
     assert sample_endpoint.last_health_check is not None
+
 
 async def test_unhealthy_endpoint_detection(db_session, sample_endpoint):
     """Test detection and recording of unhealthy endpoints."""
@@ -524,13 +584,17 @@ async def test_unhealthy_endpoint_detection(db_session, sample_endpoint):
 
     # Should record unhealthy state
     from sqlalchemy import select
+
     health_result = await db_session.execute(
-        select(HealthCheck).where(HealthCheck.fk_endpoint == sample_endpoint.pk_endpoint)
+        select(HealthCheck).where(
+            HealthCheck.fk_endpoint == sample_endpoint.pk_endpoint
+        )
     )
     health_check = health_result.scalar_one()
 
     assert health_check.is_healthy is False
     assert health_check.error_message == "Connection refused"
+
 
 async def test_health_check_all_endpoints(db_session):
     """Test checking health of all active endpoints."""
@@ -543,7 +607,7 @@ async def test_health_check_all_endpoints(db_session):
             name=f"test-endpoint-{i}",
             url=f"https://api{i}.example.com/graphql",
             auth_type="none",
-            is_active=(i != 2)  # Make last one inactive
+            is_active=(i != 2),  # Make last one inactive
         )
         db_session.add(endpoint)
         endpoints.append(endpoint)
@@ -553,18 +617,29 @@ async def test_health_check_all_endpoints(db_session):
     # Mock different health states
     mock_responses = [
         # Healthy endpoint
-        type('GraphQLResponse', (), {
-            'data': {"__schema": {"queryType": {"name": "Query"}}},
-            'errors': None, 'response_time_ms': 50
-        })(),
+        type(
+            "GraphQLResponse",
+            (),
+            {
+                "data": {"__schema": {"queryType": {"name": "Query"}}},
+                "errors": None,
+                "response_time_ms": 50,
+            },
+        )(),
         # Slow endpoint
-        type('GraphQLResponse', (), {
-            'data': {"__schema": {"queryType": {"name": "Query"}}},
-            'errors': None, 'response_time_ms': 2000
-        })(),
+        type(
+            "GraphQLResponse",
+            (),
+            {
+                "data": {"__schema": {"queryType": {"name": "Query"}}},
+                "errors": None,
+                "response_time_ms": 2000,
+            },
+        )(),
     ]
 
     call_count = 0
+
     def mock_client_execute(query, **kwargs):
         nonlocal call_count
         if call_count < 2:
@@ -591,6 +666,7 @@ async def test_health_check_all_endpoints(db_session):
     healthy_count = sum(1 for r in results if r["is_healthy"])
     assert healthy_count == 2  # Both should be considered healthy
 
+
 async def test_health_history_retrieval(db_session, sample_endpoint):
     """Test retrieval of health check history."""
     # Create historical health checks
@@ -603,7 +679,7 @@ async def test_health_history_retrieval(db_session, sample_endpoint):
             check_time=now - timedelta(hours=i),
             is_healthy=(i % 2 == 0),  # Alternating health
             response_time_ms=100 + (i * 10),
-            error_message="Timeout" if i % 2 != 0 else None
+            error_message="Timeout" if i % 2 != 0 else None,
         )
         health_checks.append(health_check)
         db_session.add(health_check)
@@ -613,10 +689,7 @@ async def test_health_history_retrieval(db_session, sample_endpoint):
     service = HealthCheckService(db_session, Mock())
 
     # Get 24-hour history
-    history = await service.get_health_history(
-        sample_endpoint.pk_endpoint,
-        hours=24
-    )
+    history = await service.get_health_history(sample_endpoint.pk_endpoint, hours=24)
 
     assert len(history) == 5
 
@@ -636,6 +709,7 @@ Implement minimal services to make tests pass.
 ```python
 # src/fraiseql_doctor/services/query.py
 """Query management service with validation and storage."""
+
 from typing import List, Optional, Dict, Any
 from uuid import UUID
 from datetime import datetime
@@ -650,7 +724,7 @@ from fraiseql_doctor.schemas.query import QueryCreate, QueryUpdate, QueryRespons
 from fraiseql_doctor.core.exceptions import (
     QueryNotFoundError,
     QueryValidationError,
-    DuplicateQueryError
+    DuplicateQueryError,
 )
 
 
@@ -665,8 +739,7 @@ class QueryService:
         """Create a new query with validation."""
         # Validate query syntax and complexity
         validation_result = await self.validator.validate_query(
-            query_data.query_text,
-            query_data.variables
+            query_data.query_text, query_data.variables
         )
 
         if not validation_result.is_valid:
@@ -677,7 +750,9 @@ class QueryService:
         # Check for duplicate names
         existing = await self._get_query_by_name(query_data.name)
         if existing:
-            raise DuplicateQueryError(f"Query with name '{query_data.name}' already exists")
+            raise DuplicateQueryError(
+                f"Query with name '{query_data.name}' already exists"
+            )
 
         # Create query with validation metadata
         query = Query(
@@ -691,10 +766,12 @@ class QueryService:
             metadata={
                 "validation": {
                     "complexity_score": validation_result.complexity_score,
-                    "recommendations": getattr(validation_result, 'recommendations', [])
+                    "recommendations": getattr(
+                        validation_result, "recommendations", []
+                    ),
                 },
-                "created_via": "api"
-            }
+                "created_via": "api",
+            },
         )
 
         self.db.add(query)
@@ -718,7 +795,7 @@ class QueryService:
         is_active: bool | None = None,
         created_by: str | None = None,
         limit: int = 100,
-        offset: int = 0
+        offset: int = 0,
     ) -> List[QueryResponse]:
         """List queries with filtering."""
         stmt = select(Query)
@@ -726,7 +803,7 @@ class QueryService:
         # Apply filters
         if tags:
             # PostgreSQL JSONB containment operator
-            stmt = stmt.where(Query.tags.op('@>')([tags]))
+            stmt = stmt.where(Query.tags.op("@>")([tags]))
         if is_active is not None:
             stmt = stmt.where(Query.is_active == is_active)
         if created_by:
@@ -739,7 +816,9 @@ class QueryService:
 
         return [QueryResponse.from_orm(q) for q in queries]
 
-    async def update_query(self, query_id: UUID, update_data: QueryUpdate) -> QueryResponse:
+    async def update_query(
+        self, query_id: UUID, update_data: QueryUpdate
+    ) -> QueryResponse:
         """Update existing query with revalidation."""
         query = await self.db.get(Query, query_id)
         if not query:
@@ -748,8 +827,7 @@ class QueryService:
         # Validate if query text changed
         if update_data.query_text and update_data.query_text != query.query_text:
             validation_result = await self.validator.validate_query(
-                update_data.query_text,
-                update_data.variables or query.variables
+                update_data.query_text, update_data.variables or query.variables
             )
 
             if not validation_result.is_valid:
@@ -760,7 +838,7 @@ class QueryService:
             query.expected_complexity_score = validation_result.complexity_score
             query.metadata["validation"] = {
                 "complexity_score": validation_result.complexity_score,
-                "recommendations": getattr(validation_result, 'recommendations', [])
+                "recommendations": getattr(validation_result, "recommendations", []),
             }
 
         # Update fields
@@ -794,17 +872,14 @@ class QueryService:
     async def _calculate_performance_stats(self, query_id: UUID) -> Dict[str, Any]:
         """Calculate performance statistics for query."""
         # Basic implementation for tests
-        return {
-            "avg_response_time_ms": 0,
-            "success_rate": 0.0,
-            "total_executions": 0
-        }
+        return {"avg_response_time_ms": 0, "success_rate": 0.0, "total_executions": 0}
 ```
 
 #### 2.2 Execution Service Implementation
 ```python
 # src/fraiseql_doctor/services/execution.py
 """Query execution service with comprehensive tracking."""
+
 from typing import Dict, Any, List, Optional, Callable
 from uuid import UUID
 from datetime import datetime
@@ -822,10 +897,7 @@ class ExecutionService:
     """Service for executing FraiseQL queries."""
 
     def __init__(
-        self,
-        db_session: AsyncSession,
-        client_factory: Callable,
-        metrics_collector
+        self, db_session: AsyncSession, client_factory: Callable, metrics_collector
     ):
         self.db = db_session
         self.client_factory = client_factory
@@ -836,7 +908,7 @@ class ExecutionService:
         query_id: UUID,
         endpoint_id: UUID,
         variables: Dict[str, Any] | None = None,
-        timeout: int | None = None
+        timeout: int | None = None,
     ) -> Dict[str, Any]:
         """Execute a single query against an endpoint."""
         # Load query and endpoint
@@ -858,8 +930,8 @@ class ExecutionService:
             execution_context={
                 "timeout": timeout,
                 "user_agent": "fraiseql-doctor",
-                "version": "0.1.0"
-            }
+                "version": "0.1.0",
+            },
         )
 
         self.db.add(execution)
@@ -869,9 +941,7 @@ class ExecutionService:
             # Execute query
             client = self.client_factory(endpoint)
             response = await client.execute_query(
-                query.query_text,
-                variables or query.variables,
-                timeout=timeout
+                query.query_text, variables or query.variables, timeout=timeout
             )
 
             # Update execution with results
@@ -890,15 +960,18 @@ class ExecutionService:
 
             # Record metrics
             from fraiseql_doctor.services.metrics import QueryMetrics
-            self.metrics.record_query(QueryMetrics(
-                query_id=str(query_id),
-                endpoint_id=str(endpoint_id),
-                execution_time_ms=response.response_time_ms,
-                response_size_bytes=execution.response_size_bytes,
-                complexity_score=response.complexity_score,
-                success=execution.status == "success",
-                error_message=execution.error_message
-            ))
+
+            self.metrics.record_query(
+                QueryMetrics(
+                    query_id=str(query_id),
+                    endpoint_id=str(endpoint_id),
+                    execution_time_ms=response.response_time_ms,
+                    response_size_bytes=execution.response_size_bytes,
+                    complexity_score=response.complexity_score,
+                    success=execution.status == "success",
+                    error_message=execution.error_message,
+                )
+            )
 
             await self.db.commit()
 
@@ -908,7 +981,7 @@ class ExecutionService:
                 "response_time_ms": execution.response_time_ms,
                 "data": execution.response_data,
                 "errors": response.errors,
-                "complexity_score": execution.actual_complexity_score
+                "complexity_score": execution.actual_complexity_score,
             }
 
         except Exception as e:
@@ -923,9 +996,7 @@ class ExecutionService:
             raise ExecutionError(f"Query execution failed: {e}") from e
 
     async def execute_batch(
-        self,
-        executions: List[Dict[str, Any]],
-        max_concurrent: int = 5
+        self, executions: List[Dict[str, Any]], max_concurrent: int = 5
     ) -> List[Dict[str, Any]]:
         """Execute multiple queries concurrently."""
         semaphore = asyncio.Semaphore(max_concurrent)
@@ -936,7 +1007,7 @@ class ExecutionService:
                     query_id=exec_data["query_id"],
                     endpoint_id=exec_data["endpoint_id"],
                     variables=exec_data.get("variables"),
-                    timeout=exec_data.get("timeout")
+                    timeout=exec_data.get("timeout"),
                 )
 
         tasks = [execute_single(exec_data) for exec_data in executions]
@@ -946,13 +1017,15 @@ class ExecutionService:
         formatted_results = []
         for i, result in enumerate(results):
             if isinstance(result, Exception):
-                formatted_results.append({
-                    "execution_id": None,
-                    "status": "error",
-                    "error_message": str(result),
-                    "query_id": str(executions[i]["query_id"]),
-                    "endpoint_id": str(executions[i]["endpoint_id"])
-                })
+                formatted_results.append(
+                    {
+                        "execution_id": None,
+                        "status": "error",
+                        "error_message": str(result),
+                        "query_id": str(executions[i]["query_id"]),
+                        "endpoint_id": str(executions[i]["endpoint_id"]),
+                    }
+                )
             else:
                 formatted_results.append(result)
 
@@ -963,6 +1036,7 @@ class ExecutionService:
 ```python
 # src/fraiseql_doctor/services/health.py
 """Health monitoring service for FraiseQL endpoints."""
+
 from typing import Dict, Any, List, Callable
 from uuid import UUID
 from datetime import datetime, timedelta
@@ -978,11 +1052,7 @@ from fraiseql_doctor.models.health_check import HealthCheck
 class HealthCheckService:
     """Service for monitoring FraiseQL endpoint health."""
 
-    def __init__(
-        self,
-        db_session: AsyncSession,
-        client_factory: Callable
-    ):
+    def __init__(self, db_session: AsyncSession, client_factory: Callable):
         self.db = db_session
         self.client_factory = client_factory
 
@@ -993,8 +1063,7 @@ class HealthCheckService:
             raise ValueError(f"Endpoint {endpoint_id} not found")
 
         health_check = HealthCheck(
-            fk_endpoint=endpoint_id,
-            check_time=datetime.utcnow()
+            fk_endpoint=endpoint_id, check_time=datetime.utcnow()
         )
 
         try:
@@ -1023,7 +1092,8 @@ class HealthCheckService:
 
                 schema_data = response.data["__schema"]
                 health_check.available_operations = [
-                    op for op in ["query", "mutation", "subscription"]
+                    op
+                    for op in ["query", "mutation", "subscription"]
                     if schema_data.get(f"{op}Type")
                 ]
 
@@ -1034,8 +1104,9 @@ class HealthCheckService:
                 health_check.performance_metrics = {
                     "response_time_ms": int(response_time),
                     "complexity_supported": response.complexity_score is not None,
-                    "caching_enabled": response.cached or bool(response.extensions.get("caching")),
-                    "extensions_available": bool(response.extensions)
+                    "caching_enabled": response.cached
+                    or bool(response.extensions.get("caching")),
+                    "extensions_available": bool(response.extensions),
                 }
             else:
                 health_check.is_healthy = False
@@ -1059,7 +1130,7 @@ class HealthCheckService:
             "error_message": health_check.error_message,
             "available_operations": health_check.available_operations,
             "performance_metrics": health_check.performance_metrics,
-            "check_time": health_check.check_time.isoformat()
+            "check_time": health_check.check_time.isoformat(),
         }
 
     async def check_all_endpoints(self) -> List[Dict[str, Any]]:
@@ -1069,8 +1140,7 @@ class HealthCheckService:
         endpoints = result.scalars().all()
 
         tasks = [
-            self.check_endpoint_health(endpoint.pk_endpoint)
-            for endpoint in endpoints
+            self.check_endpoint_health(endpoint.pk_endpoint) for endpoint in endpoints
         ]
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -1079,21 +1149,21 @@ class HealthCheckService:
         formatted_results = []
         for i, result in enumerate(results):
             if isinstance(result, Exception):
-                formatted_results.append({
-                    "endpoint_id": str(endpoints[i].pk_endpoint),
-                    "is_healthy": False,
-                    "error_message": str(result),
-                    "check_time": datetime.utcnow().isoformat()
-                })
+                formatted_results.append(
+                    {
+                        "endpoint_id": str(endpoints[i].pk_endpoint),
+                        "is_healthy": False,
+                        "error_message": str(result),
+                        "check_time": datetime.utcnow().isoformat(),
+                    }
+                )
             else:
                 formatted_results.append(result)
 
         return formatted_results
 
     async def get_health_history(
-        self,
-        endpoint_id: UUID,
-        hours: int = 24
+        self, endpoint_id: UUID, hours: int = 24
     ) -> List[Dict[str, Any]]:
         """Get health check history for endpoint."""
         cutoff_time = datetime.utcnow() - timedelta(hours=hours)
@@ -1102,7 +1172,7 @@ class HealthCheckService:
             select(HealthCheck)
             .where(
                 HealthCheck.fk_endpoint == endpoint_id,
-                HealthCheck.check_time >= cutoff_time
+                HealthCheck.check_time >= cutoff_time,
             )
             .order_by(HealthCheck.check_time.desc())
         )
@@ -1116,7 +1186,7 @@ class HealthCheckService:
                 "is_healthy": hc.is_healthy,
                 "response_time_ms": hc.response_time_ms,
                 "error_message": hc.error_message,
-                "performance_metrics": hc.performance_metrics
+                "performance_metrics": hc.performance_metrics,
             }
             for hc in health_checks
         ]
@@ -1128,6 +1198,7 @@ class HealthCheckService:
 ```python
 # src/fraiseql_doctor/schemas/query.py
 """Query-related Pydantic schemas."""
+
 from typing import Any, List, Optional
 from uuid import UUID
 from datetime import datetime
@@ -1136,6 +1207,7 @@ from pydantic import BaseModel, Field
 
 class QueryCreate(BaseModel):
     """Schema for creating a new query."""
+
     name: str = Field(..., min_length=1, max_length=255)
     description: str | None = None
     query_text: str = Field(..., min_length=1)
@@ -1148,6 +1220,7 @@ class QueryCreate(BaseModel):
 
 class QueryUpdate(BaseModel):
     """Schema for updating a query."""
+
     name: str | None = Field(None, min_length=1, max_length=255)
     description: str | None = None
     query_text: str | None = Field(None, min_length=1)
@@ -1158,6 +1231,7 @@ class QueryUpdate(BaseModel):
 
 class QueryResponse(BaseModel):
     """Schema for query response."""
+
     pk_query: UUID
     name: str
     description: str | None
@@ -1183,33 +1257,43 @@ class QueryResponse(BaseModel):
 
 class FraiseQLDoctorError(Exception):
     """Base exception for FraiseQL Doctor."""
+
     pass
 
 
 class QueryNotFoundError(FraiseQLDoctorError):
     """Exception raised when query is not found."""
+
     pass
 
 
 class QueryValidationError(FraiseQLDoctorError):
     """Exception raised when query validation fails."""
+
     pass
 
 
 class DuplicateQueryError(FraiseQLDoctorError):
     """Exception raised when attempting to create duplicate query."""
+
     pass
 
 
 class ExecutionError(FraiseQLDoctorError):
     """Exception raised during query execution."""
+
     pass
 
 
 class GraphQLClientError(FraiseQLDoctorError):
     """Base exception for GraphQL client errors."""
 
-    def __init__(self, message: str, status_code: int | None = None, response_time_ms: int | None = None):
+    def __init__(
+        self,
+        message: str,
+        status_code: int | None = None,
+        response_time_ms: int | None = None,
+    ):
         super().__init__(message)
         self.status_code = status_code
         self.response_time_ms = response_time_ms
@@ -1225,6 +1309,7 @@ class GraphQLTimeoutError(GraphQLClientError):
 
 class CircuitBreakerOpenError(FraiseQLDoctorError):
     """Exception raised when circuit breaker is open."""
+
     pass
 ```
 

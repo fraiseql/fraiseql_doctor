@@ -2,7 +2,6 @@
 
 import json
 from pathlib import Path
-from typing import Optional
 from uuid import UUID, uuid4
 
 import typer
@@ -103,18 +102,18 @@ def get_endpoint_manager():
 def add_endpoint(
     name: str = typer.Option(..., "--name", "-n", help="Endpoint name"),
     url: str = typer.Option(..., "--url", "-u", help="GraphQL endpoint URL"),
-    description: Optional[str] = typer.Option(None, "--description", help="Endpoint description"),
-    auth_method: Optional[str] = typer.Option(
+    description: str | None = typer.Option(None, "--description", help="Endpoint description"),
+    auth_method: str | None = typer.Option(
         None, "--auth", help="Auth method: bearer, apikey, basic, none"
     ),
-    token: Optional[str] = typer.Option(None, "--token", help="Bearer token or API key"),
-    username: Optional[str] = typer.Option(None, "--username", help="Basic auth username"),
-    password: Optional[str] = typer.Option(None, "--password", help="Basic auth password"),
+    token: str | None = typer.Option(None, "--token", help="Bearer token or API key"),
+    username: str | None = typer.Option(None, "--username", help="Basic auth username"),
+    password: str | None = typer.Option(None, "--password", help="Basic auth password"),
     timeout: int = typer.Option(30, "--timeout", help="Request timeout in seconds"),
-    headers_file: Optional[Path] = typer.Option(
+    headers_file: Path | None = typer.Option(
         None, "--headers", help="JSON file with custom headers"
     ),
-    headers_json: Optional[str] = typer.Option(
+    headers_json: str | None = typer.Option(
         None, "--header-json", help="Custom headers as JSON string"
     ),
     test_connection: bool = typer.Option(
@@ -237,7 +236,7 @@ def add_endpoint(
 
 @endpoint_app.command("list")
 def list_endpoints(
-    status: Optional[str] = typer.Option(
+    status: str | None = typer.Option(
         None, "--status", help="Filter by status: healthy, unhealthy, unknown"
     ),
     format: str = typer.Option("table", "--format", help="Output format: table, json"),
@@ -322,8 +321,8 @@ def list_endpoints(
 
 @endpoint_app.command("show")
 def show_endpoint(
-    endpoint_id: Optional[str] = typer.Option(None, "--id", help="Endpoint ID"),
-    name: Optional[str] = typer.Option(None, "--name", "-n", help="Endpoint name"),
+    endpoint_id: str | None = typer.Option(None, "--id", help="Endpoint ID"),
+    name: str | None = typer.Option(None, "--name", "-n", help="Endpoint name"),
     format: str = typer.Option("pretty", "--format", help="Output format: pretty, json"),
     show_sensitive: bool = typer.Option(False, "--show-auth", help="Show authentication details"),
 ):
@@ -395,10 +394,10 @@ def show_endpoint(
 
 @endpoint_app.command("test")
 def test_endpoint(
-    endpoint_id: Optional[str] = typer.Option(None, "--id", help="Endpoint ID"),
-    name: Optional[str] = typer.Option(None, "--name", "-n", help="Endpoint name"),
-    query: Optional[str] = typer.Option(None, "--query", help="Custom test query"),
-    timeout: Optional[int] = typer.Option(None, "--timeout", help="Override timeout"),
+    endpoint_id: str | None = typer.Option(None, "--id", help="Endpoint ID"),
+    name: str | None = typer.Option(None, "--name", "-n", help="Endpoint name"),
+    query: str | None = typer.Option(None, "--query", help="Custom test query"),
+    timeout: int | None = typer.Option(None, "--timeout", help="Override timeout"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
 ):
     """Test endpoint connectivity and GraphQL capabilities."""
@@ -465,29 +464,26 @@ def test_endpoint(
 
                     raise typer.Exit(1)
 
-                else:
-                    rprint("[green]✓[/green] Connection test successful")
+                rprint("[green]✓[/green] Connection test successful")
 
-                    # Show schema info if using default query
-                    if not query and "data" in result and "__schema" in result["data"]:
-                        schema = result["data"]["__schema"]
+                # Show schema info if using default query
+                if not query and "data" in result and "__schema" in result["data"]:
+                    schema = result["data"]["__schema"]
+                    rprint(
+                        f"[green]Query Type:[/green] {schema.get('queryType', {}).get('name', 'Not available')}"
+                    )
+
+                    if schema.get("mutationType"):
+                        rprint(f"[green]Mutation Type:[/green] {schema['mutationType']['name']}")
+
+                    if schema.get("subscriptionType"):
                         rprint(
-                            f"[green]Query Type:[/green] {schema.get('queryType', {}).get('name', 'Not available')}"
+                            f"[green]Subscription Type:[/green] {schema['subscriptionType']['name']}"
                         )
 
-                        if schema.get("mutationType"):
-                            rprint(
-                                f"[green]Mutation Type:[/green] {schema['mutationType']['name']}"
-                            )
-
-                        if schema.get("subscriptionType"):
-                            rprint(
-                                f"[green]Subscription Type:[/green] {schema['subscriptionType']['name']}"
-                            )
-
-                    if verbose:
-                        rprint("\n[dim]Full response:[/dim]")
-                        rprint(json.dumps(result, indent=2))
+                if verbose:
+                    rprint("\n[dim]Full response:[/dim]")
+                    rprint(json.dumps(result, indent=2))
 
             except NetworkError as e:
                 progress.stop()
@@ -518,12 +514,12 @@ def test_endpoint(
 
 @endpoint_app.command("update")
 def update_endpoint(
-    endpoint_id: Optional[str] = typer.Option(None, "--id", help="Endpoint ID"),
-    name: Optional[str] = typer.Option(None, "--name", "-n", help="Endpoint name to update"),
-    new_name: Optional[str] = typer.Option(None, "--new-name", help="New endpoint name"),
-    url: Optional[str] = typer.Option(None, "--url", "-u", help="New endpoint URL"),
-    description: Optional[str] = typer.Option(None, "--description", help="New description"),
-    timeout: Optional[int] = typer.Option(None, "--timeout", help="New timeout in seconds"),
+    endpoint_id: str | None = typer.Option(None, "--id", help="Endpoint ID"),
+    name: str | None = typer.Option(None, "--name", "-n", help="Endpoint name to update"),
+    new_name: str | None = typer.Option(None, "--new-name", help="New endpoint name"),
+    url: str | None = typer.Option(None, "--url", "-u", help="New endpoint URL"),
+    description: str | None = typer.Option(None, "--description", help="New description"),
+    timeout: int | None = typer.Option(None, "--timeout", help="New timeout in seconds"),
     clear_auth: bool = typer.Option(False, "--clear-auth", help="Remove authentication"),
 ):
     """Update an existing endpoint."""
@@ -600,8 +596,8 @@ def update_endpoint(
 
 @endpoint_app.command("remove")
 def remove_endpoint(
-    endpoint_id: Optional[str] = typer.Option(None, "--id", help="Endpoint ID"),
-    name: Optional[str] = typer.Option(None, "--name", "-n", help="Endpoint name"),
+    endpoint_id: str | None = typer.Option(None, "--id", help="Endpoint ID"),
+    name: str | None = typer.Option(None, "--name", "-n", help="Endpoint name"),
     confirm: bool = typer.Option(False, "--confirm", help="Skip confirmation prompt"),
 ):
     """Remove an endpoint."""

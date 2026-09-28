@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import uuid4
 
 from fraiseql_doctor.core.fraiseql_client import GraphQLExecutionError, NetworkError
@@ -13,7 +13,7 @@ from fraiseql_doctor.services.complexity import QueryComplexityAnalyzer
 class TestGraphQLClient:
     """Lightweight test GraphQL client - predictable responses without external dependencies."""
 
-    def __init__(self, endpoint: Optional[Endpoint] = None):
+    def __init__(self, endpoint: Endpoint | None = None):
         self.endpoint = endpoint
         self.call_count = 0
         self.should_fail = False
@@ -25,7 +25,7 @@ class TestGraphQLClient:
         self.default_response = None
 
     async def execute_query(
-        self, query: str, variables: Optional[dict[str, Any]] = None
+        self, query: str, variables: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """Execute GraphQL query with predictable test responses."""
         self.call_count += 1
@@ -35,9 +35,9 @@ class TestGraphQLClient:
         if self.should_fail:
             if "network" in query.lower():
                 raise NetworkError("Test network error")
-            elif "error" in query.lower() or "fail" in query.lower():
+            if "error" in query.lower() or "fail" in query.lower():
                 raise GraphQLExecutionError("Test GraphQL error")
-            elif "poison" in query.lower():
+            if "poison" in query.lower():
                 raise Exception("Poison query executed")
 
         # Handle pattern-based failures
@@ -83,7 +83,7 @@ class TestGraphQLClient:
                 "_complexity_score": 5.2,
                 "_execution_time": 0.15,
             }
-        elif "dashboard" in query.lower():
+        if "dashboard" in query.lower():
             return {
                 "data": {
                     "dashboard": {
@@ -95,13 +95,12 @@ class TestGraphQLClient:
                 "_complexity_score": 15.8,
                 "_execution_time": 0.45,
             }
-        else:
-            # Default response
-            return {
-                "data": {"test": "result", "timestamp": datetime.now(UTC).isoformat()},
-                "_complexity_score": 3.0,
-                "_execution_time": 0.1,
-            }
+        # Default response
+        return {
+            "data": {"test": "result", "timestamp": datetime.now(UTC).isoformat()},
+            "_complexity_score": 3.0,
+            "_execution_time": 0.1,
+        }
 
     def set_failure_mode(self, should_fail: bool = True):
         """Enable/disable failure mode for testing error scenarios."""
@@ -140,26 +139,25 @@ class TestComplexityAnalyzer(QueryComplexityAnalyzer):
         self.should_fail = False
         self.custom_score = None
 
-    async def analyze_query(self, query: str, variables: Optional[dict[str, Any]] = None):
+    async def analyze_query(self, query: str, variables: dict[str, Any] | None = None):
         """Analyze query complexity with predictable test results."""
         if self.should_fail:
             if "invalid" in query.lower():
                 raise ValueError("Invalid GraphQL syntax")
-            elif "corrupted" in query.lower():
+            if "corrupted" in query.lower():
                 raise ValueError("Corrupted query content")
 
         if self.custom_score is not None:
             score = self.custom_score
+        # Predictable scoring based on query content
+        elif "complex" in query.lower() or "dashboard" in query.lower():
+            score = 15.5
+        elif len(query) > 1000:
+            score = min(50.0, len(query) / 100.0)  # Scale with length
+        elif query.count("{") > 3:  # Nested queries
+            score = query.count("{") * 2.5
         else:
-            # Predictable scoring based on query content
-            if "complex" in query.lower() or "dashboard" in query.lower():
-                score = 15.5
-            elif len(query) > 1000:
-                score = min(50.0, len(query) / 100.0)  # Scale with length
-            elif query.count("{") > 3:  # Nested queries
-                score = query.count("{") * 2.5
-            else:
-                score = 3.0
+            score = 3.0
 
         @dataclass
         class AnalysisResult:
@@ -205,18 +203,16 @@ class TestDatabaseSession:
         if self.should_fail:
             if self.custom_error:
                 raise self.custom_error
-            else:
-                raise Exception("Database connection lost")
+            raise Exception("Database connection lost")
         self.committed = True
 
-    async def execute(self, query: str, params: Optional[list] = None):
+    async def execute(self, query: str, params: list | None = None):
         """Execute query and return test results."""
         self.call_count += 1
         if self.should_fail:
             if self.custom_error:
                 raise self.custom_error
-            else:
-                raise Exception("Database connection lost")
+            raise Exception("Database connection lost")
         return self.results
 
     async def get(self, model_class, primary_key):
@@ -225,8 +221,7 @@ class TestDatabaseSession:
         if self.should_fail:
             if self.custom_error:
                 raise self.custom_error
-            else:
-                raise Exception("Database connection lost")
+            raise Exception("Database connection lost")
 
         # Return test object if requested
         if hasattr(model_class, "from_dict"):

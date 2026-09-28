@@ -5,8 +5,8 @@ Tests that the core components can be instantiated and basic functionality works
 without depending on complex database models.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, "/home/lionel/code/fraiseql_doctor/src")
 
@@ -216,7 +216,7 @@ def test_code_quality():
     print(f"   📏 Total Lines: {total_lines}")
     print(f"   🏗️  Total Classes: {total_classes}")
     print(f"   ⚙️  Total Methods: {total_methods}")
-    print(f"   📈 Avg Lines per File: {total_lines/len(phase4_files):.0f}")
+    print(f"   📈 Avg Lines per File: {total_lines / len(phase4_files):.0f}")
 
     # Quality checks
     if total_lines < 500:
@@ -324,7 +324,7 @@ def main():
     print("📊 Final Verification Results:")
     print(f"✅ Passed: {passed}")
     print(f"❌ Failed: {failed}")
-    print(f"📈 Success Rate: {passed/(passed+failed)*100:.1f}%")
+    print(f"📈 Success Rate: {passed / (passed + failed) * 100:.1f}%")
 
     if failed == 0:
         print("\n🎉 PHASE 4 VERIFICATION COMPLETE!")

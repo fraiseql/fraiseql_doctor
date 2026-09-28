@@ -41,6 +41,7 @@ class GraphQLFileHandler:
         ------
             ValueError: If file extension is invalid or parsing fails
             FileNotFoundError: If file doesn't exist
+
         """
         if file_path.suffix.lower() not in GraphQLFileHandler.VALID_EXTENSIONS:
             raise ValueError(
@@ -75,6 +76,7 @@ class GraphQLFileHandler:
         Raises:
         ------
             ValueError: If query has syntax errors
+
         """
         try:
             # Parse the query to check syntax
@@ -103,6 +105,7 @@ class GraphQLFileHandler:
         Returns:
         -------
             Dictionary with query information
+
         """
         try:
             parsed = parse(query)
@@ -159,23 +162,23 @@ class VariableFileHandler:
         ------
             ValueError: If file cannot be parsed
             FileNotFoundError: If file doesn't exist
+
         """
         try:
             content = file_path.read_text(encoding="utf-8")
 
             if file_path.suffix.lower() in {".json"}:
                 return json.loads(content)
-            elif file_path.suffix.lower() in {".yaml", ".yml"}:
+            if file_path.suffix.lower() in {".yaml", ".yml"}:
                 return yaml.safe_load(content) or {}
-            else:
-                # Try to auto-detect format
+            # Try to auto-detect format
+            try:
+                return json.loads(content)
+            except json.JSONDecodeError:
                 try:
-                    return json.loads(content)
-                except json.JSONDecodeError:
-                    try:
-                        return yaml.safe_load(content) or {}
-                    except yaml.YAMLError as e:
-                        raise ValueError(f"Cannot parse file as JSON or YAML: {e}") from e
+                    return yaml.safe_load(content) or {}
+                except yaml.YAMLError as e:
+                    raise ValueError(f"Cannot parse file as JSON or YAML: {e}") from e
 
         except UnicodeDecodeError as e:
             raise ValueError(f"Cannot decode file {file_path}: {e}") from e
@@ -195,6 +198,7 @@ class VariableFileHandler:
             file_path: Path to save file
             variables: Variables dictionary
             format: Output format ('json' or 'yaml')
+
         """
         try:
             if format.lower() == "json":
@@ -225,6 +229,7 @@ class VariableFileHandler:
         Returns:
         -------
             List of validation errors (empty if valid)
+
         """
         errors = []
 
@@ -286,6 +291,7 @@ class ExportHandler:
             queries: List of query dictionaries
             output_path: Output file path
             format: Export format ('json', 'yaml', 'csv')
+
         """
         try:
             if format.lower() == "json":
@@ -351,6 +357,7 @@ class ExportHandler:
         Returns:
         -------
             List of query dictionaries
+
         """
         try:
             content = file_path.read_text(encoding="utf-8")
