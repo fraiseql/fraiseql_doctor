@@ -1,4 +1,5 @@
 """Database fixtures for testing with real PostgreSQL."""
+
 import os
 from collections.abc import AsyncGenerator
 
