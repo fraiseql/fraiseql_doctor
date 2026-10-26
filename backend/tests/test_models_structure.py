@@ -1,4 +1,5 @@
 """Test database model structure and relationships."""
+
 from sqlalchemy import text
 
 

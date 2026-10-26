@@ -109,7 +109,7 @@ describe('AlertRuleForm', () => {
       const form = wrapper.find('form')
       await form.trigger('submit')
       await nextTick()
-      
+
       // Add small delay to allow validation to process
       await new Promise(resolve => setTimeout(resolve, 10))
 
@@ -132,7 +132,7 @@ describe('AlertRuleForm', () => {
       const form = wrapper.find('form')
       await form.trigger('submit')
       await nextTick()
-      
+
       // Add small delay to allow validation to process
       await new Promise(resolve => setTimeout(resolve, 10))
 
@@ -155,7 +155,7 @@ describe('AlertRuleForm', () => {
       const form = wrapper.find('form')
       await form.trigger('submit')
       await nextTick()
-      
+
       // Add small delay to allow validation to process
       await new Promise(resolve => setTimeout(resolve, 10))
 
@@ -174,7 +174,7 @@ describe('AlertRuleForm', () => {
       const form = wrapper.find('form')
       await form.trigger('submit')
       await nextTick()
-      
+
       // Add small delay to allow validation to process
       await new Promise(resolve => setTimeout(resolve, 10))
 
@@ -192,7 +192,7 @@ describe('AlertRuleForm', () => {
       const form = wrapper.find('form')
       await form.trigger('submit')
       await nextTick()
-      
+
       // Add delay to allow validation to process
       await new Promise(resolve => setTimeout(resolve, 10))
 

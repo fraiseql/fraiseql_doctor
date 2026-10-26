@@ -1,12 +1,14 @@
 """Test database performance requirements."""
+
 import time
 
 import pytest
-from fraiseql_doctor.models.query import Query
 from sqlalchemy import select
 
+from fraiseql_doctor.models.query import Query
 
-@pytest.mark.performance()
+
+@pytest.mark.performance
 async def test_query_list_performance(db_session):
     """Test that listing queries meets performance requirements."""
     # Create test data
@@ -38,7 +40,7 @@ async def test_query_list_performance(db_session):
     assert query_time < 0.1  # Should complete in < 100ms
 
 
-@pytest.mark.performance()
+@pytest.mark.performance
 async def test_execution_history_query_performance(db_session):
     """Test execution history queries meet performance requirements."""
     # This test defines the performance requirement
