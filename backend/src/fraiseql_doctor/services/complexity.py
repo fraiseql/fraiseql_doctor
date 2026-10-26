@@ -3,6 +3,7 @@
 Analyzes GraphQL queries to compute complexity scores and provide
 optimization recommendations.
 """
+
 import re
 from dataclasses import dataclass
 from enum import Enum
@@ -76,6 +77,7 @@ class QueryComplexityAnalyzer:
         Returns:
         -------
             ComplexityMetrics with analysis results
+
         """
         # Clean and normalize query
         normalized_query = self._normalize_query(query)
@@ -167,12 +169,11 @@ class QueryComplexityAnalyzer:
         """Determine complexity level based on score."""
         if score <= self.LOW_THRESHOLD:
             return ComplexityLevel.LOW
-        elif score <= self.MEDIUM_THRESHOLD:
+        if score <= self.MEDIUM_THRESHOLD:
             return ComplexityLevel.MEDIUM
-        elif score <= self.HIGH_THRESHOLD:
+        if score <= self.HIGH_THRESHOLD:
             return ComplexityLevel.HIGH
-        else:
-            return ComplexityLevel.VERY_HIGH
+        return ComplexityLevel.VERY_HIGH
 
     def _generate_recommendations(
         self, query: str, depth: int, field_count: int, score: int
@@ -239,18 +240,18 @@ class QueryComplexityAnalyzer:
         Returns:
         -------
             Tuple of (min_time_ms, max_time_ms)
+
         """
         # Base execution time estimates (in milliseconds)
         base_time = 10  # Base 10ms
 
         if complexity_score <= self.LOW_THRESHOLD:
             return (base_time, base_time * 3)
-        elif complexity_score <= self.MEDIUM_THRESHOLD:
+        if complexity_score <= self.MEDIUM_THRESHOLD:
             return (base_time * 2, base_time * 8)
-        elif complexity_score <= self.HIGH_THRESHOLD:
+        if complexity_score <= self.HIGH_THRESHOLD:
             return (base_time * 5, base_time * 20)
-        else:
-            return (base_time * 10, base_time * 50)
+        return (base_time * 10, base_time * 50)
 
     def suggest_optimizations(self, metrics: ComplexityMetrics) -> list[str]:
         """Suggest specific optimizations based on complexity metrics.
@@ -262,6 +263,7 @@ class QueryComplexityAnalyzer:
         Returns:
         -------
             List of specific optimization suggestions
+
         """
         optimizations = []
 

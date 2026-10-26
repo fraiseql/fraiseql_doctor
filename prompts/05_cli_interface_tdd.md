@@ -13,9 +13,11 @@ Define CLI behavior through failing tests that specify exact user experience req
 ```python
 # tests/test_cli_structure.py - Write FIRST
 """Test CLI command structure and help system."""
+
 import pytest
 from typer.testing import CliRunner
 from fraiseql_doctor.cli.main import app
+
 
 def test_main_app_help_output():
     """Test main app help shows all subcommands clearly."""
@@ -37,6 +39,7 @@ def test_main_app_help_output():
     # Should show helpful usage examples
     assert "Usage:" in result.stdout
 
+
 def test_subcommand_help_accessibility():
     """Test that all subcommands have accessible help."""
     runner = CliRunner()
@@ -49,6 +52,7 @@ def test_subcommand_help_accessibility():
         assert subcmd in result.stdout.lower()
         assert "Usage:" in result.stdout
 
+
 def test_version_command_clarity():
     """Test version command provides clear information."""
     runner = CliRunner()
@@ -57,6 +61,7 @@ def test_version_command_clarity():
     assert result.exit_code == 0
     assert "FraiseQL Doctor" in result.stdout
     assert "v0.1.0" in result.stdout
+
 
 def test_global_options_work():
     """Test global options work across commands."""
@@ -75,6 +80,7 @@ def test_global_options_work():
 ```python
 # tests/test_cli_query_commands.py - Write FIRST
 """Test query management CLI commands."""
+
 import pytest
 import json
 import tempfile
@@ -84,10 +90,11 @@ from unittest.mock import AsyncMock, patch
 
 from fraiseql_doctor.cli.main import app
 
+
 @pytest.fixture
 def temp_graphql_file():
     """Create temporary GraphQL file for testing."""
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.graphql', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".graphql", delete=False) as f:
         f.write("""
             query GetUserProfile($userId: ID!) {
                 user(id: $userId) {
@@ -107,27 +114,43 @@ def temp_graphql_file():
     # Cleanup
     Path(f.name).unlink()
 
+
 def test_query_create_from_file(temp_graphql_file):
     """Test creating query from GraphQL file."""
     runner = CliRunner()
 
-    with patch('fraiseql_doctor.cli.commands.query_commands.get_query_service') as mock_service:
+    with patch(
+        "fraiseql_doctor.cli.commands.query_commands.get_query_service"
+    ) as mock_service:
         # Mock successful query creation
         mock_query_service = AsyncMock()
-        mock_query_service.create_query.return_value = type('QueryResponse', (), {
-            'pk_query': 'test-uuid-123',
-            'name': 'user-profile-query',
-            'expected_complexity_score': 42
-        })()
+        mock_query_service.create_query.return_value = type(
+            "QueryResponse",
+            (),
+            {
+                "pk_query": "test-uuid-123",
+                "name": "user-profile-query",
+                "expected_complexity_score": 42,
+            },
+        )()
         mock_service.return_value.__aenter__.return_value = mock_query_service
 
-        result = runner.invoke(app, [
-            "query", "create", "user-profile-query",
-            "--file", str(temp_graphql_file),
-            "--description", "Get user profile with bio and avatar",
-            "--tag", "user",
-            "--tag", "profile"
-        ])
+        result = runner.invoke(
+            app,
+            [
+                "query",
+                "create",
+                "user-profile-query",
+                "--file",
+                str(temp_graphql_file),
+                "--description",
+                "Get user profile with bio and avatar",
+                "--tag",
+                "user",
+                "--tag",
+                "profile",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "created successfully" in result.stdout
@@ -141,58 +164,75 @@ def test_query_create_from_file(temp_graphql_file):
         assert "user" in call_args.tags
         assert "profile" in call_args.tags
 
+
 def test_query_create_interactive_mode():
     """Test interactive query creation."""
     runner = CliRunner()
 
-    with patch('fraiseql_doctor.cli.commands.query_commands.get_query_service') as mock_service:
+    with patch(
+        "fraiseql_doctor.cli.commands.query_commands.get_query_service"
+    ) as mock_service:
         mock_query_service = AsyncMock()
-        mock_query_service.create_query.return_value = type('QueryResponse', (), {
-            'pk_query': 'interactive-uuid',
-            'name': 'interactive-query'
-        })()
+        mock_query_service.create_query.return_value = type(
+            "QueryResponse",
+            (),
+            {"pk_query": "interactive-uuid", "name": "interactive-query"},
+        )()
         mock_service.return_value.__aenter__.return_value = mock_query_service
 
         # Simulate user input for interactive mode
         user_inputs = [
-            "interactive-query",           # Query name
-            "Test interactive creation",   # Description
-            "user,test",                  # Tags
-            "query { test }",             # Query text (followed by EOF)
-            "",                           # EOF simulation
-            "y"                           # Confirm creation
+            "interactive-query",  # Query name
+            "Test interactive creation",  # Description
+            "user,test",  # Tags
+            "query { test }",  # Query text (followed by EOF)
+            "",  # EOF simulation
+            "y",  # Confirm creation
         ]
 
-        result = runner.invoke(app, [
-            "query", "create", "temp-name", "--interactive"
-        ], input="\n".join(user_inputs))
+        result = runner.invoke(
+            app,
+            ["query", "create", "temp-name", "--interactive"],
+            input="\n".join(user_inputs),
+        )
 
         assert result.exit_code == 0
         assert "created successfully" in result.stdout
+
 
 def test_query_list_with_filters():
     """Test query listing with various filters."""
     runner = CliRunner()
 
-    with patch('fraiseql_doctor.cli.commands.query_commands.get_query_service') as mock_service:
+    with patch(
+        "fraiseql_doctor.cli.commands.query_commands.get_query_service"
+    ) as mock_service:
         # Mock query list response
         mock_queries = [
-            type('QueryResponse', (), {
-                'name': 'user-query',
-                'description': 'Get user data',
-                'tags': ['user', 'production'],
-                'is_active': True,
-                'created_at': '2024-01-01T00:00:00',
-                'created_by': 'team-a'
-            })(),
-            type('QueryResponse', (), {
-                'name': 'order-query',
-                'description': 'Get order data',
-                'tags': ['order', 'production'],
-                'is_active': True,
-                'created_at': '2024-01-02T00:00:00',
-                'created_by': 'team-b'
-            })()
+            type(
+                "QueryResponse",
+                (),
+                {
+                    "name": "user-query",
+                    "description": "Get user data",
+                    "tags": ["user", "production"],
+                    "is_active": True,
+                    "created_at": "2024-01-01T00:00:00",
+                    "created_by": "team-a",
+                },
+            )(),
+            type(
+                "QueryResponse",
+                (),
+                {
+                    "name": "order-query",
+                    "description": "Get order data",
+                    "tags": ["order", "production"],
+                    "is_active": True,
+                    "created_at": "2024-01-02T00:00:00",
+                    "created_by": "team-b",
+                },
+            )(),
         ]
 
         mock_query_service = AsyncMock()
@@ -209,10 +249,7 @@ def test_query_list_with_filters():
         result = runner.invoke(app, ["query", "list", "--tag", "user"])
         assert result.exit_code == 0
         mock_query_service.list_queries.assert_called_with(
-            tags=["user"],
-            is_active=True,
-            created_by=None,
-            limit=20
+            tags=["user"], is_active=True, created_by=None, limit=20
         )
 
         # Test with creator filter
@@ -223,19 +260,26 @@ def test_query_list_with_filters():
         result = runner.invoke(app, ["query", "list", "--active-only=false"])
         assert result.exit_code == 0
 
+
 def test_query_list_output_formats():
     """Test different output formats for query listing."""
     runner = CliRunner()
 
-    with patch('fraiseql_doctor.cli.commands.query_commands.get_query_service') as mock_service:
-        mock_query = type('QueryResponse', (), {
-            'name': 'test-query',
-            'description': 'Test query',
-            'tags': ['test'],
-            'is_active': True,
-            'created_at': '2024-01-01T00:00:00',
-            'pk_query': 'test-uuid'
-        })()
+    with patch(
+        "fraiseql_doctor.cli.commands.query_commands.get_query_service"
+    ) as mock_service:
+        mock_query = type(
+            "QueryResponse",
+            (),
+            {
+                "name": "test-query",
+                "description": "Test query",
+                "tags": ["test"],
+                "is_active": True,
+                "created_at": "2024-01-01T00:00:00",
+                "pk_query": "test-uuid",
+            },
+        )()
 
         mock_query_service = AsyncMock()
         mock_query_service.list_queries.return_value = [mock_query]
@@ -255,37 +299,44 @@ def test_query_list_output_formats():
         result = runner.invoke(app, ["query", "list", "--format", "yaml"])
         assert result.exit_code == 0
 
+
 def test_query_show_detailed_view():
     """Test detailed query information display."""
     runner = CliRunner()
 
-    with patch('fraiseql_doctor.cli.commands.query_commands.get_query_service') as mock_service:
-        mock_query = type('QueryResponse', (), {
-            'pk_query': 'detail-uuid',
-            'name': 'detailed-query',
-            'description': 'A complex query for testing',
-            'query_text': 'query GetUser($id: ID!) { user(id: $id) { id name } }',
-            'variables': {'id': '123'},
-            'tags': ['user', 'detail'],
-            'is_active': True,
-            'created_at': '2024-01-01T00:00:00',
-            'updated_at': '2024-01-01T00:00:00',
-            'expected_complexity_score': 35,
-            'recent_executions': [
-                {
-                    'execution_id': 'exec-1',
-                    'status': 'success',
-                    'response_time_ms': 150,
-                    'execution_start': '2024-01-01T12:00:00',
-                    'error_message': None
-                }
-            ],
-            'performance_stats': {
-                'avg_response_time_ms': 145.5,
-                'success_rate': 98.5,
-                'total_executions': 42
-            }
-        })()
+    with patch(
+        "fraiseql_doctor.cli.commands.query_commands.get_query_service"
+    ) as mock_service:
+        mock_query = type(
+            "QueryResponse",
+            (),
+            {
+                "pk_query": "detail-uuid",
+                "name": "detailed-query",
+                "description": "A complex query for testing",
+                "query_text": "query GetUser($id: ID!) { user(id: $id) { id name } }",
+                "variables": {"id": "123"},
+                "tags": ["user", "detail"],
+                "is_active": True,
+                "created_at": "2024-01-01T00:00:00",
+                "updated_at": "2024-01-01T00:00:00",
+                "expected_complexity_score": 35,
+                "recent_executions": [
+                    {
+                        "execution_id": "exec-1",
+                        "status": "success",
+                        "response_time_ms": 150,
+                        "execution_start": "2024-01-01T12:00:00",
+                        "error_message": None,
+                    }
+                ],
+                "performance_stats": {
+                    "avg_response_time_ms": 145.5,
+                    "success_rate": 98.5,
+                    "total_executions": 42,
+                },
+            },
+        )()
 
         mock_query_service = AsyncMock()
         mock_query_service.get_query.return_value = mock_query
@@ -314,36 +365,43 @@ def test_query_show_detailed_view():
         assert "145.5ms" in result.stdout
         assert "98.5%" in result.stdout
 
+
 def test_query_execute_with_variables():
     """Test query execution with variable handling."""
     runner = CliRunner()
 
-    with patch('fraiseql_doctor.cli.commands.query_commands.get_execution_service') as mock_service:
+    with patch(
+        "fraiseql_doctor.cli.commands.query_commands.get_execution_service"
+    ) as mock_service:
         mock_execution_service = AsyncMock()
         mock_execution_service.execute_query.return_value = {
-            'execution_id': 'exec-uuid',
-            'status': 'success',
-            'response_time_ms': 125,
-            'complexity_score': 20,
-            'data': {
-                'user': {
-                    'id': '123',
-                    'name': 'Test User',
-                    'email': 'test@example.com'
-                }
+            "execution_id": "exec-uuid",
+            "status": "success",
+            "response_time_ms": 125,
+            "complexity_score": 20,
+            "data": {
+                "user": {"id": "123", "name": "Test User", "email": "test@example.com"}
             },
-            'errors': None
+            "errors": None,
         }
         mock_service.return_value.__aenter__.return_value = mock_execution_service
 
         # Test with JSON variables
         variables_json = '{"userId": "123", "includeProfile": true}'
 
-        result = runner.invoke(app, [
-            "query", "execute", "user-query", "endpoint-1",
-            "--variables", variables_json,
-            "--timeout", "30"
-        ])
+        result = runner.invoke(
+            app,
+            [
+                "query",
+                "execute",
+                "user-query",
+                "endpoint-1",
+                "--variables",
+                variables_json,
+                "--timeout",
+                "30",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "success" in result.stdout
@@ -353,35 +411,36 @@ def test_query_execute_with_variables():
         # Verify execution service was called correctly
         mock_execution_service.execute_query.assert_called_once()
 
+
 def test_query_execute_error_handling():
     """Test query execution error scenarios."""
     runner = CliRunner()
 
-    with patch('fraiseql_doctor.cli.commands.query_commands.get_execution_service') as mock_service:
+    with patch(
+        "fraiseql_doctor.cli.commands.query_commands.get_execution_service"
+    ) as mock_service:
         mock_execution_service = AsyncMock()
         mock_execution_service.execute_query.return_value = {
-            'execution_id': 'error-exec',
-            'status': 'error',
-            'response_time_ms': 50,
-            'complexity_score': None,
-            'data': None,
-            'errors': [
+            "execution_id": "error-exec",
+            "status": "error",
+            "response_time_ms": 50,
+            "complexity_score": None,
+            "data": None,
+            "errors": [
                 {
-                    'message': 'Field "nonexistent" not found on type "User"',
-                    'locations': [{'line': 2, 'column': 5}],
-                    'path': ['user', 'nonexistent']
+                    "message": 'Field "nonexistent" not found on type "User"',
+                    "locations": [{"line": 2, "column": 5}],
+                    "path": ["user", "nonexistent"],
                 }
-            ]
+            ],
         }
         mock_service.return_value.__aenter__.return_value = mock_execution_service
 
-        result = runner.invoke(app, [
-            "query", "execute", "broken-query", "endpoint-1"
-        ])
+        result = runner.invoke(app, ["query", "execute", "broken-query", "endpoint-1"])
 
         assert result.exit_code == 0  # CLI should handle errors gracefully
         assert "error" in result.stdout.lower()
-        assert "Field \"nonexistent\" not found" in result.stdout
+        assert 'Field "nonexistent" not found' in result.stdout
 
         # Should show error details clearly
         assert "Errors:" in result.stdout
@@ -391,6 +450,7 @@ def test_query_execute_error_handling():
 ```python
 # tests/test_cli_config_and_errors.py - Write FIRST
 """Test CLI configuration management and error handling."""
+
 import pytest
 import tempfile
 import yaml
@@ -399,6 +459,7 @@ from typer.testing import CliRunner
 
 from fraiseql_doctor.cli.main import app
 
+
 def test_config_init_creates_proper_structure():
     """Test config initialization creates proper directory structure."""
     runner = CliRunner()
@@ -406,10 +467,7 @@ def test_config_init_creates_proper_structure():
     with tempfile.TemporaryDirectory() as temp_dir:
         config_dir = Path(temp_dir) / "test-config"
 
-        result = runner.invoke(app, [
-            "config", "init",
-            "--dir", str(config_dir)
-        ])
+        result = runner.invoke(app, ["config", "init", "--dir", str(config_dir)])
 
         assert result.exit_code == 0
         assert "Configuration initialized" in result.stdout
@@ -433,6 +491,7 @@ def test_config_init_creates_proper_structure():
         assert "url" in config["database"]
         assert "pool_size" in config["database"]
 
+
 def test_config_init_force_overwrite():
     """Test config initialization with force overwrite."""
     runner = CliRunner()
@@ -446,23 +505,19 @@ def test_config_init_force_overwrite():
         config_file.write_text("existing: config")
 
         # Try init without force (should warn)
-        result = runner.invoke(app, [
-            "config", "init",
-            "--dir", str(config_dir)
-        ])
+        result = runner.invoke(app, ["config", "init", "--dir", str(config_dir)])
         assert result.exit_code == 0
         assert "already exists" in result.stdout
         assert config_file.read_text() == "existing: config"
 
         # Try init with force (should overwrite)
-        result = runner.invoke(app, [
-            "config", "init",
-            "--dir", str(config_dir),
-            "--force"
-        ])
+        result = runner.invoke(
+            app, ["config", "init", "--dir", str(config_dir), "--force"]
+        )
         assert result.exit_code == 0
         assert "Configuration initialized" in result.stdout
         assert config_file.read_text() != "existing: config"
+
 
 def test_cli_error_handling_and_messages():
     """Test CLI provides helpful error messages."""
@@ -478,14 +533,19 @@ def test_cli_error_handling_and_messages():
     result = runner.invoke(app, ["query", "invalid-subcommand"])
     assert result.exit_code != 0
 
+
 def test_cli_handles_service_errors_gracefully():
     """Test CLI handles service errors with user-friendly messages."""
     runner = CliRunner()
 
-    with patch('fraiseql_doctor.cli.commands.query_commands.get_query_service') as mock_service:
+    with patch(
+        "fraiseql_doctor.cli.commands.query_commands.get_query_service"
+    ) as mock_service:
         # Mock service raising an exception
         mock_query_service = AsyncMock()
-        mock_query_service.list_queries.side_effect = Exception("Database connection failed")
+        mock_query_service.list_queries.side_effect = Exception(
+            "Database connection failed"
+        )
         mock_service.return_value.__aenter__.return_value = mock_query_service
 
         result = runner.invoke(app, ["query", "list"])
@@ -495,6 +555,7 @@ def test_cli_handles_service_errors_gracefully():
 
         # Should provide helpful guidance
         assert any(word in result.stdout.lower() for word in ["tip:", "help", "check"])
+
 
 def test_cli_verbose_mode():
     """Test verbose mode provides additional information."""
@@ -513,11 +574,13 @@ def test_cli_verbose_mode():
 ```python
 # tests/test_cli_dashboard.py - Write FIRST
 """Test interactive dashboard functionality."""
+
 import pytest
 from unittest.mock import AsyncMock, patch, Mock
 from typer.testing import CliRunner
 
 from fraiseql_doctor.cli.main import app
+
 
 def test_dashboard_command_exists():
     """Test dashboard command is available and accessible."""
@@ -528,12 +591,13 @@ def test_dashboard_command_exists():
     assert result.exit_code == 0
     assert "dashboard" in result.stdout
 
+
 @pytest.mark.slow
 def test_dashboard_starts_without_errors():
     """Test dashboard can start without immediate errors."""
     runner = CliRunner()
 
-    with patch('fraiseql_doctor.cli.dashboard.Dashboard') as mock_dashboard:
+    with patch("fraiseql_doctor.cli.dashboard.Dashboard") as mock_dashboard:
         mock_dashboard_instance = Mock()
         mock_dashboard_instance.show = Mock()
         mock_dashboard.return_value = mock_dashboard_instance
@@ -545,6 +609,7 @@ def test_dashboard_starts_without_errors():
         mock_dashboard.assert_called_once()
         mock_dashboard_instance.show.assert_called_once()
 
+
 def test_dashboard_layout_requirements():
     """Test dashboard layout meets requirements."""
     # This test defines the layout requirements for dashboard
@@ -553,7 +618,7 @@ def test_dashboard_layout_requirements():
     dashboard = Dashboard()
 
     # Should have layout components defined
-    assert hasattr(dashboard, 'layout')
+    assert hasattr(dashboard, "layout")
 
     # Should be able to initialize layout
     try:
@@ -570,6 +635,7 @@ Implement minimal CLI to make tests pass.
 ```python
 # src/fraiseql_doctor/cli/main.py
 """Main CLI application with comprehensive subcommands."""
+
 import typer
 from rich.console import Console
 from rich.panel import Panel
@@ -582,7 +648,7 @@ from fraiseql_doctor.cli.commands import (
     endpoint_commands,
     health_commands,
     schedule_commands,
-    config_commands
+    config_commands,
 )
 
 app = typer.Typer(
@@ -590,23 +656,30 @@ app = typer.Typer(
     help="🔍 Health monitoring and query execution tool for FraiseQL/GraphQL endpoints",
     rich_markup_mode="rich",
     no_args_is_help=True,
-    add_completion=True
+    add_completion=True,
 )
 
 console = Console()
 
 # Add subcommands
 app.add_typer(query_commands.app, name="query", help="📝 Manage FraiseQL queries")
-app.add_typer(endpoint_commands.app, name="endpoint", help="🌐 Manage GraphQL endpoints")
+app.add_typer(
+    endpoint_commands.app, name="endpoint", help="🌐 Manage GraphQL endpoints"
+)
 app.add_typer(health_commands.app, name="health", help="❤️ Monitor endpoint health")
-app.add_typer(schedule_commands.app, name="schedule", help="⏰ Schedule query execution")
+app.add_typer(
+    schedule_commands.app, name="schedule", help="⏰ Schedule query execution"
+)
 app.add_typer(config_commands.app, name="config", help="⚙️ Manage configuration")
+
 
 @app.callback()
 def main(
     ctx: typer.Context,
     version: bool = typer.Option(False, "--version", "-v", help="Show version"),
-    config_file: Optional[Path] = typer.Option(None, "--config", "-c", help="Config file path"),
+    config_file: Optional[Path] = typer.Option(
+        None, "--config", "-c", help="Config file path"
+    ),
     verbose: bool = typer.Option(False, "--verbose", help="Enable verbose logging"),
 ):
     """FraiseQL Doctor - Monitor and execute GraphQL queries."""
@@ -622,12 +695,15 @@ def main(
     if verbose:
         console.print("[dim]Verbose mode enabled[/dim]")
 
+
 @app.command()
 def dashboard():
     """📊 Show interactive dashboard with health overview."""
     from fraiseql_doctor.cli.dashboard import Dashboard
+
     dashboard = Dashboard()
     dashboard.show()
+
 
 if __name__ == "__main__":
     app()
@@ -637,6 +713,7 @@ if __name__ == "__main__":
 ```python
 # src/fraiseql_doctor/cli/commands/query_commands.py
 """Query management CLI commands."""
+
 import typer
 from rich.console import Console
 from rich.table import Table
@@ -653,19 +730,28 @@ from fraiseql_doctor.cli.utils import (
     get_query_service,
     get_execution_service,
     format_datetime,
-    handle_service_error
+    handle_service_error,
 )
 
 app = typer.Typer()
 console = Console()
 
+
 @app.command("create")
 def create_query(
     name: str = typer.Argument(..., help="Query name"),
-    description: Optional[str] = typer.Option(None, "--description", "-d", help="Query description"),
-    file: Optional[Path] = typer.Option(None, "--file", "-f", help="GraphQL file to read"),
-    interactive: bool = typer.Option(False, "--interactive", "-i", help="Interactive query builder"),
-    tags: Optional[List[str]] = typer.Option(None, "--tag", "-t", help="Tags for the query"),
+    description: Optional[str] = typer.Option(
+        None, "--description", "-d", help="Query description"
+    ),
+    file: Optional[Path] = typer.Option(
+        None, "--file", "-f", help="GraphQL file to read"
+    ),
+    interactive: bool = typer.Option(
+        False, "--interactive", "-i", help="Interactive query builder"
+    ),
+    tags: Optional[List[str]] = typer.Option(
+        None, "--tag", "-t", help="Tags for the query"
+    ),
 ):
     """Create a new FraiseQL query."""
 
@@ -684,7 +770,9 @@ def create_query(
             raise typer.Exit(1)
         query_text = file.read_text()
     elif interactive:
-        console.print("[yellow]Enter your GraphQL query (press Ctrl+D when finished):[/yellow]")
+        console.print(
+            "[yellow]Enter your GraphQL query (press Ctrl+D when finished):[/yellow]"
+        )
         lines = []
         try:
             while True:
@@ -693,7 +781,9 @@ def create_query(
         except EOFError:
             query_text = "\n".join(lines)
     else:
-        console.print("[red]Error: Either --file or --interactive must be specified[/red]")
+        console.print(
+            "[red]Error: Either --file or --interactive must be specified[/red]"
+        )
         raise typer.Exit(1)
 
     # Show query preview
@@ -718,7 +808,7 @@ def create_query(
                     description=description,
                     query_text=query_text,
                     tags=tags or [],
-                    created_by="cli"
+                    created_by="cli",
                 )
 
                 query = await service.create_query(query_data)
@@ -738,13 +828,24 @@ def create_query(
     console.print(f"[green]✅ Query '{name}' created successfully![/green]")
     console.print(f"Query ID: {query.pk_query}")
 
+
 @app.command("list")
 def list_queries(
-    tags: Optional[List[str]] = typer.Option(None, "--tag", "-t", help="Filter by tags"),
-    active_only: bool = typer.Option(True, "--active-only", help="Show only active queries"),
-    created_by: Optional[str] = typer.Option(None, "--created-by", help="Filter by creator"),
-    limit: int = typer.Option(20, "--limit", "-l", help="Maximum number of queries to show"),
-    format: str = typer.Option("table", "--format", help="Output format: table, json, yaml"),
+    tags: Optional[List[str]] = typer.Option(
+        None, "--tag", "-t", help="Filter by tags"
+    ),
+    active_only: bool = typer.Option(
+        True, "--active-only", help="Show only active queries"
+    ),
+    created_by: Optional[str] = typer.Option(
+        None, "--created-by", help="Filter by creator"
+    ),
+    limit: int = typer.Option(
+        20, "--limit", "-l", help="Maximum number of queries to show"
+    ),
+    format: str = typer.Option(
+        "table", "--format", help="Output format: table, json, yaml"
+    ),
 ):
     """List all FraiseQL queries."""
 
@@ -754,10 +855,7 @@ def list_queries(
         async with get_query_service() as service:
             try:
                 queries = await service.list_queries(
-                    tags=tags,
-                    is_active=active_only,
-                    created_by=created_by,
-                    limit=limit
+                    tags=tags, is_active=active_only, created_by=created_by, limit=limit
                 )
                 return queries
             except Exception as e:
@@ -781,6 +879,7 @@ def list_queries(
         console.print(json.dumps(output, indent=2, default=str))
     elif format == "yaml":
         import yaml
+
         output = [q.dict() for q in queries]
         console.print(yaml.dump(output, default_flow_style=False))
     else:
@@ -801,17 +900,22 @@ def list_queries(
                 query.description or "",
                 tags_str,
                 format_datetime(query.created_at),
-                status
+                status,
             )
 
         console.print(table)
         console.print(f"\n[dim]Showing {len(queries)} queries[/dim]")
 
+
 @app.command("show")
 def show_query(
     query_id: str = typer.Argument(..., help="Query ID or name"),
-    show_executions: bool = typer.Option(True, "--executions", help="Show recent executions"),
-    show_stats: bool = typer.Option(True, "--stats", help="Show performance statistics"),
+    show_executions: bool = typer.Option(
+        True, "--executions", help="Show recent executions"
+    ),
+    show_stats: bool = typer.Option(
+        True, "--stats", help="Show performance statistics"
+    ),
 ):
     """Show detailed information about a query."""
 
@@ -869,22 +973,29 @@ def show_query(
     # Show variables if any
     if query.variables:
         variables_syntax = Syntax(
-            json.dumps(query.variables, indent=2),
-            "json",
-            theme="monokai"
+            json.dumps(query.variables, indent=2), "json", theme="monokai"
         )
         console.print("\n[bold]Variables:[/bold]")
         console.print(Panel(variables_syntax, title="Query Variables"))
+
 
 @app.command("execute")
 def execute_query(
     query_id: str = typer.Argument(..., help="Query ID or name"),
     endpoint_id: str = typer.Argument(..., help="Endpoint ID or name"),
-    variables: Optional[str] = typer.Option(None, "--variables", "-v", help="Variables as JSON string"),
-    variables_file: Optional[Path] = typer.Option(None, "--variables-file", help="Variables from JSON file"),
+    variables: Optional[str] = typer.Option(
+        None, "--variables", "-v", help="Variables as JSON string"
+    ),
+    variables_file: Optional[Path] = typer.Option(
+        None, "--variables-file", help="Variables from JSON file"
+    ),
     timeout: Optional[int] = typer.Option(None, "--timeout", help="Timeout in seconds"),
-    output_file: Optional[Path] = typer.Option(None, "--output", "-o", help="Save output to file"),
-    format: str = typer.Option("pretty", "--format", help="Output format: pretty, json, yaml"),
+    output_file: Optional[Path] = typer.Option(
+        None, "--output", "-o", help="Save output to file"
+    ),
+    format: str = typer.Option(
+        "pretty", "--format", help="Output format: pretty, json, yaml"
+    ),
 ):
     """Execute a FraiseQL query against an endpoint."""
 
@@ -913,13 +1024,15 @@ def execute_query(
             try:
                 # Convert names to UUIDs if needed (simplified for now)
                 query_uuid = UUID(query_id) if len(query_id) > 20 else query_id
-                endpoint_uuid = UUID(endpoint_id) if len(endpoint_id) > 20 else endpoint_id
+                endpoint_uuid = (
+                    UUID(endpoint_id) if len(endpoint_id) > 20 else endpoint_id
+                )
 
                 result = await service.execute_query(
                     query_id=query_uuid,
                     endpoint_id=endpoint_uuid,
                     variables=query_variables,
-                    timeout=timeout
+                    timeout=timeout,
                 )
 
                 return result
@@ -940,12 +1053,14 @@ def execute_query(
     # Display execution result
     _display_execution_result(result, format, output_file)
 
+
 def _display_execution_result(result: dict, format: str, output_file: Optional[Path]):
     """Display execution result in specified format."""
     if format == "json":
         output = json.dumps(result, indent=2, default=str)
     elif format == "yaml":
         import yaml
+
         output = yaml.dump(result, default_flow_style=False)
     else:
         # Pretty format
@@ -958,17 +1073,17 @@ def _display_execution_result(result: dict, format: str, output_file: Optional[P
 
         summary_table.add_row("Status", f"{status_icon} {result['status']}")
         summary_table.add_row("Response Time", f"{result.get('response_time_ms', 0)}ms")
-        summary_table.add_row("Complexity Score", str(result.get('complexity_score', 'N/A')))
-        summary_table.add_row("Execution ID", str(result['execution_id']))
+        summary_table.add_row(
+            "Complexity Score", str(result.get("complexity_score", "N/A"))
+        )
+        summary_table.add_row("Execution ID", str(result["execution_id"]))
 
         console.print(summary_table)
 
         # Show data if successful
         if result["status"] == "success" and result.get("data"):
             data_syntax = Syntax(
-                json.dumps(result["data"], indent=2),
-                "json",
-                theme="monokai"
+                json.dumps(result["data"], indent=2), "json", theme="monokai"
             )
             console.print("\n[bold]Response Data:[/bold]")
             console.print(Panel(data_syntax, title="GraphQL Response"))
@@ -976,12 +1091,12 @@ def _display_execution_result(result: dict, format: str, output_file: Optional[P
         # Show errors if any
         if result.get("errors"):
             errors_syntax = Syntax(
-                json.dumps(result["errors"], indent=2),
-                "json",
-                theme="monokai"
+                json.dumps(result["errors"], indent=2), "json", theme="monokai"
             )
             console.print("\n[bold red]Errors:[/bold red]")
-            console.print(Panel(errors_syntax, title="GraphQL Errors", border_style="red"))
+            console.print(
+                Panel(errors_syntax, title="GraphQL Errors", border_style="red")
+            )
 
         return
 
@@ -997,6 +1112,7 @@ def _display_execution_result(result: dict, format: str, output_file: Optional[P
 ```python
 # src/fraiseql_doctor/cli/commands/config_commands.py
 """Configuration management commands."""
+
 import typer
 from rich.console import Console
 from pathlib import Path
@@ -1005,9 +1121,12 @@ import yaml
 app = typer.Typer()
 console = Console()
 
+
 @app.command("init")
 def init_config(
-    config_dir: Path = typer.Option(Path.home() / ".fraiseql-doctor", "--dir", help="Config directory"),
+    config_dir: Path = typer.Option(
+        Path.home() / ".fraiseql-doctor", "--dir", help="Config directory"
+    ),
     force: bool = typer.Option(False, "--force", help="Overwrite existing config"),
 ):
     """Initialize FraiseQL Doctor configuration."""
@@ -1026,30 +1145,32 @@ def init_config(
         "database": {
             "url": "postgresql://localhost/fraiseql_doctor",
             "pool_size": 5,
-            "max_overflow": 10
+            "max_overflow": 10,
         },
         "logging": {
             "level": "INFO",
-            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         },
         "defaults": {
             "timeout_seconds": 30,
             "max_retries": 3,
-            "health_check_interval": 300
-        }
+            "health_check_interval": 300,
+        },
     }
 
     # Write config file
-    with open(config_file, 'w') as f:
+    with open(config_file, "w") as f:
         yaml.dump(default_config, f, default_flow_style=False)
 
     console.print(f"[green]✅ Configuration initialized at {config_file}[/green]")
     console.print(f"[dim]Edit the file to customize your settings[/dim]")
 
+
 @app.command("show")
 def show_config():
     """Show current configuration."""
     console.print("[yellow]Configuration display not yet implemented[/yellow]")
+
 
 @app.command("validate")
 def validate_config():
@@ -1061,6 +1182,7 @@ def validate_config():
 ```python
 # src/fraiseql_doctor/cli/utils.py
 """CLI utility functions and helpers."""
+
 from typing import Any
 from datetime import datetime
 from contextlib import asynccontextmanager
@@ -1070,9 +1192,11 @@ from fraiseql_doctor.core.exceptions import FraiseQLDoctorError
 
 console = Console()
 
+
 def format_datetime(dt: datetime) -> str:
     """Format datetime for CLI display."""
     return dt.strftime("%Y-%m-%d %H:%M:%S")
+
 
 def handle_service_error(error: Exception, operation: str) -> None:
     """Handle service errors with user-friendly messages."""
@@ -1083,23 +1207,29 @@ def handle_service_error(error: Exception, operation: str) -> None:
 
     # Show help for common errors
     if "not found" in str(error).lower():
-        console.print("[dim]Tip: Use 'fraiseql-doctor query list' to see available queries[/dim]")
+        console.print(
+            "[dim]Tip: Use 'fraiseql-doctor query list' to see available queries[/dim]"
+        )
     elif "connection" in str(error).lower():
         console.print("[dim]Tip: Check your database connection settings[/dim]")
+
 
 @asynccontextmanager
 async def get_query_service():
     """Get query service with proper session management."""
     # Simplified implementation for tests
     from unittest.mock import AsyncMock
+
     service = AsyncMock()
     yield service
+
 
 @asynccontextmanager
 async def get_execution_service():
     """Get execution service with proper session management."""
     # Simplified implementation for tests
     from unittest.mock import AsyncMock
+
     service = AsyncMock()
     yield service
 ```
@@ -1108,6 +1238,7 @@ async def get_execution_service():
 ```python
 # src/fraiseql_doctor/cli/dashboard.py
 """Interactive dashboard for FraiseQL Doctor."""
+
 from rich.console import Console
 from rich.layout import Layout
 from rich.panel import Panel
@@ -1145,25 +1276,20 @@ class Dashboard:
         self.layout.split_column(
             Layout(name="header", size=3),
             Layout(name="main"),
-            Layout(name="footer", size=3)
+            Layout(name="footer", size=3),
         )
 
         # Split main into left and right panels
-        self.layout["main"].split_row(
-            Layout(name="left"),
-            Layout(name="right")
-        )
+        self.layout["main"].split_row(Layout(name="left"), Layout(name="right"))
 
         # Split left into endpoints and queries
         self.layout["left"].split_column(
-            Layout(name="endpoints", ratio=2),
-            Layout(name="queries", ratio=1)
+            Layout(name="endpoints", ratio=2), Layout(name="queries", ratio=1)
         )
 
         # Split right into health and metrics
         self.layout["right"].split_column(
-            Layout(name="health", ratio=1),
-            Layout(name="metrics", ratio=1)
+            Layout(name="health", ratio=1), Layout(name="metrics", ratio=1)
         )
 
     async def _update_loop(self):
@@ -1236,7 +1362,9 @@ class Dashboard:
         health_text.append("Warning: 1\n")
         health_text.append("Down: 1\n")
 
-        self.layout["health"].update(Panel(health_text, title="Health Summary", border_style="yellow"))
+        self.layout["health"].update(
+            Panel(health_text, title="Health Summary", border_style="yellow")
+        )
 
     async def _update_metrics_panel(self):
         """Update performance metrics panel."""
@@ -1250,7 +1378,9 @@ class Dashboard:
         metrics_text.append("Errors/hour: ")
         metrics_text.append("3", style="red")
 
-        self.layout["metrics"].update(Panel(metrics_text, title="Performance", border_style="cyan"))
+        self.layout["metrics"].update(
+            Panel(metrics_text, title="Performance", border_style="cyan")
+        )
 ```
 
 ## TDD Success Criteria for Phase 5
