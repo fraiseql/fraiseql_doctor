@@ -1,6 +1,6 @@
 """Execution API schemas."""
 
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -12,14 +12,14 @@ class ExecutionResponse(BaseModel):
     endpoint_id: str
     query_id: str
     status: str
-    operation_name: Optional[str] = None
+    operation_name: str | None = None
     started_at: str
-    completed_at: Optional[str] = None
-    response_time_ms: Optional[int] = None
-    complexity_score: Optional[int] = None
-    error_message: Optional[str] = None
-    variables: Optional[dict[str, Any]] = None
-    trace_id: Optional[str] = None
+    completed_at: str | None = None
+    response_time_ms: int | None = None
+    complexity_score: int | None = None
+    error_message: str | None = None
+    variables: dict[str, Any] | None = None
+    trace_id: str | None = None
 
 
 class ExecutionListResponse(BaseModel):
@@ -36,15 +36,15 @@ class CreateExecutionRequest(BaseModel):
 
     endpoint_id: str
     query: str
-    variables: Optional[dict[str, Any]] = None
-    execution_time: Optional[int] = None
+    variables: dict[str, Any] | None = None
+    execution_time: int | None = None
     success: bool = True
-    result: Optional[dict[str, Any]] = None
-    status_code: Optional[int] = None
-    error: Optional[str] = None
+    result: dict[str, Any] | None = None
+    status_code: int | None = None
+    error: str | None = None
 
 
 class UpdateExecutionRequest(BaseModel):
     """Request schema for updating an execution."""
 
-    favorite: Optional[bool] = None
+    favorite: bool | None = None

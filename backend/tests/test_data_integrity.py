@@ -1,8 +1,10 @@
 """Test database data integrity and constraints."""
+
 import pytest
+from sqlalchemy import select
+
 from fraiseql_doctor.models.endpoint import Endpoint
 from fraiseql_doctor.models.query import Query
-from sqlalchemy import select
 
 
 async def test_query_name_uniqueness(db_session):
