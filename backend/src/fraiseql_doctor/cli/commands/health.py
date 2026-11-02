@@ -4,7 +4,6 @@ import json
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich import print as rprint
@@ -89,10 +88,10 @@ def get_health_manager():
 
 @health_app.command("check")
 def health_check(
-    endpoint_id: Optional[str] = typer.Option(None, "--id", help="Specific endpoint ID"),
-    name: Optional[str] = typer.Option(None, "--name", "-n", help="Specific endpoint name"),
+    endpoint_id: str | None = typer.Option(None, "--id", help="Specific endpoint ID"),
+    name: str | None = typer.Option(None, "--name", "-n", help="Specific endpoint name"),
     all_endpoints: bool = typer.Option(False, "--all", help="Check all endpoints"),
-    query: Optional[str] = typer.Option(None, "--query", help="Custom health check query"),
+    query: str | None = typer.Option(None, "--query", help="Custom health check query"),
     timeout: int = typer.Option(10, "--timeout", help="Health check timeout"),
     format: str = typer.Option("table", "--format", help="Output format: table, json"),
     save_results: bool = typer.Option(False, "--save", help="Save results to database"),
@@ -254,12 +253,12 @@ def health_check(
 
 @health_app.command("monitor")
 def monitor_health(
-    endpoints: Optional[list[str]] = typer.Option(
+    endpoints: list[str] | None = typer.Option(
         None, "--endpoint", "-e", help="Endpoint names to monitor"
     ),
     all_endpoints: bool = typer.Option(False, "--all", help="Monitor all endpoints"),
     interval: int = typer.Option(30, "--interval", "-i", help="Check interval in seconds"),
-    duration: Optional[int] = typer.Option(None, "--duration", help="Monitor duration in seconds"),
+    duration: int | None = typer.Option(None, "--duration", help="Monitor duration in seconds"),
     alert_on_change: bool = typer.Option(False, "--alert", help="Alert on status changes"),
     save_results: bool = typer.Option(True, "--save/--no-save", help="Save results to database"),
 ):
@@ -416,11 +415,11 @@ def monitor_health(
 @health_app.command("report")
 def health_report(
     format: str = typer.Option("table", "--format", help="Output format: table, json, html"),
-    output: Optional[Path] = typer.Option(None, "--output", "-o", help="Save report to file"),
-    since: Optional[str] = typer.Option(
+    output: Path | None = typer.Option(None, "--output", "-o", help="Save report to file"),
+    since: str | None = typer.Option(
         None, "--since", help="Include results since (e.g., '1 hour ago', '2024-01-01')"
     ),
-    endpoint: Optional[str] = typer.Option(None, "--endpoint", help="Filter by endpoint name"),
+    endpoint: str | None = typer.Option(None, "--endpoint", help="Filter by endpoint name"),
     include_errors: bool = typer.Option(True, "--errors/--no-errors", help="Include error details"),
 ):
     """Generate health check report from historical data."""
@@ -578,7 +577,7 @@ def health_report(
 </head>
 <body>
     <h1>FraiseQL Doctor Health Report</h1>
-    <p>Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+    <p>Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
     <p>Total Health Checks: {len(health_checks)}</p>
 
     <h2>Endpoint Summary</h2>
@@ -604,10 +603,10 @@ def health_report(
                 html_content += f"""
         <tr>
             <td>{endpoint_name}</td>
-            <td>{stats['total_checks']}</td>
-            <td class="{uptime_class}">{stats['uptime_percentage']:.1f}%</td>
-            <td>{stats['avg_response_time']:.0f}ms</td>
-            <td>{stats['unhealthy_checks'] + stats['timeout_checks']}</td>
+            <td>{stats["total_checks"]}</td>
+            <td class="{uptime_class}">{stats["uptime_percentage"]:.1f}%</td>
+            <td>{stats["avg_response_time"]:.0f}ms</td>
+            <td>{stats["unhealthy_checks"] + stats["timeout_checks"]}</td>
         </tr>
 """
 
@@ -634,7 +633,7 @@ def health_report(
 
 @health_app.command("status")
 def health_status(
-    endpoint: Optional[str] = typer.Option(None, "--endpoint", "-e", help="Specific endpoint"),
+    endpoint: str | None = typer.Option(None, "--endpoint", "-e", help="Specific endpoint"),
     summary: bool = typer.Option(False, "--summary", help="Show summary only"),
 ):
     """Show current health status overview."""

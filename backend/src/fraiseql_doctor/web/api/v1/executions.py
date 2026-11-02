@@ -1,7 +1,6 @@
 """Query execution history API endpoints - Maps to Query History frontend feature."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -25,12 +24,12 @@ executions_router = APIRouter()
 
 @executions_router.get("/", response_model=ExecutionListResponse)
 async def get_query_history(
-    endpoint_id: Optional[str] = Query(None, description="Filter by endpoint ID"),
-    success: Optional[bool] = Query(None, description="Filter by success status"),
-    search: Optional[str] = Query(None, description="Search in query text and operation names"),
-    favorite: Optional[bool] = Query(None, description="Filter by favorite status"),
-    from_date: Optional[datetime] = Query(None, description="Filter from date"),
-    to_date: Optional[datetime] = Query(None, description="Filter to date"),
+    endpoint_id: str | None = Query(None, description="Filter by endpoint ID"),
+    success: bool | None = Query(None, description="Filter by success status"),
+    search: str | None = Query(None, description="Search in query text and operation names"),
+    favorite: bool | None = Query(None, description="Filter by favorite status"),
+    from_date: datetime | None = Query(None, description="Filter from date"),
+    to_date: datetime | None = Query(None, description="Filter to date"),
     limit: int = Query(100, le=1000, description="Maximum number of results"),
     offset: int = Query(0, description="Offset for pagination"),
     db: AsyncSession = Depends(get_database_session),
@@ -110,9 +109,9 @@ async def get_query_history(
 
 @executions_router.get("/stats", response_model=ExecutionStatsResponse)
 async def get_query_history_stats(
-    endpoint_id: Optional[str] = Query(None, description="Filter by endpoint ID"),
-    from_date: Optional[datetime] = Query(None, description="Stats from date"),
-    to_date: Optional[datetime] = Query(None, description="Stats to date"),
+    endpoint_id: str | None = Query(None, description="Filter by endpoint ID"),
+    from_date: datetime | None = Query(None, description="Stats from date"),
+    to_date: datetime | None = Query(None, description="Stats to date"),
     db: AsyncSession = Depends(get_database_session),
 ) -> ExecutionStatsResponse:
     """Get query execution statistics.
@@ -237,7 +236,7 @@ async def delete_execution(
 
 @executions_router.post("/clear")
 async def clear_all_executions(
-    endpoint_id: Optional[str] = Query(
+    endpoint_id: str | None = Query(
         None, description="Clear only executions for specific endpoint"
     ),
     db: AsyncSession = Depends(get_database_session),
