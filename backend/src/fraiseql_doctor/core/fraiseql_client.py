@@ -11,10 +11,10 @@ from ..services.fraiseql_client import (
 )
 
 __all__ = [
-    "FraiseQLClient",
-    "GraphQLExecutionError",
-    "NetworkError",
     "AuthenticationError",
+    "FraiseQLClient",
     "GraphQLClientError",
+    "GraphQLExecutionError",
     "GraphQLResponse",
+    "NetworkError",
 ]

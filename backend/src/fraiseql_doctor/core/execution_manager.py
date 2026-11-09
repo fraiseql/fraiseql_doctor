@@ -16,7 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
 from croniter import croniter
@@ -79,16 +79,16 @@ class ExecutionResult:
     endpoint_id: UUID
     status: ExecutionStatus
     started_at: datetime
-    completed_at: Optional[datetime] = None
-    execution_time: Optional[float] = None
+    completed_at: datetime | None = None
+    execution_time: float | None = None
     success: bool = False
-    result_data: Optional[dict[str, Any]] = None
-    error_message: Optional[str] = None
-    error_code: Optional[str] = None
-    complexity_score: Optional[float] = None
-    response_size: Optional[int] = None
+    result_data: dict[str, Any] | None = None
+    error_message: str | None = None
+    error_code: str | None = None
+    complexity_score: float | None = None
+    response_size: int | None = None
     cache_hit: bool = False
-    variables: Optional[dict[str, Any]] = None
+    variables: dict[str, Any] | None = None
 
 
 @dataclass
@@ -116,8 +116,8 @@ class ScheduledExecution:
     config: ExecutionConfig
     enabled: bool = True
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
-    last_execution: Optional[datetime] = None
-    next_execution: Optional[datetime] = None
+    last_execution: datetime | None = None
+    next_execution: datetime | None = None
 
 
 class QueryExecutionManager:
@@ -148,7 +148,7 @@ class QueryExecutionManager:
         self._running_executions: dict[UUID, asyncio.Task] = {}
         self._scheduled_executions: dict[UUID, ScheduledExecution] = {}
         self._execution_semaphore = asyncio.Semaphore(self.config.max_concurrent)
-        self._scheduler_task: Optional[asyncio.Task] = None
+        self._scheduler_task: asyncio.Task | None = None
         self._shutdown_event = asyncio.Event()
 
         # Metrics
@@ -169,8 +169,8 @@ class QueryExecutionManager:
         self,
         query_id: UUID,
         endpoint_id: UUID,
-        variables: Optional[dict[str, Any]] = None,
-        config_override: Optional[ExecutionConfig] = None,
+        variables: dict[str, Any] | None = None,
+        config_override: ExecutionConfig | None = None,
     ) -> ExecutionResult:
         """Execute a single query with comprehensive result tracking.
 
@@ -184,6 +184,7 @@ class QueryExecutionManager:
         Returns:
         -------
             ExecutionResult with complete execution details
+
         """
         execution_id = uuid4()
         config = config_override or self.config
@@ -283,7 +284,7 @@ class QueryExecutionManager:
                 logger.info(f"Completed execution {execution_id} in {execution_time:.2f}s")
                 return result
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return ExecutionResult(
                 execution_id=execution_id,
                 query_id=query_id,
@@ -343,8 +344,8 @@ class QueryExecutionManager:
         query_ids: list[UUID],
         endpoint_id: UUID,
         mode: BatchMode = BatchMode.PARALLEL,
-        variables_map: Optional[dict[UUID, dict[str, Any]]] = None,
-        config_override: Optional[ExecutionConfig] = None,
+        variables_map: dict[UUID, dict[str, Any]] | None = None,
+        config_override: ExecutionConfig | None = None,
     ) -> BatchExecutionResult:
         """Execute multiple queries in batch with different execution modes.
 
@@ -359,6 +360,7 @@ class QueryExecutionManager:
         Returns:
         -------
             BatchExecutionResult with aggregated results
+
         """
         batch_id = uuid4()
         config = config_override or self.config
@@ -547,7 +549,7 @@ class QueryExecutionManager:
         query_id: UUID,
         endpoint_id: UUID,
         cron_expression: str,
-        config_override: Optional[ExecutionConfig] = None,
+        config_override: ExecutionConfig | None = None,
     ) -> ScheduledExecution:
         """Schedule a query for recurring execution using cron expression.
 
@@ -561,6 +563,7 @@ class QueryExecutionManager:
         Returns:
         -------
             ScheduledExecution instance
+
         """
         # Validate cron expression
         try:
