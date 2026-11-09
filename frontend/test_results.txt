@@ -137,7 +137,7 @@ stdout | src/services/queryHistoryHybrid.ts:49:17
    ❯ src/services/__tests__/notificationService.test.ts > NotificationService > Unified Notification Sending > should emit events for notification success/failure
      → expected "spy" to be called with arguments: [ ObjectContaining{…} ]
 
-Received: 
+Received:
 
 
 
@@ -183,7 +183,7 @@ chartInstance after setProps: null
    ❯ src/components/__tests__/HistoricalTrendChart.test.ts > HistoricalTrendChart > Chart Configuration > should configure chart for response size metrics
      → expected "spy" to be called with arguments: [ Any<HTMLCanvasElement>, …(1) ]
 
-Received: 
+Received:
 
 
 
@@ -196,7 +196,7 @@ Number of calls: 0
    ❯ src/components/__tests__/HistoricalTrendChart.test.ts > HistoricalTrendChart > Interactive Features > should support zooming functionality
      → expected "spy" to be called with arguments: [ Any<HTMLCanvasElement>, …(1) ]
 
-Received: 
+Received:
 
 
 
@@ -270,7 +270,7 @@ If this is a long-running test, pass a timeout value as the last argument or con
    ❯ src/services/__tests__/realTimeQueryHistoryApi.test.ts > RealTimeQueryHistoryApi > Real-time Data Streaming > should establish real-time query stream for live monitoring
      → expected "spy" to be called with arguments: [ StringContaining{…} ]
 
-Received: 
+Received:
 
   1st spy call:
 

@@ -21,31 +21,31 @@ from .real_services import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def test_complexity_analyzer():
     """Create test complexity analyzer."""
     return TestComplexityAnalyzer()
 
 
-@pytest.fixture()
+@pytest.fixture
 def test_client_factory():
     """Create test GraphQL client factory."""
     return create_test_client_factory()
 
 
-@pytest.fixture()
+@pytest.fixture
 async def test_endpoint():
     """Create test endpoint."""
     return await create_test_endpoint()
 
 
-@pytest.fixture()
+@pytest.fixture
 def real_query_collection_manager(db_session, test_complexity_analyzer):
     """Create real QueryCollectionManager with existing database session."""
     return QueryCollectionManager(db_session, test_complexity_analyzer)
 
 
-@pytest.fixture()
+@pytest.fixture
 def real_execution_manager(db_session, test_client_factory, real_query_collection_manager):
     """Create real QueryExecutionManager with existing database session."""
     config = ExecutionConfig(timeout_seconds=30, max_retries=2, max_concurrent=5, batch_size=10)
@@ -54,7 +54,7 @@ def real_execution_manager(db_session, test_client_factory, real_query_collectio
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def real_result_storage_manager(db_session, tmp_path):
     """Create real ResultStorageManager with existing database session."""
     storage_path = tmp_path / "test_results"
@@ -68,7 +68,7 @@ def real_result_storage_manager(db_session, tmp_path):
     return ResultStorageManager(db_session, config)
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_query_data():
     """Sample query data for testing."""
     return {
@@ -79,7 +79,7 @@ def sample_query_data():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_collection_data():
     """Sample collection data for testing."""
     return {
@@ -90,7 +90,7 @@ def sample_collection_data():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_queries():
     """Sample GraphQL queries for testing."""
     return [
@@ -161,7 +161,7 @@ def sample_queries():
     ]
 
 
-@pytest.fixture()
+@pytest.fixture
 def created_query(real_query_collection_manager, sample_query_data):
     """Create a real query instance for testing."""
     # Create query using real services
@@ -175,7 +175,7 @@ def created_query(real_query_collection_manager, sample_query_data):
     return query
 
 
-@pytest.fixture()
+@pytest.fixture
 def created_collection(real_query_collection_manager, sample_collection_data):
     """Create a real collection instance for testing."""
     collection = QueryCollection.from_dict(
@@ -184,7 +184,7 @@ def created_collection(real_query_collection_manager, sample_collection_data):
     return collection
 
 
-@pytest.fixture()
+@pytest.fixture
 async def created_collection_with_queries(real_query_collection_manager, sample_queries):
     """Create a real collection with queries for testing."""
     from src.fraiseql_doctor.core.database.schemas import QueryCollectionCreate, QueryCreate

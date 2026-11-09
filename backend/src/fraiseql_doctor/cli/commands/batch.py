@@ -2,7 +2,6 @@
 
 import json
 from pathlib import Path
-from typing import Optional
 from uuid import UUID
 
 import typer
@@ -97,19 +96,19 @@ def get_managers():
 
 @batch_app.command("execute")
 def batch_execute(
-    collection_id: Optional[str] = typer.Option(
+    collection_id: str | None = typer.Option(
         None, "--collection", help="Execute all queries in collection"
     ),
-    query_ids: Optional[list[str]] = typer.Option(
+    query_ids: list[str] | None = typer.Option(
         None, "--query", help="Specific query IDs to execute"
     ),
-    query_file: Optional[Path] = typer.Option(
+    query_file: Path | None = typer.Option(
         None, "--queries-file", help="File with query IDs (one per line)"
     ),
-    endpoint_id: Optional[str] = typer.Option(
+    endpoint_id: str | None = typer.Option(
         None, "--endpoint-id", help="Endpoint ID to execute against"
     ),
-    endpoint_name: Optional[str] = typer.Option(
+    endpoint_name: str | None = typer.Option(
         None, "--endpoint", "-e", help="Endpoint name to execute against"
     ),
     mode: str = typer.Option(
@@ -117,7 +116,7 @@ def batch_execute(
     ),
     max_concurrent: int = typer.Option(5, "--max-concurrent", help="Maximum concurrent executions"),
     timeout: int = typer.Option(60, "--timeout", help="Query timeout in seconds"),
-    output_dir: Optional[Path] = typer.Option(
+    output_dir: Path | None = typer.Option(
         None, "--output", "-o", help="Save results to directory"
     ),
     format: str = typer.Option("json", "--format", help="Output format: json, csv"),
@@ -138,7 +137,7 @@ def batch_execute(
             rprint("Use --query to specify individual query IDs")
             raise typer.Exit(1)
 
-        elif query_ids:
+        if query_ids:
             target_query_ids = [UUID(qid) for qid in query_ids]
 
         elif query_file:
@@ -216,18 +215,18 @@ def batch_execute(
         summary_table.add_row(
             "Successful",
             str(batch_result.successful),
-            f"{(batch_result.successful/total)*100:.1f}%" if total > 0 else "0%",
+            f"{(batch_result.successful / total) * 100:.1f}%" if total > 0 else "0%",
         )
         summary_table.add_row(
             "Failed",
             str(batch_result.failed),
-            f"{(batch_result.failed/total)*100:.1f}%" if total > 0 else "0%",
+            f"{(batch_result.failed / total) * 100:.1f}%" if total > 0 else "0%",
         )
         if batch_result.cancelled > 0:
             summary_table.add_row(
                 "Cancelled",
                 str(batch_result.cancelled),
-                f"{(batch_result.cancelled/total)*100:.1f}%",
+                f"{(batch_result.cancelled / total) * 100:.1f}%",
             )
 
         summary_table.add_row("Total Time", f"{batch_result.total_time:.2f}s", "")
@@ -326,11 +325,11 @@ def batch_execute(
 @batch_app.command("import")
 def batch_import(
     file: Path = typer.Option(..., "--file", "-f", help="File to import queries from"),
-    endpoint_id: Optional[str] = typer.Option(None, "--endpoint-id", help="Default endpoint ID"),
-    endpoint_name: Optional[str] = typer.Option(
+    endpoint_id: str | None = typer.Option(None, "--endpoint-id", help="Default endpoint ID"),
+    endpoint_name: str | None = typer.Option(
         None, "--endpoint", "-e", help="Default endpoint name"
     ),
-    collection_name: Optional[str] = typer.Option(
+    collection_name: str | None = typer.Option(
         None, "--collection", help="Collection to add queries to"
     ),
     validate: bool = typer.Option(True, "--validate/--no-validate", help="Validate GraphQL syntax"),
@@ -363,12 +362,12 @@ def batch_import(
 
         for i, query_dict in enumerate(query_data):
             if not query_dict.get("name"):
-                errors.append(f"Query #{i+1}: Missing 'name' field")
+                errors.append(f"Query #{i + 1}: Missing 'name' field")
                 continue
 
             if not query_dict.get("query_text") and not query_dict.get("content"):
                 errors.append(
-                    f"Query #{i+1} ({query_dict['name']}): Missing 'query_text' or 'content' field"
+                    f"Query #{i + 1} ({query_dict['name']}): Missing 'query_text' or 'content' field"
                 )
                 continue
 
@@ -512,13 +511,13 @@ def batch_import(
 @batch_app.command("export")
 def batch_export(
     output_file: Path = typer.Option(..., "--output", "-o", help="Output file path"),
-    endpoint_id: Optional[str] = typer.Option(
+    endpoint_id: str | None = typer.Option(
         None, "--endpoint-id", help="Export queries for specific endpoint"
     ),
-    endpoint_name: Optional[str] = typer.Option(
+    endpoint_name: str | None = typer.Option(
         None, "--endpoint", "-e", help="Export queries for specific endpoint"
     ),
-    collection_id: Optional[str] = typer.Option(
+    collection_id: str | None = typer.Option(
         None, "--collection", help="Export queries from specific collection"
     ),
     format: str = typer.Option("json", "--format", help="Export format: json, yaml, csv"),

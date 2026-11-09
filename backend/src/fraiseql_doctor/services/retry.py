@@ -3,13 +3,13 @@
 Provides sophisticated retry mechanisms for GraphQL client operations
 with exponential backoff, jitter, and circuit breaker patterns.
 """
+
 import asyncio
 import logging
 import secrets
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 from fraiseql_doctor.models.endpoint import Endpoint
 from fraiseql_doctor.services.fraiseql_client import (
@@ -125,8 +125,8 @@ class RetryableClient:
     def __init__(
         self,
         client: FraiseQLClient,
-        retry_config: Optional[RetryConfig] = None,
-        circuit_breaker_config: Optional[CircuitBreakerConfig] = None,
+        retry_config: RetryConfig | None = None,
+        circuit_breaker_config: CircuitBreakerConfig | None = None,
     ):
         """Initialize retryable client.
 
@@ -135,6 +135,7 @@ class RetryableClient:
             client: Base FraiseQL client
             retry_config: Retry behavior configuration
             circuit_breaker_config: Circuit breaker configuration
+
         """
         self.client = client
         self.retry_config = retry_config or RetryConfig()
@@ -143,10 +144,10 @@ class RetryableClient:
     async def execute_query(
         self,
         query: str,
-        variables: Optional[dict] = None,
-        operation_name: Optional[str] = None,
-        timeout: Optional[int] = None,
-        retry_config: Optional[RetryConfig] = None,
+        variables: dict | None = None,
+        operation_name: str | None = None,
+        timeout: int | None = None,
+        retry_config: RetryConfig | None = None,
     ) -> GraphQLResponse:
         """Execute GraphQL query with retry logic.
 
@@ -165,6 +166,7 @@ class RetryableClient:
         Raises:
         ------
             GraphQLClientError: After all retries exhausted
+
         """
         config = retry_config or self.retry_config
         attempt = 0
@@ -286,8 +288,8 @@ class RetryableClient:
 
 def create_retryable_client(
     endpoint: Endpoint,
-    retry_config: Optional[RetryConfig] = None,
-    circuit_breaker_config: Optional[CircuitBreakerConfig] = None,
+    retry_config: RetryConfig | None = None,
+    circuit_breaker_config: CircuitBreakerConfig | None = None,
 ) -> RetryableClient:
     """Create a retryable client from endpoint configuration.
 
@@ -300,6 +302,7 @@ def create_retryable_client(
     Returns:
     -------
         Configured RetryableClient instance
+
     """
     # Create base client
     base_client = FraiseQLClient(endpoint)

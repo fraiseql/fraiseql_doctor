@@ -101,8 +101,8 @@ class TestDatabaseSession:
 ```python
 client = TestGraphQLClient()
 client.set_failure_pattern("poison")  # Fails on queries containing "poison"
-client.set_random_failures(True)      # Enable random failures for stress testing
-client.set_failure_rate(0.1)          # 10% failure rate
+client.set_random_failures(True)  # Enable random failures for stress testing
+client.set_failure_rate(0.1)  # 10% failure rate
 ```
 
 **Benefits**:
@@ -129,7 +129,7 @@ client.set_failure_rate(0.1)          # 10% failure rate
 mock.side_effect = [
     Exception("First call fails"),
     {"result": "Second call succeeds"},
-    lambda *args: complex_calculation(args[0])
+    lambda *args: complex_calculation(args[0]),
 ]
 ```
 

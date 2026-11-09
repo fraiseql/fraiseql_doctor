@@ -1,8 +1,10 @@
 """Test comprehensive data validation rules."""
+
 import pytest
+from pydantic import ValidationError
+
 from fraiseql_doctor.schemas.endpoint import EndpointCreate
 from fraiseql_doctor.schemas.query import QueryCreate
-from pydantic import ValidationError
 
 
 def test_query_creation_validation():
