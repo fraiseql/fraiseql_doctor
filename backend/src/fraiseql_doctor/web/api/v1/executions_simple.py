@@ -1,7 +1,6 @@
 """Simple executions API for testing connectivity."""
 
 from datetime import datetime, timedelta
-from typing import Optional
 from uuid import uuid4
 
 from fastapi import APIRouter
@@ -14,14 +13,12 @@ executions_router = APIRouter()
 
 @executions_router.get("/", response_model=ExecutionListResponse)
 async def get_query_history(
-    endpoint_id: Optional[str] = QueryParam(None, description="Filter by endpoint ID"),
-    success: Optional[bool] = QueryParam(None, description="Filter by success status"),
-    search: Optional[str] = QueryParam(
-        None, description="Search in query text and operation names"
-    ),
-    favorite: Optional[bool] = QueryParam(None, description="Filter favorites"),
-    from_date: Optional[datetime] = QueryParam(None, description="Filter from date"),
-    to_date: Optional[datetime] = QueryParam(None, description="Filter to date"),
+    endpoint_id: str | None = QueryParam(None, description="Filter by endpoint ID"),
+    success: bool | None = QueryParam(None, description="Filter by success status"),
+    search: str | None = QueryParam(None, description="Search in query text and operation names"),
+    favorite: bool | None = QueryParam(None, description="Filter favorites"),
+    from_date: datetime | None = QueryParam(None, description="Filter from date"),
+    to_date: datetime | None = QueryParam(None, description="Filter to date"),
     limit: int = QueryParam(100, ge=1, le=1000, description="Maximum number of results"),
     offset: int = QueryParam(0, ge=0, description="Offset for pagination"),
 ):
@@ -67,8 +64,8 @@ async def get_query_history(
                 "error_message": None
                 if is_success
                 else f"Database connection timeout (mock error {i})",
-                "variables": {"userId": f"user_{i+100}", "limit": 20},
-                "trace_id": f"trace-{i+1000}",
+                "variables": {"userId": f"user_{i + 100}", "limit": 20},
+                "trace_id": f"trace-{i + 1000}",
             }
         )
 
@@ -79,9 +76,9 @@ async def get_query_history(
 
 @executions_router.get("/stats")
 async def get_query_stats(
-    endpoint_id: Optional[str] = QueryParam(None, description="Filter by endpoint ID"),
-    from_date: Optional[datetime] = QueryParam(None, description="Filter from date"),
-    to_date: Optional[datetime] = QueryParam(None, description="Filter to date"),
+    endpoint_id: str | None = QueryParam(None, description="Filter by endpoint ID"),
+    from_date: datetime | None = QueryParam(None, description="Filter from date"),
+    to_date: datetime | None = QueryParam(None, description="Filter to date"),
 ):
     """Get query execution statistics."""
     # Return mock statistics
@@ -130,7 +127,7 @@ async def delete_execution(execution_id: str):
 
 
 @executions_router.post("/clear")
-async def clear_history(endpoint_id: Optional[str] = QueryParam(None)):
+async def clear_history(endpoint_id: str | None = QueryParam(None)):
     """Clear query history."""
     # Mock successful clear
     cleared_count = 150 if endpoint_id else 1247

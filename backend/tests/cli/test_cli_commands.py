@@ -5,17 +5,18 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-from fraiseql_doctor.cli.main import app
 from typer.testing import CliRunner
 
+from fraiseql_doctor.cli.main import app
 
-@pytest.fixture()
+
+@pytest.fixture
 def cli_runner():
     """Provide CLI runner for testing."""
     return CliRunner()
 
 
-@pytest.fixture()
+@pytest.fixture
 def temp_dir():
     """Provide temporary directory for test files."""
     with tempfile.TemporaryDirectory() as td:
@@ -354,7 +355,7 @@ class TestRichFormatting:
             assert task is not None
 
 
-@pytest.mark.integration()
+@pytest.mark.integration
 class TestCLIIntegration:
     """Integration tests for CLI functionality."""
 
