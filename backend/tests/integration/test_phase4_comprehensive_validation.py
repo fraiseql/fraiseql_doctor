@@ -17,6 +17,7 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
+
 from fraiseql_doctor.core.database.schemas import QueryCollectionCreate, QueryCreate
 from fraiseql_doctor.core.execution_manager import (
     BatchMode,
@@ -35,7 +36,7 @@ from fraiseql_doctor.core.result_storage import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def performance_monitor():
     """Monitor performance metrics during tests."""
 
@@ -76,7 +77,7 @@ def performance_monitor():
     return PerformanceMonitor()
 
 
-@pytest.fixture()
+@pytest.fixture
 async def realistic_test_environment(tmp_path):
     """Create realistic test environment with all components using real implementations."""
     from tests.fixtures.real_services import (
@@ -602,7 +603,7 @@ class TestPerformanceRegressionDetection:
         )
 
 
-@pytest.mark.slow()
+@pytest.mark.slow
 class TestEndToEndReverseScenarios:
     """Test complete end-to-end reverse scenarios."""
 
@@ -724,7 +725,7 @@ class TestEndToEndReverseScenarios:
             )
             logging.getLogger(__name__).info(f"    Failed: {failed_ops}/{scenario['operations']}")
             logging.getLogger(__name__).info(
-                f"    Success rate: {successful_ops/scenario['operations']*100:.1f}%"
+                f"    Success rate: {successful_ops / scenario['operations'] * 100:.1f}%"
             )
 
             # System should maintain reasonable performance even under adversarial conditions

@@ -6,11 +6,11 @@ Tests core functionality without dependencies on existing test infrastructure.
 
 import asyncio
 import tempfile
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from uuid import uuid4
 from unittest.mock import AsyncMock, MagicMock
-from dataclasses import dataclass
+from uuid import uuid4
 
 
 # Test models
@@ -48,10 +48,10 @@ async def test_execution_manager():
     # Import the execution manager
     try:
         from src.fraiseql_doctor.core.execution_manager import (
-            QueryExecutionManager,
+            BatchMode,
             ExecutionConfig,
             ExecutionStatus,
-            BatchMode,
+            QueryExecutionManager,
         )
 
         print("✅ Successfully imported ExecutionManager")
@@ -137,10 +137,10 @@ async def test_result_storage():
 
     try:
         from src.fraiseql_doctor.core.result_storage import (
-            ResultStorageManager,
-            StorageConfig,
-            StorageBackend,
             CompressionType,
+            ResultStorageManager,
+            StorageBackend,
+            StorageConfig,
         )
 
         print("✅ Successfully imported ResultStorageManager")
@@ -206,12 +206,12 @@ async def test_query_collection_manager():
     print("🧪 Testing Query Collection Manager...")
 
     try:
+        from src.fraiseql_doctor.core.complexity import QueryComplexityAnalyzer
         from src.fraiseql_doctor.core.query_collection import (
             QueryCollectionManager,
-            QueryStatus,
             QueryPriority,
+            QueryStatus,
         )
-        from src.fraiseql_doctor.core.complexity import QueryComplexityAnalyzer
 
         print("✅ Successfully imported QueryCollectionManager")
     except ImportError as e:
@@ -257,14 +257,14 @@ async def test_integration_workflow():
 
     try:
         from src.fraiseql_doctor.core.execution_manager import (
-            QueryExecutionManager,
             ExecutionConfig,
             ExecutionStatus,
+            QueryExecutionManager,
         )
         from src.fraiseql_doctor.core.result_storage import (
             ResultStorageManager,
-            StorageConfig,
             StorageBackend,
+            StorageConfig,
         )
 
         print("✅ Successfully imported components for integration test")
@@ -388,7 +388,7 @@ async def main():
     print("\n📊 Test Summary:")
     print(f"✅ Passed: {passed}")
     print(f"❌ Failed: {failed}")
-    print(f"📈 Success Rate: {passed/(passed+failed)*100:.1f}%")
+    print(f"📈 Success Rate: {passed / (passed + failed) * 100:.1f}%")
 
     if failed == 0:
         print("\n🎉 ALL PHASE 4 TESTS PASSED!")

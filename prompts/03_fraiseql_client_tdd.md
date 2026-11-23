@@ -13,11 +13,13 @@ Define client behavior through failing tests that specify exact requirements.
 ```python
 # tests/test_fraiseql_client_basic.py - Write FIRST
 """Test basic FraiseQL client functionality."""
+
 import pytest
 import aioresponses
 from aiohttp import ClientTimeout
 from fraiseql_doctor.services.fraiseql_client import FraiseQLClient, GraphQLResponse
 from fraiseql_doctor.models.endpoint import Endpoint
+
 
 @pytest.fixture
 def sample_endpoint():
@@ -27,8 +29,9 @@ def sample_endpoint():
         url="https://api.example.com/graphql",
         auth_type="none",
         timeout_seconds=30,
-        max_retries=3
+        max_retries=3,
     )
+
 
 async def test_client_executes_simple_query(sample_endpoint):
     """Test client can execute a simple GraphQL query."""
@@ -36,16 +39,9 @@ async def test_client_executes_simple_query(sample_endpoint):
         # Mock successful GraphQL response
         m.post(
             "https://api.example.com/graphql",
-            payload={
-                "data": {
-                    "user": {
-                        "id": "123",
-                        "name": "John Doe"
-                    }
-                }
-            },
+            payload={"data": {"user": {"id": "123", "name": "John Doe"}}},
             status=200,
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
         )
 
         client = FraiseQLClient(sample_endpoint)
@@ -59,10 +55,7 @@ async def test_client_executes_simple_query(sample_endpoint):
             }
         """
 
-        response = await client.execute_query(
-            query,
-            variables={"id": "123"}
-        )
+        response = await client.execute_query(query, variables={"id": "123"})
 
         # Verify response structure
         assert isinstance(response, GraphQLResponse)
@@ -72,6 +65,7 @@ async def test_client_executes_simple_query(sample_endpoint):
         assert response.errors is None
         assert response.response_time_ms > 0
         assert response.response_time_ms < 5000  # Should be reasonable
+
 
 async def test_client_handles_graphql_errors(sample_endpoint):
     """Test client properly handles GraphQL errors in response."""
@@ -84,12 +78,12 @@ async def test_client_handles_graphql_errors(sample_endpoint):
                     {
                         "message": "Field 'user' not found on type 'Query'",
                         "locations": [{"line": 2, "column": 3}],
-                        "path": ["user"]
+                        "path": ["user"],
                     }
                 ],
-                "data": None
+                "data": None,
             },
-            status=200  # GraphQL errors still return 200
+            status=200,  # GraphQL errors still return 200
         )
 
         client = FraiseQLClient(sample_endpoint)
@@ -102,6 +96,7 @@ async def test_client_handles_graphql_errors(sample_endpoint):
         assert "not found" in response.errors[0]["message"]
         assert response.response_time_ms > 0
 
+
 async def test_client_handles_http_errors(sample_endpoint):
     """Test client properly handles HTTP-level errors."""
     with aioresponses.aioresponses() as m:
@@ -109,7 +104,7 @@ async def test_client_handles_http_errors(sample_endpoint):
         m.post(
             "https://api.example.com/graphql",
             status=500,
-            payload={"error": "Internal Server Error"}
+            payload={"error": "Internal Server Error"},
         )
 
         client = FraiseQLClient(sample_endpoint)
@@ -118,7 +113,11 @@ async def test_client_handles_http_errors(sample_endpoint):
             await client.execute_query("query { test }")
 
         # Should raise appropriate exception with context
-        assert "500" in str(exc_info.value) or "server error" in str(exc_info.value).lower()
+        assert (
+            "500" in str(exc_info.value)
+            or "server error" in str(exc_info.value).lower()
+        )
+
 
 async def test_client_respects_timeout_settings(sample_endpoint):
     """Test client respects timeout configuration."""
@@ -129,7 +128,7 @@ async def test_client_respects_timeout_settings(sample_endpoint):
         # Mock slow response (never actually responds)
         m.post(
             "https://api.example.com/graphql",
-            exception=aioresponses.ClientTimeout("Request timeout")
+            exception=aioresponses.ClientTimeout("Request timeout"),
         )
 
         client = FraiseQLClient(sample_endpoint)
@@ -145,11 +144,13 @@ async def test_client_respects_timeout_settings(sample_endpoint):
 ```python
 # tests/test_authentication.py - Write FIRST
 """Test authentication mechanisms."""
+
 import pytest
 import aioresponses
 import base64
 from fraiseql_doctor.services.fraiseql_client import FraiseQLClient
 from fraiseql_doctor.models.endpoint import Endpoint
+
 
 async def test_bearer_token_authentication():
     """Test Bearer token authentication is properly applied."""
@@ -157,13 +158,12 @@ async def test_bearer_token_authentication():
         name="bearer-test",
         url="https://api.example.com/graphql",
         auth_type="bearer",
-        auth_config={"token": "secret-token-123"}
+        auth_config={"token": "secret-token-123"},
     )
 
     with aioresponses.aioresponses() as m:
         m.post(
-            "https://api.example.com/graphql",
-            payload={"data": {"authenticated": True}}
+            "https://api.example.com/graphql", payload={"data": {"authenticated": True}}
         )
 
         client = FraiseQLClient(endpoint)
@@ -175,22 +175,19 @@ async def test_bearer_token_authentication():
         assert "Authorization" in request.headers
         assert request.headers["Authorization"] == "Bearer secret-token-123"
 
+
 async def test_api_key_authentication():
     """Test API key authentication with custom header."""
     endpoint = Endpoint(
         name="api-key-test",
         url="https://api.example.com/graphql",
         auth_type="api_key",
-        auth_config={
-            "api_key": "abc123",
-            "header_name": "X-API-Key"
-        }
+        auth_config={"api_key": "abc123", "header_name": "X-API-Key"},
     )
 
     with aioresponses.aioresponses() as m:
         m.post(
-            "https://api.example.com/graphql",
-            payload={"data": {"authenticated": True}}
+            "https://api.example.com/graphql", payload={"data": {"authenticated": True}}
         )
 
         client = FraiseQLClient(endpoint)
@@ -201,22 +198,19 @@ async def test_api_key_authentication():
         assert "X-API-Key" in request.headers
         assert request.headers["X-API-Key"] == "abc123"
 
+
 async def test_basic_authentication():
     """Test HTTP Basic authentication."""
     endpoint = Endpoint(
         name="basic-test",
         url="https://api.example.com/graphql",
         auth_type="basic",
-        auth_config={
-            "username": "testuser",
-            "password": "testpass"
-        }
+        auth_config={"username": "testuser", "password": "testpass"},
     )
 
     with aioresponses.aioresponses() as m:
         m.post(
-            "https://api.example.com/graphql",
-            payload={"data": {"authenticated": True}}
+            "https://api.example.com/graphql", payload={"data": {"authenticated": True}}
         )
 
         client = FraiseQLClient(endpoint)
@@ -234,19 +228,15 @@ async def test_basic_authentication():
         decoded_creds = base64.b64decode(encoded_creds).decode()
         assert decoded_creds == "testuser:testpass"
 
+
 async def test_no_authentication():
     """Test that no auth type doesn't add auth headers."""
     endpoint = Endpoint(
-        name="no-auth-test",
-        url="https://api.example.com/graphql",
-        auth_type="none"
+        name="no-auth-test", url="https://api.example.com/graphql", auth_type="none"
     )
 
     with aioresponses.aioresponses() as m:
-        m.post(
-            "https://api.example.com/graphql",
-            payload={"data": {"public": True}}
-        )
+        m.post("https://api.example.com/graphql", payload={"data": {"public": True}})
 
         client = FraiseQLClient(endpoint)
         await client.execute_query("query { public }")
@@ -261,6 +251,7 @@ async def test_no_authentication():
 ```python
 # tests/test_client_performance.py - Write FIRST
 """Test client performance and reliability features."""
+
 import pytest
 import asyncio
 import time
@@ -269,21 +260,19 @@ from fraiseql_doctor.services.fraiseql_client import FraiseQLClient
 from fraiseql_doctor.services.retry import RetryableClient, CircuitBreaker
 from fraiseql_doctor.models.endpoint import Endpoint
 
+
 @pytest.mark.performance
 async def test_concurrent_request_handling():
     """Test client can handle concurrent requests efficiently."""
     endpoint = Endpoint(
-        name="concurrent-test",
-        url="https://api.example.com/graphql",
-        auth_type="none"
+        name="concurrent-test", url="https://api.example.com/graphql", auth_type="none"
     )
 
     with aioresponses.aioresponses() as m:
         # Mock multiple responses
         for i in range(10):
             m.post(
-                "https://api.example.com/graphql",
-                payload={"data": {"request_id": i}}
+                "https://api.example.com/graphql", payload={"data": {"request_id": i}}
             )
 
         client = FraiseQLClient(endpoint)
@@ -291,10 +280,7 @@ async def test_concurrent_request_handling():
         # Execute 10 concurrent requests
         start_time = time.time()
 
-        tasks = [
-            client.execute_query(f"query {{ request{i} }}")
-            for i in range(10)
-        ]
+        tasks = [client.execute_query(f"query {{ request{i} }}") for i in range(10)]
 
         results = await asyncio.gather(*tasks)
         total_time = time.time() - start_time
@@ -306,6 +292,7 @@ async def test_concurrent_request_handling():
         # Should complete in reasonable time (concurrent, not sequential)
         assert total_time < 5.0  # Much faster than 10 sequential requests
 
+
 async def test_retry_mechanism():
     """Test retry logic with exponential backoff."""
     endpoint = Endpoint(
@@ -313,17 +300,14 @@ async def test_retry_mechanism():
         url="https://api.example.com/graphql",
         auth_type="none",
         max_retries=3,
-        retry_delay_seconds=1
+        retry_delay_seconds=1,
     )
 
     with aioresponses.aioresponses() as m:
         # First two requests fail, third succeeds
         m.post("https://api.example.com/graphql", status=500)
         m.post("https://api.example.com/graphql", status=500)
-        m.post(
-            "https://api.example.com/graphql",
-            payload={"data": {"success": True}}
-        )
+        m.post("https://api.example.com/graphql", payload={"data": {"success": True}})
 
         client = FraiseQLClient(endpoint)
         retryable_client = RetryableClient(client, endpoint)
@@ -339,13 +323,14 @@ async def test_retry_mechanism():
         assert retry_time >= 3.0  # At least 1 + 2 seconds for backoff
         assert len(m.requests) == 3  # All three attempts made
 
+
 async def test_circuit_breaker_pattern():
     """Test circuit breaker prevents cascading failures."""
     endpoint = Endpoint(
         name="circuit-test",
         url="https://api.example.com/graphql",
         auth_type="none",
-        max_retries=2
+        max_retries=2,
     )
 
     with aioresponses.aioresponses() as m:
@@ -371,12 +356,11 @@ async def test_circuit_breaker_pattern():
         assert fast_fail_time < 0.1
         assert "circuit breaker" in str(exc_info.value).lower()
 
+
 async def test_connection_pooling():
     """Test connection pooling works correctly."""
     endpoint = Endpoint(
-        name="pool-test",
-        url="https://api.example.com/graphql",
-        auth_type="none"
+        name="pool-test", url="https://api.example.com/graphql", auth_type="none"
     )
 
     # This test defines the requirement for connection pooling
@@ -393,8 +377,13 @@ async def test_connection_pooling():
 ```python
 # tests/test_query_complexity.py - Write FIRST
 """Test GraphQL query complexity analysis."""
+
 import pytest
-from fraiseql_doctor.services.complexity import QueryComplexityAnalyzer, ComplexityMetrics
+from fraiseql_doctor.services.complexity import (
+    QueryComplexityAnalyzer,
+    ComplexityMetrics,
+)
+
 
 def test_simple_query_complexity():
     """Test complexity analysis for simple queries."""
@@ -417,6 +406,7 @@ def test_simple_query_complexity():
     assert metrics.total_score > 0
     assert metrics.total_score < 100  # Should be low for simple query
     assert len(metrics.recommendations) == 0  # No recommendations for simple query
+
 
 def test_complex_nested_query():
     """Test complexity analysis for deeply nested queries."""
@@ -458,6 +448,7 @@ def test_complex_nested_query():
     assert "depth" in rec_text.lower()
     assert "complexity" in rec_text.lower()
 
+
 def test_query_with_variables_complexity():
     """Test complexity analysis considers variables and arguments."""
     analyzer = QueryComplexityAnalyzer()
@@ -479,6 +470,7 @@ def test_query_with_variables_complexity():
     assert metrics.field_count >= 3  # user, posts, id, title, createdAt
     assert metrics.total_score > 0
     # Variables don't necessarily increase complexity, but arguments might
+
 
 def test_complexity_recommendations_quality():
     """Test that complexity recommendations are helpful and actionable."""
@@ -502,9 +494,10 @@ def test_complexity_recommendations_quality():
     # Recommendations should be specific and actionable
     for rec in metrics.recommendations:
         assert len(rec) > 10  # Should be descriptive
-        assert any(keyword in rec.lower() for keyword in [
-            "reduce", "limit", "fragment", "separate", "flatten"
-        ])
+        assert any(
+            keyword in rec.lower()
+            for keyword in ["reduce", "limit", "fragment", "separate", "flatten"]
+        )
 ```
 
 ### Step 3: Client Implementation (GREEN Phase)
@@ -514,6 +507,7 @@ Implement minimal client to make tests pass.
 ```python
 # src/fraiseql_doctor/services/fraiseql_client.py
 """Production-ready FraiseQL/GraphQL client."""
+
 import asyncio
 import time
 from typing import Any, Dict, Optional
@@ -524,12 +518,13 @@ from fraiseql_doctor.models.endpoint import Endpoint
 from fraiseql_doctor.core.exceptions import (
     GraphQLClientError,
     GraphQLTimeoutError,
-    GraphQLAuthError
+    GraphQLAuthError,
 )
 
 
 class GraphQLResponse(BaseModel):
     """Structured GraphQL response model."""
+
     data: Dict[str, Any] | None = None
     errors: list[Dict[str, Any]] | None = None
     extensions: Dict[str, Any] | None = None
@@ -542,9 +537,7 @@ class FraiseQLClient:
     """Production-ready FraiseQL/GraphQL client."""
 
     def __init__(
-        self,
-        endpoint: Endpoint,
-        session: aiohttp.ClientSession | None = None
+        self, endpoint: Endpoint, session: aiohttp.ClientSession | None = None
     ):
         self.endpoint = endpoint
         self.session = session
@@ -555,7 +548,7 @@ class FraiseQLClient:
         query: str,
         variables: Dict[str, Any] | None = None,
         operation_name: str | None = None,
-        timeout: int | None = None
+        timeout: int | None = None,
     ) -> GraphQLResponse:
         """Execute a GraphQL query with comprehensive error handling."""
         start_time = time.time()
@@ -577,7 +570,7 @@ class FraiseQLClient:
         variables: Dict[str, Any] | None,
         operation_name: str | None,
         timeout: int | None,
-        start_time: float
+        start_time: float,
     ) -> GraphQLResponse:
         """Execute query with provided session."""
         try:
@@ -595,7 +588,7 @@ class FraiseQLClient:
                 str(self.endpoint.url),
                 json=payload,
                 headers=headers,
-                timeout=aiohttp.ClientTimeout(total=timeout_val)
+                timeout=aiohttp.ClientTimeout(total=timeout_val),
             ) as response:
                 response_time_ms = int((time.time() - start_time) * 1000)
 
@@ -603,7 +596,7 @@ class FraiseQLClient:
                     raise GraphQLClientError(
                         f"HTTP {response.status}: {await response.text()}",
                         status_code=response.status,
-                        response_time_ms=response_time_ms
+                        response_time_ms=response_time_ms,
                     )
 
                 result = await response.json()
@@ -614,7 +607,7 @@ class FraiseQLClient:
                     extensions=result.get("extensions"),
                     response_time_ms=response_time_ms,
                     complexity_score=self._extract_complexity(result),
-                    cached=self._is_cached_response(result)
+                    cached=self._is_cached_response(result),
                 )
 
         except asyncio.TimeoutError:
@@ -622,13 +615,12 @@ class FraiseQLClient:
             raise GraphQLTimeoutError(
                 f"Query timeout after {response_time_ms}ms",
                 timeout=timeout_val,
-                response_time_ms=response_time_ms
+                response_time_ms=response_time_ms,
             )
         except aiohttp.ClientError as e:
             response_time_ms = int((time.time() - start_time) * 1000)
             raise GraphQLClientError(
-                f"Client error: {e}",
-                response_time_ms=response_time_ms
+                f"Client error: {e}", response_time_ms=response_time_ms
             ) from e
 
     def _build_auth_headers(self) -> Dict[str, str]:
@@ -651,7 +643,10 @@ class FraiseQLClient:
             password = self.endpoint.auth_config.get("password")
             if username and password:
                 import base64
-                credentials = base64.b64encode(f"{username}:{password}".encode()).decode()
+
+                credentials = base64.b64encode(
+                    f"{username}:{password}".encode()
+                ).decode()
                 headers["Authorization"] = f"Basic {credentials}"
 
         return headers
@@ -679,6 +674,7 @@ class FraiseQLClient:
 ```python
 # src/fraiseql_doctor/services/complexity.py
 """FraiseQL query complexity analysis."""
+
 import re
 from typing import List
 from dataclasses import dataclass
@@ -687,6 +683,7 @@ from dataclasses import dataclass
 @dataclass
 class ComplexityMetrics:
     """Query complexity analysis results."""
+
     total_score: int
     depth: int
     field_count: int
@@ -709,9 +706,13 @@ class QueryComplexityAnalyzer:
         field_count = self._count_fields(query)
         nested_queries = self._count_nested_queries(query)
 
-        total_score = self._calculate_complexity_score(depth, field_count, nested_queries)
+        total_score = self._calculate_complexity_score(
+            depth, field_count, nested_queries
+        )
         estimated_cost = self._estimate_cost(total_score, depth)
-        recommendations = self._generate_recommendations(depth, field_count, nested_queries, total_score)
+        recommendations = self._generate_recommendations(
+            depth, field_count, nested_queries, total_score
+        )
 
         return ComplexityMetrics(
             total_score=total_score,
@@ -719,7 +720,7 @@ class QueryComplexityAnalyzer:
             field_count=field_count,
             nested_queries=nested_queries,
             estimated_cost=estimated_cost,
-            recommendations=recommendations
+            recommendations=recommendations,
         )
 
     def _calculate_depth(self, query: str) -> int:
@@ -728,10 +729,10 @@ class QueryComplexityAnalyzer:
         current_depth = 0
 
         for char in query:
-            if char == '{':
+            if char == "{":
                 current_depth += 1
                 max_depth = max(max_depth, current_depth)
-            elif char == '}':
+            elif char == "}":
                 current_depth -= 1
 
         return max_depth
@@ -739,13 +740,19 @@ class QueryComplexityAnalyzer:
     def _count_fields(self, query: str) -> int:
         """Count total number of fields requested."""
         # Simplified field counting
-        field_pattern = r'\b[a-zA-Z_][a-zA-Z0-9_]*\s*(?:\([^)]*\))?\s*(?:{|$|\s)'
+        field_pattern = r"\b[a-zA-Z_][a-zA-Z0-9_]*\s*(?:\([^)]*\))?\s*(?:{|$|\s)"
         matches = re.findall(field_pattern, query)
-        return len([m for m in matches if not m.strip().startswith(('query', 'mutation', 'subscription'))])
+        return len(
+            [
+                m
+                for m in matches
+                if not m.strip().startswith(("query", "mutation", "subscription"))
+            ]
+        )
 
     def _count_nested_queries(self, query: str) -> int:
         """Count nested object selections."""
-        return query.count('{') - 1  # Subtract the root query
+        return query.count("{") - 1  # Subtract the root query
 
     def _calculate_complexity_score(self, depth: int, fields: int, nested: int) -> int:
         """Calculate overall complexity score."""
@@ -764,16 +771,24 @@ class QueryComplexityAnalyzer:
         recommendations = []
 
         if depth > self.max_depth:
-            recommendations.append(f"Query depth ({depth}) exceeds recommended maximum ({self.max_depth}). Consider breaking into separate queries.")
+            recommendations.append(
+                f"Query depth ({depth}) exceeds recommended maximum ({self.max_depth}). Consider breaking into separate queries."
+            )
 
         if score > self.max_complexity:
-            recommendations.append(f"Query complexity ({score}) exceeds limit ({self.max_complexity}). Consider reducing fields or using fragments.")
+            recommendations.append(
+                f"Query complexity ({score}) exceeds limit ({self.max_complexity}). Consider reducing fields or using fragments."
+            )
 
         if fields > 50:
-            recommendations.append("Consider reducing number of fields or using GraphQL fragments for reusability.")
+            recommendations.append(
+                "Consider reducing number of fields or using GraphQL fragments for reusability."
+            )
 
         if nested > 5:
-            recommendations.append("Consider flattening nested queries or using separate requests to improve performance.")
+            recommendations.append(
+                "Consider flattening nested queries or using separate requests to improve performance."
+            )
 
         return recommendations
 ```
@@ -785,6 +800,7 @@ Add sophisticated features while maintaining test coverage.
 ```python
 # src/fraiseql_doctor/services/retry.py
 """Advanced retry logic with circuit breaker pattern."""
+
 import asyncio
 import time
 from enum import Enum
@@ -803,6 +819,7 @@ class CircuitState(Enum):
 @dataclass
 class CircuitBreakerConfig:
     """Circuit breaker configuration."""
+
     failure_threshold: int = 5
     recovery_timeout: int = 60
     expected_exception: type = Exception
@@ -811,6 +828,7 @@ class CircuitBreakerConfig:
 @dataclass
 class CircuitBreakerStats:
     """Circuit breaker statistics."""
+
     state: CircuitState = CircuitState.CLOSED
     failure_count: int = 0
     last_failure_time: float = 0
@@ -830,7 +848,10 @@ class CircuitBreaker:
         self.stats.total_requests += 1
 
         if self.stats.state == CircuitState.OPEN:
-            if time.time() - self.stats.last_failure_time > self.config.recovery_timeout:
+            if (
+                time.time() - self.stats.last_failure_time
+                > self.config.recovery_timeout
+            ):
                 self.stats.state = CircuitState.HALF_OPEN
             else:
                 raise CircuitBreakerOpenError("Circuit breaker is open")
@@ -865,16 +886,14 @@ class RetryableClient:
     def __init__(self, client, endpoint):
         self.client = client
         self.endpoint = endpoint
-        self.circuit_breaker = CircuitBreaker(CircuitBreakerConfig(
-            failure_threshold=endpoint.max_retries or 3,
-            recovery_timeout=60
-        ))
+        self.circuit_breaker = CircuitBreaker(
+            CircuitBreakerConfig(
+                failure_threshold=endpoint.max_retries or 3, recovery_timeout=60
+            )
+        )
 
     async def execute_with_retry(
-        self,
-        query: str,
-        variables: dict | None = None,
-        **kwargs
+        self, query: str, variables: dict | None = None, **kwargs
     ) -> Any:
         """Execute query with retry logic and circuit breaker."""
         max_retries = self.endpoint.max_retries or 3
@@ -883,17 +902,14 @@ class RetryableClient:
         for attempt in range(max_retries + 1):
             try:
                 return await self.circuit_breaker.call(
-                    self.client.execute_query,
-                    query,
-                    variables,
-                    **kwargs
+                    self.client.execute_query, query, variables, **kwargs
                 )
             except Exception as e:
                 if attempt == max_retries:
                     raise e
 
                 # Exponential backoff
-                wait_time = delay * (2 ** attempt)
+                wait_time = delay * (2**attempt)
                 await asyncio.sleep(wait_time)
 ```
 
@@ -905,13 +921,19 @@ class RetryableClient:
 
 class FraiseQLDoctorError(Exception):
     """Base exception for FraiseQL Doctor."""
+
     pass
 
 
 class GraphQLClientError(FraiseQLDoctorError):
     """Base exception for GraphQL client errors."""
 
-    def __init__(self, message: str, status_code: int | None = None, response_time_ms: int | None = None):
+    def __init__(
+        self,
+        message: str,
+        status_code: int | None = None,
+        response_time_ms: int | None = None,
+    ):
         super().__init__(message)
         self.status_code = status_code
         self.response_time_ms = response_time_ms
@@ -927,11 +949,13 @@ class GraphQLTimeoutError(GraphQLClientError):
 
 class GraphQLAuthError(GraphQLClientError):
     """Exception raised for authentication errors."""
+
     pass
 
 
 class CircuitBreakerOpenError(FraiseQLDoctorError):
     """Exception raised when circuit breaker is open."""
+
     pass
 ```
 
