@@ -40,7 +40,7 @@ class MockQuery:
     metadata: MockQueryMetadata = None
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_db_session():
     """Real test database session - more reliable than complex mocks."""
     from tests.fixtures.real_services import TestDatabaseSession
@@ -48,7 +48,7 @@ def mock_db_session():
     return TestDatabaseSession()
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_complexity_analyzer():
     """Real test complexity analyzer - more reliable than mocks."""
     from tests.fixtures.real_services import TestComplexityAnalyzer
@@ -56,7 +56,7 @@ def mock_complexity_analyzer():
     return TestComplexityAnalyzer()
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_fraiseql_client():
     """Real test GraphQL client - more predictable than complex mocks."""
     from tests.fixtures.real_services import TestGraphQLClient
@@ -64,7 +64,7 @@ def mock_fraiseql_client():
     return TestGraphQLClient()
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_query():
     """Sample query for testing."""
     return MockQuery(
@@ -85,7 +85,7 @@ def sample_query():
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_endpoint():
     """Sample endpoint for testing."""
     return MockEndpoint(
@@ -100,7 +100,7 @@ def sample_endpoint():
 class TestQueryExecutionCore:
     """Test core query execution functionality."""
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_execute_single_query_success(
         self, mock_db_session, mock_fraiseql_client, sample_query, sample_endpoint
     ):
@@ -142,7 +142,7 @@ class TestQueryExecutionCore:
         # Verify client was called (TestGraphQLClient tracks call count)
         assert mock_fraiseql_client.call_count == 1
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_execute_query_with_error(
         self, mock_db_session, mock_fraiseql_client, sample_query, sample_endpoint
     ):
@@ -181,7 +181,7 @@ class TestQueryExecutionCore:
         assert "Field 'invalidField' not found" in result.error_message
         assert result.error_code == "GRAPHQL_ERROR"
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_batch_execution_parallel(
         self, mock_db_session, mock_fraiseql_client, sample_endpoint
     ):
@@ -198,8 +198,8 @@ class TestQueryExecutionCore:
         for i in range(3):
             query = MockQuery(
                 id=str(uuid4()),
-                name=f"Test Query {i+1}",
-                query_text=f"query TestQuery{i+1} {{ test{i+1} }}",
+                name=f"Test Query {i + 1}",
+                query_text=f"query TestQuery{i + 1} {{ test{i + 1} }}",
                 variables={},
                 expected_complexity_score=float(i + 1),
                 metadata=MockQueryMetadata(complexity_score=float(i + 1)),
@@ -244,7 +244,7 @@ class TestQueryExecutionCore:
 class TestResultStorageCore:
     """Test core result storage functionality."""
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_store_and_retrieve_result(self, mock_db_session, tmp_path):
         """Test basic result storage and retrieval."""
         from fraiseql_doctor.core.result_storage import (
@@ -288,7 +288,7 @@ class TestResultStorageCore:
         # Verify data integrity
         assert retrieved_data == result_data
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_compression_effectiveness(self, mock_db_session, tmp_path):
         """Test that compression reduces storage size."""
         from fraiseql_doctor.core.result_storage import (
@@ -333,7 +333,7 @@ class TestResultStorageCore:
 class TestIntegrationWorkflow:
     """Test integrated workflows."""
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_query_execution_to_storage_workflow(
         self, mock_db_session, mock_fraiseql_client, sample_query, sample_endpoint, tmp_path
     ):
@@ -386,7 +386,7 @@ class TestIntegrationWorkflow:
         # TestGraphQLClient returns users data for queries containing "users"
         assert "users" in stored_result["data"]
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_error_handling_workflow(
         self, mock_db_session, mock_fraiseql_client, sample_query, sample_endpoint, tmp_path
     ):

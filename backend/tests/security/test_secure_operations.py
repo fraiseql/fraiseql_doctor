@@ -17,6 +17,7 @@ import warnings
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from fraiseql_doctor.core.result_storage import (
     CompressionType,
     ResultStorageManager,

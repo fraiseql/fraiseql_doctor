@@ -19,7 +19,7 @@ import uuid
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from functools import wraps
-from typing import Any, Optional, Union
+from typing import Any
 
 
 class SecurityFilter(logging.Filter):
@@ -54,14 +54,14 @@ class SecurityFilter(logging.Filter):
 
         return True
 
-    def _mask_sensitive_data(self, data: Union[str, dict[str, Any]]) -> Union[str, dict[str, Any]]:
+    def _mask_sensitive_data(self, data: str | dict[str, Any]) -> str | dict[str, Any]:
         """Recursively mask sensitive data."""
         if isinstance(data, str):
             for key in self.SENSITIVE_KEYS:
                 if key in data.lower():
                     return data.replace(key, f"{key}=***")
             return data
-        elif isinstance(data, dict):
+        if isinstance(data, dict):
             masked = {}
             for key, value in data.items():
                 if key.lower() in self.SENSITIVE_KEYS:
@@ -140,7 +140,7 @@ class StructuredFormatter(logging.Formatter):
 class PerformanceLogger:
     """Context manager for performance logging."""
 
-    def __init__(self, logger: logging.Logger, operation: str, trace_id: Optional[str] = None):
+    def __init__(self, logger: logging.Logger, operation: str, trace_id: str | None = None):
         self.logger = logger
         self.operation = operation
         self.trace_id = trace_id or str(uuid.uuid4())
@@ -181,7 +181,7 @@ class PerformanceLogger:
                 )
 
 
-def performance_logged(operation_name: Optional[str] = None):
+def performance_logged(operation_name: str | None = None):
     """Decorator for automatic performance logging."""
 
     def decorator(func):
@@ -208,7 +208,7 @@ def performance_logged(operation_name: Optional[str] = None):
 
 
 def setup_logging(
-    level: Optional[str] = None, format_type: str = "json", enable_security_filter: bool = True
+    level: str | None = None, format_type: str = "json", enable_security_filter: bool = True
 ) -> None:
     """Setup structured logging configuration.
 
@@ -217,6 +217,7 @@ def setup_logging(
         level: Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         format_type: Logging format ("json" for production, "text" for development)
         enable_security_filter: Whether to enable sensitive data masking
+
     """
     # Determine log level from environment or parameter
     log_level = level or os.getenv("LOG_LEVEL", "INFO").upper()

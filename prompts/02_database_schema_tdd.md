@@ -13,6 +13,7 @@ Write failing tests that define how the database should behave BEFORE creating a
 ```python
 # tests/test_models_structure.py - Write FIRST
 """Test database model structure and relationships."""
+
 import pytest
 from sqlalchemy import inspect
 from fraiseql_doctor.models.base import Base
@@ -21,84 +22,105 @@ from fraiseql_doctor.models.endpoint import Endpoint
 from fraiseql_doctor.models.execution import Execution
 from fraiseql_doctor.models.health_check import HealthCheck
 
+
 async def test_query_model_structure(test_engine):
     """Test Query model has required fields and constraints."""
     async with test_engine.connect() as conn:
         inspector = inspect(conn.sync_engine)
 
         # Table should exist
-        assert 'tb_query' in inspector.get_table_names()
+        assert "tb_query" in inspector.get_table_names()
 
         # Required columns should exist
-        columns = {col['name'] for col in inspector.get_columns('tb_query')}
+        columns = {col["name"] for col in inspector.get_columns("tb_query")}
         required_columns = {
-            'pk_query', 'name', 'description', 'query_text', 'variables',
-            'expected_complexity_score', 'tags', 'is_active', 'created_at',
-            'updated_at', 'created_by', 'metadata'
+            "pk_query",
+            "name",
+            "description",
+            "query_text",
+            "variables",
+            "expected_complexity_score",
+            "tags",
+            "is_active",
+            "created_at",
+            "updated_at",
+            "created_by",
+            "metadata",
         }
         assert required_columns.issubset(columns)
 
         # Primary key constraint
-        pk_constraint = inspector.get_pk_constraint('tb_query')
-        assert pk_constraint['constrained_columns'] == ['pk_query']
+        pk_constraint = inspector.get_pk_constraint("tb_query")
+        assert pk_constraint["constrained_columns"] == ["pk_query"]
 
         # Unique constraints
-        unique_constraints = inspector.get_unique_constraints('tb_query')
+        unique_constraints = inspector.get_unique_constraints("tb_query")
         name_unique = any(
-            constraint['column_names'] == ['name']
-            for constraint in unique_constraints
+            constraint["column_names"] == ["name"] for constraint in unique_constraints
         )
         assert name_unique, "Query name should be unique"
+
 
 async def test_endpoint_model_structure(test_engine):
     """Test Endpoint model has required fields and constraints."""
     async with test_engine.connect() as conn:
         inspector = inspect(conn.sync_engine)
 
-        assert 'tb_endpoint' in inspector.get_table_names()
+        assert "tb_endpoint" in inspector.get_table_names()
 
-        columns = {col['name'] for col in inspector.get_columns('tb_endpoint')}
+        columns = {col["name"] for col in inspector.get_columns("tb_endpoint")}
         required_columns = {
-            'pk_endpoint', 'name', 'url', 'auth_type', 'auth_config',
-            'headers', 'timeout_seconds', 'max_retries', 'retry_delay_seconds',
-            'is_active', 'created_at', 'updated_at', 'last_health_check'
+            "pk_endpoint",
+            "name",
+            "url",
+            "auth_type",
+            "auth_config",
+            "headers",
+            "timeout_seconds",
+            "max_retries",
+            "retry_delay_seconds",
+            "is_active",
+            "created_at",
+            "updated_at",
+            "last_health_check",
         }
         assert required_columns.issubset(columns)
+
 
 async def test_execution_model_relationships(test_engine):
     """Test Execution model has proper foreign key relationships."""
     async with test_engine.connect() as conn:
         inspector = inspect(conn.sync_engine)
 
-        fk_constraints = inspector.get_foreign_keys('tb_execution')
+        fk_constraints = inspector.get_foreign_keys("tb_execution")
 
         # Should have foreign keys to query and endpoint
-        fk_tables = {fk['referred_table'] for fk in fk_constraints}
-        assert 'tb_query' in fk_tables
-        assert 'tb_endpoint' in fk_tables
+        fk_tables = {fk["referred_table"] for fk in fk_constraints}
+        assert "tb_query" in fk_tables
+        assert "tb_endpoint" in fk_tables
 
         # Check cascade behavior
         for fk in fk_constraints:
-            if fk['referred_table'] == 'tb_query':
-                assert fk['options']['ondelete'] == 'CASCADE'
+            if fk["referred_table"] == "tb_query":
+                assert fk["options"]["ondelete"] == "CASCADE"
 ```
 
 #### 1.2 Data Integrity Tests
 ```python
 # tests/test_data_integrity.py - Write FIRST
 """Test database data integrity and constraints."""
+
 import pytest
 from sqlalchemy import select
 from fraiseql_doctor.models.query import Query
 from fraiseql_doctor.models.endpoint import Endpoint
 
+
 async def test_query_name_uniqueness(db_session):
     """Test that query names must be unique."""
     # Create first query
     query1 = Query(
-        name="test-query",
-        query_text="query { user { id } }",
-        created_by="test"
+        name="test-query", query_text="query { user { id } }", created_by="test"
     )
     db_session.add(query1)
     await db_session.commit()
@@ -107,20 +129,19 @@ async def test_query_name_uniqueness(db_session):
     query2 = Query(
         name="test-query",  # Same name
         query_text="query { product { id } }",
-        created_by="test"
+        created_by="test",
     )
     db_session.add(query2)
 
     with pytest.raises(Exception):  # Should raise integrity error
         await db_session.commit()
 
+
 async def test_endpoint_url_validation(db_session):
     """Test that endpoint URLs are validated."""
     # Valid URL should work
     endpoint = Endpoint(
-        name="test-endpoint",
-        url="https://api.example.com/graphql",
-        auth_type="none"
+        name="test-endpoint", url="https://api.example.com/graphql", auth_type="none"
     )
     db_session.add(endpoint)
     await db_session.commit()
@@ -132,22 +153,23 @@ async def test_endpoint_url_validation(db_session):
     saved_endpoint = result.scalar_one()
     assert saved_endpoint.url == "https://api.example.com/graphql"
 
+
 async def test_query_variables_jsonb_storage(db_session):
     """Test that query variables are properly stored as JSONB."""
     complex_variables = {
         "filters": {
             "status": ["active", "pending"],
-            "createdAfter": "2024-01-01T00:00:00Z"
+            "createdAfter": "2024-01-01T00:00:00Z",
         },
         "pagination": {"limit": 50, "offset": 0},
-        "includeDeleted": False
+        "includeDeleted": False,
     }
 
     query = Query(
         name="complex-query",
         query_text="query($filters: FilterInput!) { items(filters: $filters) { id } }",
         variables=complex_variables,
-        created_by="test"
+        created_by="test",
     )
     db_session.add(query)
     await db_session.commit()
@@ -165,11 +187,13 @@ async def test_query_variables_jsonb_storage(db_session):
 ```python
 # tests/test_database_performance.py - Write FIRST
 """Test database performance requirements."""
+
 import pytest
 import time
 from sqlalchemy import select, text
 from fraiseql_doctor.models.query import Query
 from fraiseql_doctor.models.execution import Execution
+
 
 @pytest.mark.performance
 async def test_query_list_performance(db_session):
@@ -179,9 +203,9 @@ async def test_query_list_performance(db_session):
     for i in range(100):
         query = Query(
             name=f"perf-test-{i}",
-            query_text=f"query Test{i} {{ user(id: \"{i}\") {{ id name }} }}",
+            query_text=f'query Test{i} {{ user(id: "{i}") {{ id name }} }}',
             tags=[f"tag-{i % 5}"],  # Some overlapping tags
-            created_by="perf-test"
+            created_by="perf-test",
         )
         queries.append(query)
 
@@ -202,6 +226,7 @@ async def test_query_list_performance(db_session):
     assert len(queries_result) == 20
     assert query_time < 0.1  # Should complete in < 100ms
 
+
 @pytest.mark.performance
 async def test_execution_history_query_performance(db_session):
     """Test execution history queries meet performance requirements."""
@@ -210,6 +235,7 @@ async def test_execution_history_query_performance(db_session):
 
     # Setup will be implemented after models exist
     pass
+
 
 async def test_jsonb_query_performance(db_session):
     """Test JSONB queries are properly indexed and performant."""
@@ -221,7 +247,7 @@ async def test_jsonb_query_performance(db_session):
             query_text="query { test }",
             tags=["performance", f"category-{i % 3}"],
             metadata={"complexity": i % 10, "category": f"cat-{i % 3}"},
-            created_by="jsonb-test"
+            created_by="jsonb-test",
         )
         queries.append(query)
 
@@ -247,6 +273,7 @@ Implement minimal models to make tests pass.
 ```python
 # src/fraiseql_doctor/models/base.py
 """Base SQLAlchemy model with common functionality."""
+
 from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
@@ -259,6 +286,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 class Base(DeclarativeBase):
     """Base class for all database models."""
+
     type_annotation_map = {
         dict[str, Any]: JSONB,
         list[str]: JSONB,
@@ -268,16 +296,15 @@ class Base(DeclarativeBase):
 
 class TimestampMixin:
     """Mixin for created_at and updated_at timestamps."""
+
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        nullable=False
+        DateTime(timezone=True), server_default=func.now(), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),
-        nullable=False
+        nullable=False,
     )
 ```
 
@@ -285,6 +312,7 @@ class TimestampMixin:
 ```python
 # src/fraiseql_doctor/models/query.py
 """Query storage model."""
+
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -296,6 +324,7 @@ from .base import Base, TimestampMixin
 
 class Query(Base, TimestampMixin):
     """Stored GraphQL/FraiseQL query model."""
+
     __tablename__ = "tb_query"
 
     pk_query: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
@@ -310,14 +339,19 @@ class Query(Base, TimestampMixin):
     metadata: Mapped[dict[str, Any]] = mapped_column(default=dict)
 
     # Relationships
-    executions = relationship("Execution", back_populates="query", cascade="all, delete-orphan")
-    schedules = relationship("Schedule", back_populates="query", cascade="all, delete-orphan")
+    executions = relationship(
+        "Execution", back_populates="query", cascade="all, delete-orphan"
+    )
+    schedules = relationship(
+        "Schedule", back_populates="query", cascade="all, delete-orphan"
+    )
 ```
 
 #### 2.3 Endpoint Model
 ```python
 # src/fraiseql_doctor/models/endpoint.py
 """Endpoint configuration model."""
+
 from typing import Any
 from uuid import UUID, uuid4
 from datetime import datetime
@@ -330,6 +364,7 @@ from .base import Base, TimestampMixin
 
 class Endpoint(Base, TimestampMixin):
     """GraphQL endpoint configuration model."""
+
     __tablename__ = "tb_endpoint"
 
     pk_endpoint: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
@@ -345,14 +380,19 @@ class Endpoint(Base, TimestampMixin):
     last_health_check: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     # Relationships
-    executions = relationship("Execution", back_populates="endpoint", cascade="all, delete-orphan")
-    health_checks = relationship("HealthCheck", back_populates="endpoint", cascade="all, delete-orphan")
+    executions = relationship(
+        "Execution", back_populates="endpoint", cascade="all, delete-orphan"
+    )
+    health_checks = relationship(
+        "HealthCheck", back_populates="endpoint", cascade="all, delete-orphan"
+    )
 ```
 
 #### 2.4 Execution Model
 ```python
 # src/fraiseql_doctor/models/execution.py
 """Query execution tracking model."""
+
 from typing import Any
 from uuid import UUID, uuid4
 from datetime import datetime
@@ -365,14 +405,23 @@ from .base import Base
 
 class Execution(Base):
     """Query execution history model."""
+
     __tablename__ = "tb_execution"
 
     pk_execution: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    fk_query: Mapped[UUID] = mapped_column(ForeignKey("tb_query.pk_query", ondelete="CASCADE"))
-    fk_endpoint: Mapped[UUID] = mapped_column(ForeignKey("tb_endpoint.pk_endpoint", ondelete="CASCADE"))
-    execution_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    fk_query: Mapped[UUID] = mapped_column(
+        ForeignKey("tb_query.pk_query", ondelete="CASCADE")
+    )
+    fk_endpoint: Mapped[UUID] = mapped_column(
+        ForeignKey("tb_endpoint.pk_endpoint", ondelete="CASCADE")
+    )
+    execution_start: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow
+    )
     execution_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    status: Mapped[str] = mapped_column(String(20), nullable=False)  # pending, success, error, timeout
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False
+    )  # pending, success, error, timeout
     response_time_ms: Mapped[int | None] = mapped_column(Integer)
     response_size_bytes: Mapped[int | None] = mapped_column(Integer)
     actual_complexity_score: Mapped[int | None] = mapped_column(Integer)
@@ -381,7 +430,9 @@ class Execution(Base):
     response_data: Mapped[dict[str, Any] | None] = mapped_column()
     variables_used: Mapped[dict[str, Any]] = mapped_column(default=dict)
     execution_context: Mapped[dict[str, Any]] = mapped_column(default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow
+    )
 
     # Relationships
     query = relationship("Query", back_populates="executions")
@@ -395,10 +446,12 @@ Test that Alembic migrations work correctly.
 ```python
 # tests/test_migrations.py - Write FIRST
 """Test database migrations work correctly."""
+
 import pytest
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import text
+
 
 async def test_migration_up_and_down(test_engine):
     """Test that migrations can be applied and rolled back."""
@@ -410,13 +463,15 @@ async def test_migration_up_and_down(test_engine):
 
     # Verify tables exist
     async with test_engine.connect() as conn:
-        result = await conn.execute(text("""
+        result = await conn.execute(
+            text("""
             SELECT table_name FROM information_schema.tables
             WHERE table_schema = 'public' AND table_name LIKE 'tb_%'
-        """))
+        """)
+        )
         tables = [row[0] for row in result]
 
-        expected_tables = ['tb_query', 'tb_endpoint', 'tb_execution', 'tb_health_check']
+        expected_tables = ["tb_query", "tb_endpoint", "tb_execution", "tb_health_check"]
         for table in expected_tables:
             assert table in tables, f"Table {table} should exist after migration"
 
@@ -425,12 +480,15 @@ async def test_migration_up_and_down(test_engine):
 
     # Verify tables are gone
     async with test_engine.connect() as conn:
-        result = await conn.execute(text("""
+        result = await conn.execute(
+            text("""
             SELECT table_name FROM information_schema.tables
             WHERE table_schema = 'public' AND table_name LIKE 'tb_%'
-        """))
+        """)
+        )
         tables = [row[0] for row in result]
         assert len(tables) == 0, "All tables should be removed after downgrade"
+
 
 async def test_migration_idempotency(test_engine):
     """Test that running migrations multiple times is safe."""
@@ -459,60 +517,83 @@ Revision ID: 002
 Revises: 001
 Create Date: 2024-01-01 12:00:00.000000
 """
+
 from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers
-revision = '002'
-down_revision = '001'
+revision = "002"
+down_revision = "001"
 branch_labels = None
 depends_on = None
+
 
 def upgrade() -> None:
     """Add performance indexes."""
     # Query table indexes
-    op.create_index('idx_query_name', 'tb_query', ['name'])
-    op.create_index('idx_query_tags_gin', 'tb_query', ['tags'], postgresql_using='gin')
-    op.create_index('idx_query_active', 'tb_query', ['is_active'],
-                   postgresql_where=sa.text('is_active = true'))
-    op.create_index('idx_query_created_by', 'tb_query', ['created_by'])
-    op.create_index('idx_query_metadata_gin', 'tb_query', ['metadata'], postgresql_using='gin')
+    op.create_index("idx_query_name", "tb_query", ["name"])
+    op.create_index("idx_query_tags_gin", "tb_query", ["tags"], postgresql_using="gin")
+    op.create_index(
+        "idx_query_active",
+        "tb_query",
+        ["is_active"],
+        postgresql_where=sa.text("is_active = true"),
+    )
+    op.create_index("idx_query_created_by", "tb_query", ["created_by"])
+    op.create_index(
+        "idx_query_metadata_gin", "tb_query", ["metadata"], postgresql_using="gin"
+    )
 
     # Endpoint table indexes
-    op.create_index('idx_endpoint_name', 'tb_endpoint', ['name'])
-    op.create_index('idx_endpoint_active', 'tb_endpoint', ['is_active'],
-                   postgresql_where=sa.text('is_active = true'))
-    op.create_index('idx_endpoint_health_check', 'tb_endpoint', ['last_health_check'])
+    op.create_index("idx_endpoint_name", "tb_endpoint", ["name"])
+    op.create_index(
+        "idx_endpoint_active",
+        "tb_endpoint",
+        ["is_active"],
+        postgresql_where=sa.text("is_active = true"),
+    )
+    op.create_index("idx_endpoint_health_check", "tb_endpoint", ["last_health_check"])
 
     # Execution table indexes (for performance queries)
-    op.create_index('idx_execution_query', 'tb_execution', ['fk_query'])
-    op.create_index('idx_execution_endpoint', 'tb_execution', ['fk_endpoint'])
-    op.create_index('idx_execution_status', 'tb_execution', ['status'])
-    op.create_index('idx_execution_time', 'tb_execution', ['execution_start'])
-    op.create_index('idx_execution_performance', 'tb_execution', ['response_time_ms'],
-                   postgresql_where=sa.text("status = 'success'"))
+    op.create_index("idx_execution_query", "tb_execution", ["fk_query"])
+    op.create_index("idx_execution_endpoint", "tb_execution", ["fk_endpoint"])
+    op.create_index("idx_execution_status", "tb_execution", ["status"])
+    op.create_index("idx_execution_time", "tb_execution", ["execution_start"])
+    op.create_index(
+        "idx_execution_performance",
+        "tb_execution",
+        ["response_time_ms"],
+        postgresql_where=sa.text("status = 'success'"),
+    )
 
     # Composite indexes for common queries
-    op.create_index('idx_execution_query_status', 'tb_execution', ['fk_query', 'status'])
-    op.create_index('idx_execution_endpoint_time', 'tb_execution', ['fk_endpoint', 'execution_start'])
+    op.create_index(
+        "idx_execution_query_status", "tb_execution", ["fk_query", "status"]
+    )
+    op.create_index(
+        "idx_execution_endpoint_time",
+        "tb_execution",
+        ["fk_endpoint", "execution_start"],
+    )
+
 
 def downgrade() -> None:
     """Remove performance indexes."""
-    op.drop_index('idx_execution_endpoint_time', table_name='tb_execution')
-    op.drop_index('idx_execution_query_status', table_name='tb_execution')
-    op.drop_index('idx_execution_performance', table_name='tb_execution')
-    op.drop_index('idx_execution_time', table_name='tb_execution')
-    op.drop_index('idx_execution_status', table_name='tb_execution')
-    op.drop_index('idx_execution_endpoint', table_name='tb_execution')
-    op.drop_index('idx_execution_query', table_name='tb_execution')
-    op.drop_index('idx_endpoint_health_check', table_name='tb_endpoint')
-    op.drop_index('idx_endpoint_active', table_name='tb_endpoint')
-    op.drop_index('idx_endpoint_name', table_name='tb_endpoint')
-    op.drop_index('idx_query_metadata_gin', table_name='tb_query')
-    op.drop_index('idx_query_created_by', table_name='tb_query')
-    op.drop_index('idx_query_active', table_name='tb_query')
-    op.drop_index('idx_query_tags_gin', table_name='tb_query')
-    op.drop_index('idx_query_name', table_name='tb_query')
+    op.drop_index("idx_execution_endpoint_time", table_name="tb_execution")
+    op.drop_index("idx_execution_query_status", table_name="tb_execution")
+    op.drop_index("idx_execution_performance", table_name="tb_execution")
+    op.drop_index("idx_execution_time", table_name="tb_execution")
+    op.drop_index("idx_execution_status", table_name="tb_execution")
+    op.drop_index("idx_execution_endpoint", table_name="tb_execution")
+    op.drop_index("idx_execution_query", table_name="tb_execution")
+    op.drop_index("idx_endpoint_health_check", table_name="tb_endpoint")
+    op.drop_index("idx_endpoint_active", table_name="tb_endpoint")
+    op.drop_index("idx_endpoint_name", table_name="tb_endpoint")
+    op.drop_index("idx_query_metadata_gin", table_name="tb_query")
+    op.drop_index("idx_query_created_by", table_name="tb_query")
+    op.drop_index("idx_query_active", table_name="tb_query")
+    op.drop_index("idx_query_tags_gin", table_name="tb_query")
+    op.drop_index("idx_query_name", table_name="tb_query")
 ```
 
 ### Step 5: Advanced Features (REFACTOR Phase)
@@ -522,21 +603,25 @@ Add sophisticated features while maintaining test coverage.
 ```python
 # tests/test_partitioning.py - Advanced feature tests
 """Test execution table partitioning for performance."""
+
 import pytest
 from datetime import datetime, timedelta
 from sqlalchemy import text
+
 
 async def test_execution_partitioning_setup(test_engine):
     """Test that execution table can be partitioned by month."""
     # This test defines the requirement for partitioning large execution tables
     async with test_engine.connect() as conn:
         # Check if partitioning is supported
-        result = await conn.execute(text("""
+        result = await conn.execute(
+            text("""
             SELECT EXISTS (
                 SELECT 1 FROM information_schema.tables
                 WHERE table_name = 'tb_execution_y2024m01'
             )
-        """))
+        """)
+        )
 
         # First month partition should exist or be creatable
         partition_exists = result.scalar()
@@ -544,6 +629,7 @@ async def test_execution_partitioning_setup(test_engine):
         if not partition_exists:
             # Test partition creation (will be implemented in migration)
             pytest.skip("Partitioning not yet implemented")
+
 
 @pytest.mark.performance
 async def test_large_execution_table_performance(db_session):
@@ -557,10 +643,12 @@ async def test_large_execution_table_performance(db_session):
 ```python
 # tests/test_data_validation.py - Comprehensive validation tests
 """Test comprehensive data validation rules."""
+
 import pytest
 from pydantic import ValidationError
 from fraiseql_doctor.schemas.query import QueryCreate
 from fraiseql_doctor.schemas.endpoint import EndpointCreate
+
 
 def test_query_creation_validation():
     """Test query creation validation rules."""
@@ -570,7 +658,7 @@ def test_query_creation_validation():
         query_text="query { user { id name } }",
         variables={"limit": 10},
         tags=["test", "user"],
-        created_by="test-user"
+        created_by="test-user",
     )
     assert valid_query.name == "valid-query"
 
@@ -579,15 +667,16 @@ def test_query_creation_validation():
         QueryCreate(
             name="",  # Empty name should fail
             query_text="query { user { id name } }",
-            created_by="test-user"
+            created_by="test-user",
         )
 
     with pytest.raises(ValidationError):
         QueryCreate(
             name="valid-name",
             query_text="",  # Empty query should fail
-            created_by="test-user"
+            created_by="test-user",
         )
+
 
 def test_endpoint_creation_validation():
     """Test endpoint creation validation rules."""
@@ -597,7 +686,7 @@ def test_endpoint_creation_validation():
         url="https://api.example.com/graphql",
         auth_type="bearer",
         auth_config={"token": "secret"},
-        timeout_seconds=30
+        timeout_seconds=30,
     )
     assert valid_endpoint.name == "test-api"
 
@@ -606,7 +695,7 @@ def test_endpoint_creation_validation():
         EndpointCreate(
             name="test-api",
             url="not-a-url",  # Invalid URL
-            auth_type="none"
+            auth_type="none",
         )
 
     # Invalid auth type should fail
@@ -614,7 +703,7 @@ def test_endpoint_creation_validation():
         EndpointCreate(
             name="test-api",
             url="https://api.example.com/graphql",
-            auth_type="invalid-auth-type"  # Not in allowed list
+            auth_type="invalid-auth-type",  # Not in allowed list
         )
 ```
 

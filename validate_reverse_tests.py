@@ -6,8 +6,8 @@ This script validates that all reverse scenario tests are properly structured
 and can be executed without import errors.
 """
 
-import sys
 import importlib.util
+import sys
 from pathlib import Path
 
 # Add project root to Python path
